@@ -22,17 +22,17 @@ export const PAGES = {
     home: {
         key: 'home' as const,
         path: '/',
-        title: 'Home',
-        icon: 'Home',
+        title: '홈',
+        icon: 'HomeOutlined',
         showInSidebar: true,
         showPageHeader: false,
         requiresAuth: false,
     },
-    workspace: {
-        key: 'workspace' as const,
-        path: '/workspace',
-        title: 'Workspace',
-        icon: 'Work',
+    project: {
+        key: 'project' as const,
+        path: '/project',
+        title: '프로젝트',
+        icon: 'FolderOutlined',
         showInSidebar: true,
         showPageHeader: true,
         requiresAuth: true,
@@ -40,7 +40,7 @@ export const PAGES = {
     depth1: {
         key: 'depth1' as const,
         title: 'Depth 1',
-        icon: 'Add',
+        icon: 'Menu',
         children: {
             depth1_1: {
                 key: 'depth1.depth1_1' as const,
@@ -74,11 +74,20 @@ export const PAGES = {
             },
         },
     },
+    users: {
+        key: 'users' as const,
+        path: '/users',
+        title: '회원 관리',
+        icon: 'PeopleOutlineOutlined',
+        showInSidebar: true,
+        showPageHeader: true,
+        requiresAuth: false,
+    },
     components: {
         key: 'components' as const,
         path: '/components',
-        title: 'UI Components',
-        icon: 'Widgets',
+        title: 'UI 컴포넌트',
+        icon: 'WidgetsOutlined',
         showInSidebar: true,
         showPageHeader: true,
         requiresAuth: false,
@@ -141,27 +150,9 @@ export type PageInfo = (typeof PAGES)[PageKey];
 export interface NavigationMenuItem {
     label: string;
     path?: string; // 폴더형 메뉴는 path가 없을 수 있음
-    icon: string;
+    icon: string | React.ReactElement; // 설정에서는 string, 렌더링에서는 ReactElement
     showInSidebar: boolean;
-    children?: Array<{
-        label: string;
-        path?: string;
-        parent?: string;
-        children?: Array<{
-            label: string;
-            path: string;
-            parent?: string;
-        }>;
-    }>;
-}
-
-// 사이드바에서 사용하는 메뉴 아이템 타입
-export interface SidebarMenuItem {
-    label: string;
-    path?: string; // 폴더형 메뉴는 path가 없을 수 있음
-    icon: React.ReactElement;
-    showInSidebar: boolean;
-    isActive: boolean;
+    isActive?: boolean; // UI 상태 (선택적)
     children?: Array<{
         label: string;
         path?: string;

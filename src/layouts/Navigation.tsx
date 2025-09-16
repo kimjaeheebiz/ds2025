@@ -2,7 +2,7 @@ import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolti
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { NAVIGATION_MENU, SidebarMenuItem, getIconComponent, PAGES } from '@/constants/app-config';
+import { NAVIGATION_MENU, NavigationMenuItem, getIconComponent, PAGES } from '@/constants/app-config';
 
 interface NavigationProps {
     open: boolean;
@@ -43,8 +43,8 @@ export const Navigation = ({ open }: NavigationProps) => {
 
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => getFoldersToExpand(location.pathname));
 
-    const menuItems: SidebarMenuItem[] = NAVIGATION_MENU.filter((item) => item.showInSidebar).map((item) => {
-        const IconComponent = getIconComponent(item.icon);
+    const menuItems: NavigationMenuItem[] = NAVIGATION_MENU.filter((item) => item.showInSidebar).map((item) => {
+        const IconComponent = getIconComponent(item.icon as string);
         return {
             ...item,
             icon: <IconComponent />,

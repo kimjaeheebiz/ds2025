@@ -8,7 +8,7 @@ export const Breadcrumb = () => {
 
     const generateBreadcrumbs = () => {
         const breadcrumbs: Array<{ label: string; path: string; isLast: boolean }> = [
-            { label: 'Home', path: '/', isLast: pageKey === 'home' },
+            { label: '홈', path: '/', isLast: pageKey === 'home' },
         ];
 
         if (pageKey && pageKey !== 'home') {

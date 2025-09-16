@@ -11,11 +11,11 @@ const HomeContent = () => {
             <Card sx={{ flex: 1, minWidth: 300 }}>
                 <CardContent>
                     <Typography variant="h5" component="h3" gutterBottom>
-                        Workspace
+                        Project
                     </Typography>
                     <Typography sx={{ mb: 2 }}>워크플로우 관리 및 실행</Typography>
-                    <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate(ROUTES.workspace)}>
-                        Workspace
+                    <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate(ROUTES.project)}>
+                        Project
                     </Button>
                 </CardContent>
             </Card>

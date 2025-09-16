@@ -1,8 +1,8 @@
-# Agent Platform Frontend
+# Agent Platform Design System 2025
 
 ## 프로젝트 개요
 
-Agent Platform Frontend는 AI 에이전트 워크플로우를 시각적으로 구축하고 관리할 수 있는 React 기반 웹 애플리케이션입니다. 이 플랫폼은 드래그 앤 드롭으로 AI 에이전트 워크플로우를 생성하고, 지식베이스를 관리하며, 배포까지 할 수 있는 통합 환경을 제공합니다.
+Agent Platform Frontend 디자인 시스템 테스트 프로젝트(2025.09 ~)
 
 ## 주요 기술 스택
 
@@ -55,9 +55,9 @@ npm run preview
 
 ```
 src/
-├── assets/              # 정적 자원 (CSS, 폰트, 아이콘, 이미지)
-├── components/          # 재사용 가능한 공통 컴포넌트
-├── constants/           # 앱 설정 및 상수
+├── assets/             # 정적 자원 (폰트, 이미지)
+├── components/         # 재사용 가능한 공통 컴포넌트
+├── constants/          # 앱 설정 및 상수
 ├── hooks/              # 전역 커스텀 훅
 ├── layouts/            # 레이아웃 컴포넌트
 ├── pages/              # 페이지 컴포넌트 (라우팅 단위)
@@ -70,21 +70,22 @@ src/
 
 ### 주요 기능 모듈
 
-1. **layouts/**: 레이아웃 컴포넌트
-   - `DefaultLayout`: 기본 레이아웃 (헤더, 사이드바, 푸터 포함)
-   - `AuthLayout`: 인증 관련 페이지 레이아웃
-   - `ErrorLayout`: 에러 페이지 레이아웃
+1. **layouts/**: 레이아웃 구성 요소
+   - `DefaultLayout`: 기본 레이아웃 (헤더/사이드바/푸터)
+   - `AuthLayout`: 인증 레이아웃
+   - `ErrorLayout`: 오류 레이아웃
 
-2. **pages/**: 페이지 컴포넌트
-   - `Home`: 홈페이지
-   - `Workspace`: 워크스페이스 관리
-   - `Login/Signup`: 인증 페이지
-   - `Components`: UI 컴포넌트 데모
-   - `depth1/`: 다단계 메뉴 구조 예시
+2. **pages/**: 페이지 구성
+   - `home/Home.tsx`: 홈페이지
+   - `project/Project.tsx`: 프로젝트 관리
+   - `depth1/.../Depth1_1_1.tsx`: 다단계 메뉴 예시
+   - `users/Users.tsx`: 회원 관리
+   - `components/Components.tsx`: UI 컴포넌트 데모
+   - `login/Login.tsx`, `signup/Signup.tsx`: 인증
 
-3. **constants/**: 앱 설정
-   - `app-config.ts`: 페이지 설정, 라우팅, 메타데이터 통합 관리
-   - `layout.ts`: 레이아웃 관련 상수
+3. **constants/**: 앱 설정 모듈
+   - `app-config.ts`: 페이지/라우팅/메타데이터 통합 설정
+   - `layout.ts`: 레이아웃 상수
 
 ### 상태 관리 패턴
 
@@ -94,13 +95,13 @@ src/
 
 ### 컴포넌트 설계 패턴
 
-각 주요 기능은 다음과 같은 구조를 따릅니다:
+기능 디렉터리 구조
 
 ```
 feature/
-├── FeatureName.tsx         # 메인 컴포넌트
-├── components/             # 기능별 하위 컴포넌트
-├── hooks/                  # 커스텀 훅
+├── FeatureName.tsx        # 메인 컴포넌트
+├── components/            # 기능별 하위 컴포넌트
+├── hooks/                 # 커스텀 훅
 ├── recoil/                # Recoil 상태
 ├── types/                 # 타입 정의
 └── utils/                 # 유틸리티 함수
@@ -108,18 +109,35 @@ feature/
 
 ## 라우팅 구조
 
-주요 라우트:
+주요 라우트
 
-- `/`: 홈페이지
-- `/workspace`: 워크스페이스 관리
+- `/`: 홈
+- `/project`: 프로젝트
+- `/users`: 회원 관리
 - `/depth1/depth1_1/depth1_1_1`: 다단계 메뉴 예시 (3단계)
 - `/depth1/depth1_1/depth1_1_2`: 다단계 메뉴 예시 (3단계)
 - `/depth1/depth1_2`: 다단계 메뉴 예시 (2단계)
-- `/components`: UI 컴포넌트 데모
-- `/login`: 로그인 페이지
-- `/signup`: 회원가입 페이지
-- `/404`: 404 에러 페이지
-- `/500`: 500 에러 페이지
+- `/components`: UI 컴포넌트
+- `/login`: 로그인
+- `/signup`: 계정 등록
+- `/404`: 404 에러
+- `/500`: 500 에러
+
+### 라우팅 자동화 규칙 (파일 기반)
+
+- 기준 파일: `src/utils/route-generator.ts`
+- 설정 소스: `app-config.ts`의 `PAGES`
+- 규칙 요약
+  - 키 계층: 점(`.`) 구분 계층
+  - 폴더 경로: 소문자 케밥케이스 변환
+  - 파일명: PascalCase, 언더스코어(`_`) 유지
+- 매핑 예시
+  - `home` → `src/pages/home/Home.tsx`
+  - `project` → `src/pages/project/Project.tsx`
+  - `depth1.depth1_1.depth1_1_1` → `src/pages/depth1/depth1_1/depth1_1_1/Depth1_1_1.tsx`
+- 로딩 방식: `import.meta.glob('/src/pages/**/*.{tsx,jsx}')` 지연 로딩
+- 레이아웃 규칙: `login`/`signup` → `AuthLayout`, 404/500 → `ErrorLayout`
+- 네이밍 주의: 폴더 소문자 시작, 파일 PascalCase, 2뎁스 + 언더스코어 유지
 
 ## 환경 설정
 
@@ -147,13 +165,13 @@ feature/
 - **개발 서버**: 포트 3000, 자동 브라우저 열기
 - **빌드 출력**: `build/` 디렉토리
 - **소스맵**: 환경변수에 따라 제어
-- **콘솔 제거**: 프로덕션 빌드 시 자동 제거
+- **콘솔 제거**: 프로덕션 빌드 시 자동 제거 (빌드 설정에 따름)
 
 ## 개발 가이드라인
 
 ### 코드 스타일
 
-- 작업 완료 후 반드시 `npx eslint 경로/파일명 --fix` 실행
+- ESLint 자동 수정(필요 시): `npx eslint 경로/파일명 --fix`
 - TypeScript strict 모드 사용 (단, `noImplicitAny: false` 설정)
 - Prettier + ESLint 조합으로 코드 포맷팅
 
@@ -185,11 +203,11 @@ feature/
 
 ## 주요 특징
 
-1. **계층적 메뉴 구조**: 3단계까지 지원하는 동적 메뉴 시스템
+1. **계층적 메뉴 구조**: 3단계까지 지원하는 동적 메뉴
 2. **통합 설정 관리**: `app-config.ts`에서 라우팅, 메타데이터, 네비게이션 통합 관리
-3. **타입 안전성**: TypeScript를 활용한 강력한 타입 시스템
-4. **반응형 디자인**: Material-UI와 TailwindCSS를 활용한 모던한 UI
-5. **개발자 경험**: Vite, ESLint, Prettier를 통한 우수한 개발 환경
+3. **타입 안전성**: TypeScript를 활용한 타입 시스템
+4. **반응형 디자인**: Material-UI와 TailwindCSS 활용 UI
+5. **개발자 경험**: Vite, ESLint, Prettier 개발 환경
 
 ## 라이선스
 
