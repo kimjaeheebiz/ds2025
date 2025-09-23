@@ -2,7 +2,6 @@ import { Box, Container, Typography, Button, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
 import { Brand } from './Brand';
-import { APP_INFO, ROUTES } from '@/constants/app-config';
 
 export interface ErrorLayoutProps {
     statusCode?: number;
@@ -45,7 +44,6 @@ export const ErrorLayout = ({ statusCode = 404, title, message }: ErrorLayoutPro
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: 'grey.50',
             }}
         >
             <Container maxWidth="md" sx={{ textAlign: 'center' }}>
@@ -62,7 +60,7 @@ export const ErrorLayout = ({ statusCode = 404, title, message }: ErrorLayoutPro
                 <Typography variant="body1" sx={{ mb: 4 }}>
                     {errorMessage}
                 </Typography>
-                <Button variant="contained" color="primary" size="large" onClick={() => navigate(ROUTES.home)}>
+                <Button variant="contained" color="primary" size="large" onClick={() => navigate('/')}>
                     Home
                 </Button>
             </Container>

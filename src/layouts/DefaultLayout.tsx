@@ -36,12 +36,13 @@ export const DefaultLayout = () => {
                 sx={{
                     display: 'flex',
                     flex: 1,
-                    backgroundColor: 'grey.50',
                     overflow: 'hidden',
                 }}
             >
+                {/* 사이드바 */}
                 <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
+                {/* 메인 영역 */}
                 <Box
                     component="main"
                     sx={{
@@ -51,11 +52,13 @@ export const DefaultLayout = () => {
                         overflow: 'auto',
                     }}
                 >
+                    {/* 페이지 헤더 */}
                     {pageInfo && 'showPageHeader' in pageInfo && pageInfo.showPageHeader && (
                         <PageHeader title={pageMetadata.title} />
                     )}
 
-                    <Box sx={{ flex: 1, p: 3 }}>
+                    {/* 페이지 콘텐츠 */}
+                    <Box sx={{ flex: 1 }}>
                         <Outlet />
                     </Box>
                 </Box>

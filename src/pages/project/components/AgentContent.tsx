@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React from 'react';
 import {
     Box,
-    Stack,
     Typography,
+    Stack,
     Button,
     TextField,
     InputAdornment,
@@ -15,19 +15,21 @@ import {
     Paper,
     IconButton,
     Tooltip,
-    Tabs,
-    Tab,
     Chip,
+    ToggleButton,
+    ToggleButtonGroup,
 } from '@mui/material';
 import { Star, StarBorder, Build, PlayArrow, MoreVert, Search, Add } from '@mui/icons-material';
-import { formatDate } from '../../utils';
-import { ProjectProvider, useProject } from './ProjectContext';
-import { sampleWorkflows } from './ProjectData';
+import { formatDate } from '../../../utils';
+import type { Workflow } from '../ProjectContext';
+import { StatusChip } from './StatusChip';
+import { useProject } from '../ProjectContext';
 
-// 샘플 데이터
-const workflowData = sampleWorkflows;
+export interface AgentContentProps {
+    workflowData?: Workflow[];
+}
 
-const ProjectContent = () => {
+export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
     const {
         searchKeyword,
         setSearchKeyword,
@@ -41,54 +43,38 @@ const ProjectContent = () => {
         toggleFavorite,
         userName,
     } = useProject();
+    const [sortKey, setSortKey] = React.useState<keyof Workflow>('updated_at');
+    const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
 
-    const [sortKey, setSortKey] = useState<keyof (typeof workflowData)[0]>('updated_at');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-    const filterStats = useMemo(() => {
+    const filterStats = React.useMemo(() => {
         const total = workflows.length;
         const mineCount = workflows.filter((workflow) => workflow.user_name === userName).length;
         const favoritesCount = workflows.filter((workflow) => workflow.isFavorite === true).length;
-
         return { total, mineCount, favoritesCount };
     }, [workflows, userName]);
 
-    // 정렬된 워크플로우 계산
-    const sortedWorkflows = useMemo(() => {
+    const sortedWorkflows = React.useMemo(() => {
         return [...filteredWorkflows].sort((a, b) => {
             const aValue = a[sortKey];
             const bValue = b[sortKey];
-
             if (aValue === undefined || bValue === undefined) return 0;
-
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
             }
-
             if (typeof aValue === 'number' && typeof bValue === 'number') {
                 return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
             }
-
             return 0;
         });
     }, [filteredWorkflows, sortKey, sortOrder]);
 
-    const tabData = useMemo(
-        () => [
-            { id: 'all', label: 'All', count: filterStats.total, value: 'all' },
-            { id: 'mine', label: 'My', count: filterStats.mineCount, value: 'mine' },
-            { id: 'favorites', label: 'Favorites', count: filterStats.favoritesCount, value: 'favorites' },
-        ],
-        [filterStats],
-    );
-
-    useEffect(() => {
+    React.useEffect(() => {
         if (workflows.length === 0) {
             setWorkflows(workflowData as any);
         }
-    }, [workflows.length, setWorkflows]);
+    }, [workflows.length, setWorkflows, workflowData]);
 
-    const handleSort = (key: keyof (typeof workflowData)[0]) => {
+    const handleSort = (key: keyof Workflow) => {
         if (sortKey === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
         else {
             setSortKey(key);
@@ -96,15 +82,17 @@ const ProjectContent = () => {
         }
     };
 
-    const getStatusDisplay = (status: string) => (status === 'Active' ? '활성' : status === 'Idle' ? '비활성' : status);
-    const getStatusColor = (status: string) => (status === 'Active' ? 'success' : 'default');
-
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Tabs
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                {/* 필터 */}
+                <ToggleButtonGroup
+                    exclusive
+                    color="secondary"
                     value={viewMode === 'favorites' ? 'favorites' : selectedFilter}
-                    onChange={(_, newValue) => {
+                    aria-label="filter toggle buttons"
+                    onChange={(e, newValue) => {
+                        if (!newValue) return;
                         if (newValue === 'favorites') {
                             setSelectedFilter('all');
                             setViewMode('favorites');
@@ -114,23 +102,22 @@ const ProjectContent = () => {
                         }
                     }}
                 >
-                    {tabData.map((tab) => (
-                        <Tab
-                            key={tab.id}
-                            value={tab.value}
-                            label={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    {tab.label}
-                                    <Chip label={tab.count} size="small" />
-                                </Box>
-                            }
-                        />
+                    {[
+                        { id: 'all', label: 'All Agent', count: filterStats.total, value: 'all' },
+                        { id: 'mine', label: 'My Agent', count: filterStats.mineCount, value: 'mine' },
+                        { id: 'favorites', label: 'Favorites', count: filterStats.favoritesCount, value: 'favorites' },
+                    ].map((tab) => (
+                        <ToggleButton size="small" key={tab.id} value={tab.value} sx={{ gap: 1 }}>
+                            {tab.label}
+                            <Chip label={tab.count} size="small" sx={{ backgroundColor: 'grey.300' }} />
+                        </ToggleButton>
                     ))}
-                </Tabs>
+                </ToggleButtonGroup>
 
+                {/* 검색, 생성 버튼 */}
                 <Stack direction="row" spacing={1}>
                     <TextField
-                        placeholder="검색"
+                        placeholder="Search Agents..."
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
                         size="small"
@@ -138,53 +125,54 @@ const ProjectContent = () => {
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <Search fontSize="small" color="action" />
+                                    <Search color="action" />
                                 </InputAdornment>
                             ),
                         }}
                     />
-                    <Button variant="contained" startIcon={<Add />}>워크플로우 생성</Button>
+                    <Button variant="contained" startIcon={<Add />}>New Workflow</Button>
                 </Stack>
             </Box>
 
+            {/* 테이블 */}
             <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
-                <Table>
+                <Table size="small">
                     <colgroup>
                         <col style={{ width: '30%' }} />
                         <col style={{ width: '30%' }} />
                         <col style={{ width: '8%' }} />
+                        <col style={{ width: '10%' }} />
                         <col />
-                        <col style={{ width: '8%' }} />
                         <col />
                     </colgroup>
                     <TableHead>
                         <TableRow>
                             <TableCell>
                                 <Button variant="text" onClick={() => handleSort('name')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    워크플로우명{sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                    NAME{sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
                                 <Button variant="text" onClick={() => handleSort('description')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    설명{sortKey === 'description' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                    DESCRIPTION{sortKey === 'description' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
                                 <Button variant="text" onClick={() => handleSort('status')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    상태{sortKey === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                    STATUS{sortKey === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
                                 <Button variant="text" onClick={() => handleSort('updated_at')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    수정일{sortKey === 'updated_at' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                    UPDATED{sortKey === 'updated_at' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
                                 <Button variant="text" onClick={() => handleSort('user_name')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    생성자{sortKey === 'user_name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                    OWNER{sortKey === 'user_name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
-                            <TableCell>작업</TableCell>
+                            <TableCell>ACTIONS</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -198,10 +186,10 @@ const ProjectContent = () => {
                                     <Typography variant="body2" color="text.secondary">{workflow.description}</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Chip label={getStatusDisplay(workflow.status || '')} color={getStatusColor(workflow.status || '') as any} size="small" />
+                                    <StatusChip status={workflow.status} />
                                 </TableCell>
                                 <TableCell>
-                                    <Typography variant="body2" color="text.secondary">{formatDate(workflow.updated_at || '')}</Typography>
+                                    <Typography variant="body2">{formatDate(workflow.updated_at || '')}</Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">{workflow.user_name}</Typography>
@@ -232,11 +220,5 @@ const ProjectContent = () => {
         </Box>
     );
 };
-
-export const Project = () => (
-    <ProjectProvider>
-        <ProjectContent />
-    </ProjectProvider>
-);
 
 

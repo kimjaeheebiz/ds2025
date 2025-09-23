@@ -2,7 +2,7 @@ import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolti
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { NAVIGATION_MENU, NavigationMenuItem, getIconComponent, PAGES } from '@/constants/app-config';
+import { NAVIGATION_MENU, NavigationMenuItem, getIconComponent, PAGES } from '../constants/app-config';
 
 interface NavigationProps {
     open: boolean;
@@ -12,7 +12,7 @@ export const Navigation = ({ open }: NavigationProps) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // 현재 경로에 따라 자동으로 폴더를 열기
+    // 현재 경로 메뉴 폴더 열기
     const getFoldersToExpand = (currentPath: string): Set<string> => {
         const folders = new Set<string>();
 
@@ -25,7 +25,10 @@ export const Navigation = ({ open }: NavigationProps) => {
                     }
                     if ('children' in child && child.children) {
                         const hasMatchingGrandChild = Object.values(child.children).some(
-                            (grandChild) => grandChild.path && currentPath.startsWith(grandChild.path),
+                            (grandChild) => {
+                                const grandChildConfig = grandChild as any;
+                                return grandChildConfig.path && currentPath.startsWith(grandChildConfig.path);
+                            }
                         );
                         if (hasMatchingGrandChild) {
                             folders.add(page.title);
@@ -70,7 +73,7 @@ export const Navigation = ({ open }: NavigationProps) => {
 
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <List sx={{ p: 1 }}>
+            <List dense sx={{ p: 0 }}>
                 {menuItems.map((item) => {
                     const hasChildren = item.children && item.children.length > 0;
                     const isExpanded = expandedFolders.has(item.label);
@@ -84,125 +87,107 @@ export const Navigation = ({ open }: NavigationProps) => {
                             ));
 
                     return (
-                        <Box key={item.path || item.label}>
-                            <ListItem disablePadding sx={{ mb: 0.5 }}>
-                                <Tooltip title={!open ? item.label : ''} placement="right" arrow>
-                                    <ListItemButton
-                                        onClick={() =>
-                                            hasChildren
-                                                ? handleFolderToggle(item.label)
-                                                : item.path && handleNavigation(item.path)
-                                        }
-                                        selected={isActive}
+                        <ListItem 
+                            key={item.path || item.label}
+                            disablePadding
+                            sx={{ 
+                                display: 'block',
+                                width: '100%',
+                            }}
+                        >
+                            <Tooltip title={!open ? item.label : ''} placement="right" arrow>
+                                <ListItemButton
+                                    onClick={() =>
+                                        hasChildren
+                                            ? handleFolderToggle(item.label)
+                                            : item.path && handleNavigation(item.path)
+                                    }
+                                    selected={isActive}
+                                    sx={{
+                                        justifyContent: open ? 'flex-start' : 'center',
+                                        minHeight: 48,
+                                        px: open ? 2 : 'auto',
+                                        width: '100%',
+                                        display: 'flex',
+                                    }}
+                                >
+                                    <ListItemIcon
                                         sx={{
-                                            minHeight: 48,
-                                            justifyContent: open ? 'initial' : 'center',
-                                            px: 2.5,
-                                            borderRadius: 1,
+                                            minWidth: open ? 40 : 'auto',
+                                            justifyContent: 'center',
                                         }}
                                     >
-                                        <ListItemIcon
-                                            sx={{
-                                                minWidth: 0,
-                                                mr: open ? 3 : 'auto',
-                                                justifyContent: 'center',
-                                            }}
-                                        >
-                                            {item.icon}
-                                        </ListItemIcon>
-                                        <ListItemText
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    {open && (
+                                        <ListItemText 
                                             primary={item.label}
-                                            sx={{
-                                                opacity: open ? 1 : 0,
-                                                '& .MuiListItemText-primary': {
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: 500,
-                                                },
+                                            sx={{ 
+                                                ml: 1,
+                                                textTransform: 'uppercase',
                                             }}
                                         />
-                                        {hasChildren && open && (
-                                            <Box sx={{ opacity: open ? 1 : 0 }}>
-                                                {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                                            </Box>
-                                        )}
-                                    </ListItemButton>
-                                </Tooltip>
-                            </ListItem>
+                                    )}
+                                    {hasChildren && open && (
+                                        isExpanded ? <ExpandLess /> : <ExpandMore />
+                                    )}
+                                </ListItemButton>
+                            </Tooltip>
 
-                            {/* 하위 메뉴 아이템들 */}
+                            {/* 2 depth */}
                             {hasChildren && (
                                 <Collapse in={isExpanded && open} timeout="auto" unmountOnExit>
-                                    <List component="div" disablePadding>
+                                    <List component="ul" disablePadding dense>
                                         {item.children?.map((child) => {
                                             const hasGrandChildren = child.children && child.children.length > 0;
                                             const isChildExpanded = expandedFolders.has(child.label);
                                             const isChildActive = child.path
                                                 ? location.pathname === child.path ||
-                                                  (child.path !== '/' && location.pathname.startsWith(child.path))
+                                                 (child.path !== '/' && location.pathname.startsWith(child.path))
                                                 : hasGrandChildren &&
-                                                  child.children?.some(
-                                                      (grandChild) =>
-                                                          location.pathname === grandChild.path ||
-                                                          (grandChild.path !== '/' &&
-                                                              location.pathname.startsWith(grandChild.path)),
-                                                  );
+                                                 child.children?.some(
+                                                     (grandChild) =>
+                                                         location.pathname === grandChild.path ||
+                                                         (grandChild.path !== '/' &&
+                                                             location.pathname.startsWith(grandChild.path)),
+                                                     );
 
                                             return (
-                                                <Box key={child.path || child.label}>
-                                                    {/* 2뎁스 메뉴 아이템 */}
-                                                    <ListItem disablePadding sx={{ mb: 0.5, pl: 2 }}>
-                                                        <Tooltip
-                                                            title={!open ? child.label : ''}
-                                                            placement="right"
-                                                            arrow
+                                                <ListItem key={child.path || child.label} disablePadding sx={{ display: 'block' }}>
+                                                    <Tooltip
+                                                        title={!open ? child.label : ''}
+                                                        placement="right"
+                                                        arrow
+                                                    >
+                                                        <ListItemButton
+                                                            onClick={() => {
+                                                                if (hasGrandChildren) {
+                                                                    handleFolderToggle(child.label);
+                                                                } else if (child.path) {
+                                                                    handleNavigation(child.path);
+                                                                }
+                                                            }}
+                                                            selected={isChildActive}
+                                                            sx={{
+                                                                pl: 8,
+                                                                pr: 2,
+                                                            }}
                                                         >
-                                                            <ListItemButton
-                                                                onClick={() => {
-                                                                    if (hasGrandChildren) {
-                                                                        handleFolderToggle(child.label);
-                                                                    } else if (child.path) {
-                                                                        handleNavigation(child.path);
-                                                                    }
-                                                                }}
-                                                                selected={isChildActive}
-                                                                sx={{
-                                                                    minHeight: 40,
-                                                                    justifyContent: open ? 'initial' : 'center',
-                                                                    px: 2.5,
-                                                                    borderRadius: 1,
-                                                                }}
-                                                            >
-                                                                <ListItemText
-                                                                    primary={child.label}
-                                                                    sx={{
-                                                                        opacity: open ? 1 : 0,
-                                                                        '& .MuiListItemText-primary': {
-                                                                            fontSize: '0.8rem',
-                                                                            fontWeight: 400,
-                                                                        },
-                                                                    }}
-                                                                />
-                                                                {hasGrandChildren && open && (
-                                                                    <Box sx={{ opacity: open ? 1 : 0 }}>
-                                                                        {isChildExpanded ? (
-                                                                            <ExpandLess />
-                                                                        ) : (
-                                                                            <ExpandMore />
-                                                                        )}
-                                                                    </Box>
-                                                                )}
-                                                            </ListItemButton>
-                                                        </Tooltip>
-                                                    </ListItem>
+                                                            {open && <ListItemText primary={child.label} />}
+                                                            {hasGrandChildren && open && (
+                                                                isChildExpanded ? <ExpandLess /> : <ExpandMore />
+                                                            )}
+                                                        </ListItemButton>
+                                                    </Tooltip>
 
-                                                    {/* 3뎁스 메뉴 아이템들 */}
+                                                    {/* 3 depth */}
                                                     {hasGrandChildren && (
                                                         <Collapse
                                                             in={isChildExpanded && open}
                                                             timeout="auto"
                                                             unmountOnExit
                                                         >
-                                                            <List component="div" disablePadding>
+                                                            <List component="ul" disablePadding dense>
                                                                 {child.children?.map((grandChild) => {
                                                                     const isGrandChildActive =
                                                                         location.pathname === grandChild.path ||
@@ -211,11 +196,7 @@ export const Navigation = ({ open }: NavigationProps) => {
                                                                                 grandChild.path,
                                                                             ));
                                                                     return (
-                                                                        <ListItem
-                                                                            key={grandChild.path}
-                                                                            disablePadding
-                                                                            sx={{ mb: 0.5, pl: 4 }}
-                                                                        >
+                                                                        <ListItem key={grandChild.path} disablePadding sx={{ display: 'block' }}>
                                                                             <Tooltip
                                                                                 title={!open ? grandChild.label : ''}
                                                                                 placement="right"
@@ -229,25 +210,11 @@ export const Navigation = ({ open }: NavigationProps) => {
                                                                                     }
                                                                                     selected={isGrandChildActive}
                                                                                     sx={{
-                                                                                        minHeight: 36,
-                                                                                        justifyContent: open
-                                                                                            ? 'initial'
-                                                                                            : 'center',
-                                                                                        px: 2.5,
-                                                                                        borderRadius: 1,
+                                                                                        pl: 12,
+                                                                                        pr: 2
                                                                                     }}
                                                                                 >
-                                                                                    <ListItemText
-                                                                                        primary={grandChild.label}
-                                                                                        sx={{
-                                                                                            opacity: open ? 1 : 0,
-                                                                                            '& .MuiListItemText-primary':
-                                                                                                {
-                                                                                                    fontSize: '0.75rem',
-                                                                                                    fontWeight: 400,
-                                                                                                },
-                                                                                        }}
-                                                                                    />
+                                                                                    {open && <ListItemText primary={grandChild.label} />}
                                                                                 </ListItemButton>
                                                                             </Tooltip>
                                                                         </ListItem>
@@ -256,13 +223,13 @@ export const Navigation = ({ open }: NavigationProps) => {
                                                             </List>
                                                         </Collapse>
                                                     )}
-                                                </Box>
+                                                </ListItem>
                                             );
                                         })}
                                     </List>
                                 </Collapse>
                             )}
-                        </Box>
+                        </ListItem>
                     );
                 })}
             </List>

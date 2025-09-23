@@ -3,3 +3,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.page-title {
+    font-weight: 700;
+    text-transform: uppercase;
+}

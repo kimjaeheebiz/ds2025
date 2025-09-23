@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
 import { Brand } from './Brand';
 import { Footer } from './Footer';
-import { APP_INFO } from '@/constants/app-config';
 
 export const AuthLayout = () => {
     useRouterPageTitle();
@@ -14,7 +13,7 @@ export const AuthLayout = () => {
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: 'grey.50',
+                backgroundColor: 'grey.100',
             }}
         >
             <Box

@@ -1,8 +1,16 @@
-// 앱 전체 설정을 중앙에서 관리하는 파일
-
-// ============================================================================
+// =========================================================================
+// 앱 전체 설정을 중앙에서 관리
 // 1. 앱 기본 정보
-// ============================================================================
+// 2. 라우트 정의 및 페이지 설정 통합
+// 3. 자동 생성되는 타입들
+// 4. 헬퍼 함수들
+// 5. 아이콘 자동 감지 및 매핑
+// =========================================================================
+
+
+// =========================================================================
+// 1. 앱 기본 정보
+// =========================================================================
 export const APP_INFO = {
     name: 'Agent Platform',
     description: 'Hecto Agent Platform',
@@ -13,84 +21,61 @@ export const APP_INFO = {
     website: 'https://hsuda-stage.hecto.co.kr',
 } as const;
 
-// ============================================================================
+// =========================================================================
 // 2. 라우트 정의 및 페이지 설정 통합
-// ============================================================================
+// =========================================================================
 
 // 페이지별 설정 통합 (라우트 + 메타데이터 + 네비게이션)
 export const PAGES = {
     home: {
         key: 'home' as const,
         path: '/',
-        title: '홈',
+        title: 'Home',
         icon: 'HomeOutlined',
         showInSidebar: true,
         showPageHeader: false,
-        requiresAuth: false,
+        
     },
     project: {
         key: 'project' as const,
-        path: '/project',
-        title: '프로젝트',
+        title: 'Project',
         icon: 'FolderOutlined',
-        showInSidebar: true,
-        showPageHeader: true,
-        requiresAuth: true,
-    },
-    depth1: {
-        key: 'depth1' as const,
-        title: 'Depth 1',
-        icon: 'Menu',
         children: {
-            depth1_1: {
-                key: 'depth1.depth1_1' as const,
-                title: 'Depth 1-1',
-                children: {
-                    depth1_1_1: {
-                        key: 'depth1.depth1_1.depth1_1_1' as const,
-                        path: '/depth1/depth1_1/depth1_1_1',
-                        title: 'Depth 1-1-1',
-                        showInSidebar: true,
-                        showPageHeader: true,
-                        requiresAuth: true,
-                    },
-                    depth1_1_2: {
-                        key: 'depth1.depth1_1.depth1_1_2' as const,
-                        path: '/depth1/depth1_1/depth1_1_2',
-                        title: 'Depth 1-1-2',
-                        showInSidebar: true,
-                        showPageHeader: true,
-                        requiresAuth: true,
-                    },
-                },
-            },
-            depth1_2: {
-                key: 'depth1.depth1_2' as const,
-                path: '/depth1/depth1_2',
-                title: 'Depth 1-2',
+            project1: {
+                key: 'project.project1' as const,
+                path: '/project/project1',
+                title: 'Project Name 1',
                 showInSidebar: true,
                 showPageHeader: true,
-                requiresAuth: true,
+                
+            },
+            project2: {
+                key: 'project.project2' as const,
+                path: '/project/project2',
+                title: 'Project Name 2',
+                showInSidebar: true,
+                showPageHeader: true,
+                
             },
         },
     },
     users: {
         key: 'users' as const,
         path: '/users',
-        title: '회원 관리',
+        title: 'Users',
         icon: 'PeopleOutlineOutlined',
         showInSidebar: true,
         showPageHeader: true,
-        requiresAuth: false,
+        
     },
     components: {
         key: 'components' as const,
         path: '/components',
-        title: 'UI 컴포넌트',
+        title: 'MUI Components',
         icon: 'WidgetsOutlined',
         showInSidebar: true,
         showPageHeader: true,
-        requiresAuth: false,
+        
     },
     login: {
         key: 'login' as const,
@@ -99,7 +84,7 @@ export const PAGES = {
         icon: 'Login',
         showInSidebar: false,
         showPageHeader: false,
-        requiresAuth: false,
+        
     },
     signup: {
         key: 'signup' as const,
@@ -108,7 +93,7 @@ export const PAGES = {
         icon: 'PersonAdd',
         showInSidebar: false,
         showPageHeader: false,
-        requiresAuth: false,
+        
     },
     notFound: {
         key: 'notFound' as const,
@@ -117,7 +102,7 @@ export const PAGES = {
         icon: 'Error',
         showInSidebar: false,
         showPageHeader: false,
-        requiresAuth: false,
+        
     },
     serverError: {
         key: 'serverError' as const,
@@ -126,22 +111,16 @@ export const PAGES = {
         icon: 'Error',
         showInSidebar: false,
         showPageHeader: false,
-        requiresAuth: false,
+        
     },
 } as const;
 
-// ============================================================================
+// =========================================================================
 // 3. 자동 생성되는 타입들
-// ============================================================================
+// =========================================================================
 
 // 페이지 키 타입 (자동 생성)
 export type PageKey = keyof typeof PAGES;
-export type PageKeyType =
-    | PageKey
-    | 'depth1.depth1_1'
-    | 'depth1.depth1_2'
-    | 'depth1.depth1_1.depth1_1_1'
-    | 'depth1.depth1_1.depth1_1_2';
 
 // 페이지 정보 타입 (자동 생성)
 export type PageInfo = (typeof PAGES)[PageKey];
@@ -168,9 +147,9 @@ export interface NavigationMenuItem {
 // 라우트 경로만 추출 (폴더형 메뉴 제외) - children이 있으면 폴더로 인식
 export const ROUTES = Object.fromEntries(
     Object.entries(PAGES)
-        .filter(([key, page]) => !('children' in page && page.children))
-        .map(([key, page]) => [key, 'path' in page ? page.path : '']),
-) as Record<PageKeyType, string>;
+        .filter(([, page]) => !('children' in page && (page as any).children))
+        .map(([key, page]) => [key, 'path' in page ? (page as any).path : '']),
+) as Record<PageKey, string>;
 
 // 페이지 메타데이터만 추출 (하위 페이지 포함)
 export const PAGE_METADATA = (() => {
@@ -178,31 +157,32 @@ export const PAGE_METADATA = (() => {
 
     // 메인 페이지들
     Object.entries(PAGES).forEach(([key, page]) => {
-        if (!('children' in page && page.children)) {
-            metadata[key] = { title: page.title, description: APP_INFO.description };
+        if (!('children' in page && (page as any).children)) {
+            metadata[key] = { title: (page as any).title, description: APP_INFO.description };
         }
 
-        // 폴더의 하위 페이지들 (2뎁스, 3뎁스 지원) - children이 있으면 폴더로 인식
-        if ('children' in page && page.children) {
-            Object.entries(page.children).forEach(([childKey, child]) => {
+        // 폴더의 하위 페이지들
+        if ('children' in page && (page as any).children) {
+            Object.entries((page as any).children).forEach(([, child]) => {
                 // 2뎁스 페이지
-                if ('path' in child) {
-                    metadata[child.key] = { title: child.title, description: APP_INFO.description };
+                if ('path' in (child as any)) {
+                    metadata[(child as any).key] = { title: (child as any).title, description: APP_INFO.description };
                 }
-                // 3뎁스 폴더 - children이 있으면 폴더로 인식
-                else if ('children' in child && child.children) {
-                    Object.entries(child.children).forEach(([grandChildKey, grandChild]) => {
-                        metadata[grandChild.key] = { title: grandChild.title, description: APP_INFO.description };
+                // 3뎁스 폴더
+                else if ('children' in (child as any) && (child as any).children) {
+                    Object.entries((child as any).children).forEach(([, grandChild]) => {
+                        const grandChildConfig = grandChild as any;
+                        metadata[grandChildConfig.key] = { title: grandChildConfig.title, description: APP_INFO.description };
                     });
                 }
             });
         }
     });
 
-    return metadata as Record<PageKeyType, { title: string; description: string }>;
+    return metadata as Record<PageKey, { title: string; description: string }>;
 })();
 
-// parent 값을 자동으로 계산하는 함수 (NAVIGATION_MENU보다 먼저 정의)
+// parent 값을 자동으로 계산 (NAVIGATION_MENU보다 먼저 정의)
 const getParentKey = (key: string): string | undefined => {
     const parts = key.split('.');
     if (parts.length <= 1) return undefined;
@@ -211,36 +191,33 @@ const getParentKey = (key: string): string | undefined => {
 
 // 네비게이션 메뉴 필터링 (계층적 구조 지원)
 export const NAVIGATION_MENU: NavigationMenuItem[] = Object.values(PAGES)
-    .filter((page) => ('showInSidebar' in page ? page.showInSidebar : true)) // 폴더형 메뉴는 기본적으로 표시
+    .filter((page) => ('showInSidebar' in page ? (page as any).showInSidebar : true))
     .map((page) => {
-        // 폴더인 경우 path 제외 - children이 있으면 폴더로 인식
+        // 폴더인 경우 path 제외
         const baseItem = {
-            label: page.title,
-            ...('children' in page && page.children ? {} : { path: 'path' in page ? page.path : '' }),
-            icon: page.icon, // 아이콘명을 그대로 전달
-            showInSidebar: 'showInSidebar' in page ? page.showInSidebar : true, // 폴더형 메뉴는 기본적으로 표시
-        };
+            label: (page as any).title,
+            ...('children' in page && (page as any).children ? {} : { path: 'path' in page ? (page as any).path : '' }),
+            icon: (page as any).icon,
+            showInSidebar: 'showInSidebar' in page ? (page as any).showInSidebar : true,
+        } as any;
 
-        // 폴더인 경우 하위 메뉴 추가 (2뎁스, 3뎁스 지원) - children이 있으면 폴더로 인식
-        if ('children' in page && page.children) {
-            const children = Object.values(page.children)
-                .map((child) => {
-                    // 2뎁스 페이지
+        if ('children' in page && (page as any).children) {
+            const children = Object.values((page as any).children)
+                .map((child: any) => {
                     if ('path' in child) {
                         return {
                             label: child.title,
                             path: child.path,
                             parent: getParentKey(child.key),
                         };
-                    }
-                    // 3뎁스 폴더 - children이 있으면 폴더로 인식
-                    else if ('children' in child && child.children) {
-                        const grandChildren = Object.values(child.children).map((grandChild) => ({
-                            label: grandChild.title,
-                            path: grandChild.path,
-                            parent: getParentKey(grandChild.key),
-                        }));
-
+                    } else if ('children' in child && child.children) {
+                        const grandChildren = Object.values(child.children).map((grandChild: any) => {
+                            return {
+                                label: grandChild.title,
+                                path: grandChild.path,
+                                parent: getParentKey(grandChild.key),
+                            };
+                        });
                         return {
                             label: child.title,
                             parent: getParentKey(child.key),
@@ -249,7 +226,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = Object.values(PAGES)
                     }
                     return null;
                 })
-                .filter((item): item is NonNullable<typeof item> => item !== null);
+                .filter((item) => item !== null) as any[];
 
             return {
                 ...baseItem,
@@ -260,22 +237,17 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = Object.values(PAGES)
         return baseItem;
     });
 
-// 인증이 필요한 페이지들 (폴더형 메뉴 제외) - children이 있으면 폴더로 인식
-export const PROTECTED_PAGES = Object.values(PAGES)
-    .filter((page) => !('children' in page && page.children) && 'requiresAuth' in page && page.requiresAuth)
-    .map((page) => ('path' in page ? page.path : ''));
-
-// ============================================================================
+// =========================================================================
 // 4. 헬퍼 함수들
-// ============================================================================
+// =========================================================================
 
 // 페이지 메타데이터 가져오기
-export const getPageMetadata = (pageKey: PageKeyType) => {
+export const getPageMetadata = (pageKey: PageKey) => {
     return PAGE_METADATA[pageKey];
 };
 
 // 브라우저 타이틀 생성
-export const getBrowserTitle = (pageKey?: PageKeyType): string => {
+export const getBrowserTitle = (pageKey?: PageKey): string => {
     if (!pageKey) {
         return APP_INFO.name;
     }
@@ -284,27 +256,17 @@ export const getBrowserTitle = (pageKey?: PageKeyType): string => {
 };
 
 // URL에서 페이지 키 추출 (하위 페이지 포함)
-export const getPageKeyFromPath = (pathname: string): PageKeyType | null => {
-    const pathToKeyMap: Record<string, PageKeyType> = {};
+export const getPageKeyFromPath = (pathname: string): PageKey | null => {
+    const pathToKeyMap: Record<string, PageKey> = {} as any;
 
-    // 메인 페이지들
     Object.entries(PAGES).forEach(([key, page]) => {
         if ('path' in page) {
-            pathToKeyMap[page.path] = key as PageKeyType;
+            pathToKeyMap[(page as any).path] = key as PageKey;
         }
-
-        // 폴더의 하위 페이지들 (2뎁스, 3뎁스 지원) - children이 있으면 폴더로 인식
-        if ('children' in page && page.children) {
-            Object.entries(page.children).forEach(([childKey, child]) => {
-                // 2뎁스 페이지
+        if ('children' in page && (page as any).children) {
+            Object.values((page as any).children).forEach((child: any) => {
                 if ('path' in child) {
-                    pathToKeyMap[child.path] = child.key as PageKeyType;
-                }
-                // 3뎁스 폴더 - children이 있으면 폴더로 인식
-                else if ('children' in child && child.children) {
-                    Object.entries(child.children).forEach(([grandChildKey, grandChild]) => {
-                        pathToKeyMap[grandChild.path] = grandChild.key as PageKeyType;
-                    });
+                    pathToKeyMap[child.path] = child.key as PageKey;
                 }
             });
         }
@@ -314,32 +276,19 @@ export const getPageKeyFromPath = (pathname: string): PageKeyType | null => {
 };
 
 // 페이지 정보 가져오기 (하위 페이지 포함)
-export const getPageInfo = (pageKey: PageKeyType) => {
-    // 메인 페이지에서 찾기
+export const getPageInfo = (pageKey: PageKey) => {
     if (pageKey in PAGES) {
-        return PAGES[pageKey as keyof typeof PAGES];
+        return (PAGES as any)[pageKey as any];
     }
-
-    // 하위 페이지에서 찾기 (2뎁스, 3뎁스 지원) - children이 있으면 폴더로 인식
-    for (const page of Object.values(PAGES)) {
+    for (const page of Object.values(PAGES) as any[]) {
         if ('children' in page && page.children) {
-            for (const child of Object.values(page.children)) {
-                // 2뎁스 페이지
+            for (const child of Object.values(page.children) as any[]) {
                 if (child.key === pageKey) {
                     return child;
-                }
-                // 3뎁스 폴더에서 찾기 - children이 있으면 폴더로 인식
-                if ('children' in child && child.children) {
-                    for (const grandChild of Object.values(child.children)) {
-                        if (grandChild.key === pageKey) {
-                            return grandChild;
-                        }
-                    }
                 }
             }
         }
     }
-
     return null;
 };
 
@@ -349,59 +298,38 @@ export const getPageInfoByPath = (pathname: string) => {
     return pageKey ? getPageInfo(pageKey) : null;
 };
 
-// 폴더형 메뉴 경로들 가져오기 (404 처리용) - children이 있으면 자동으로 폴더로 인식
+// 폴더형 메뉴 경로들 가져오기 (404 처리용)
 export const getFolderPaths = (): string[] => {
     const folderPaths: string[] = [];
 
-    Object.values(PAGES).forEach((page) => {
-        // children이 있으면 폴더로 인식
+    Object.values(PAGES).forEach((page: any) => {
         if ('children' in page && page.children) {
-            // 1뎁스 폴더 경로 추가
             folderPaths.push(`/${page.key}`);
-
-            // 2뎁스 폴더 경로 추가
-            Object.values(page.children).forEach((child) => {
-                if ('children' in child && child.children) {
-                    folderPaths.push(`/${page.key}/${child.key.split('.')[1]}`);
-                }
-            });
         }
     });
 
     return folderPaths;
 };
 
-// 인증이 필요한 페이지인지 확인
-export const isProtectedPage = (pathname: string): boolean => {
-    return PROTECTED_PAGES.includes(pathname as any);
-};
-
-// ============================================================================
+// =========================================================================
 // 5. 아이콘 자동 감지 및 매핑
-// ============================================================================
+// =========================================================================
 
-// 모든 MUI 아이콘을 한 번에 import
 import * as MuiIcons from '@mui/icons-material';
 
-// PAGES에서 사용되는 모든 아이콘을 자동으로 추출
 export const getAllUsedIcons = () => {
     const iconNames = new Set<string>();
-
-    Object.values(PAGES).forEach((page) => {
+    Object.values(PAGES).forEach((page: any) => {
         if (page.icon) {
             iconNames.add(page.icon);
         }
     });
-
     return Array.from(iconNames);
 };
 
-// 사용되는 아이콘 목록 (자동 생성)
 export const USED_ICONS = getAllUsedIcons();
 
-// 아이콘명을 React 컴포넌트로 자동 변환
 export const getIconComponent = (iconName: string) => {
-    // MuiIcons에서 해당 아이콘을 자동으로 찾아서 반환
     const IconComponent = (MuiIcons as any)[iconName];
     return IconComponent || MuiIcons.Home;
 };

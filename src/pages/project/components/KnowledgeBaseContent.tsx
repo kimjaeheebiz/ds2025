@@ -1,11 +1,14 @@
+import React from 'react';
 import { Box, Typography } from '@mui/material';
 
-export const Users = () => {
+export const KnowledgeBaseContent: React.FC = () => {
     return (
-        <Box sx={{ p: 3 }}>
+        <Box>
             <Typography variant="body2">
-                사용자 관리
+                지식베이스
             </Typography>
         </Box>
     );
 };
+
+

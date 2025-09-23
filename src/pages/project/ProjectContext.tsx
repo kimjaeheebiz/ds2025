@@ -7,26 +7,26 @@ export interface Workflow {
     updated_at: string;
     description?: string;
     seq?: number;
-    status?: 'Active' | 'Idle';
+    status?: 'active' | 'inactive' | 'stop';
     created_at?: string;
     isFavorite?: boolean;
 }
 
 interface ProjectContextType {
+    // 프로젝트 공통
+    userName: string;
+    setUserName: (name: string) => void;
+
+    // 워크플로우(AgentContent 전용) 상태
     searchKeyword: string;
     setSearchKeyword: (keyword: string) => void;
     selectedFilter: 'all' | 'mine';
     setSelectedFilter: (filter: 'all' | 'mine') => void;
     viewMode: 'all' | 'favorites';
     setViewMode: (mode: 'all' | 'favorites') => void;
-
     workflows: Workflow[];
     setWorkflows: (workflows: Workflow[]) => void;
-    userName: string;
-    setUserName: (name: string) => void;
-
     toggleFavorite: (workflowId: string) => void;
-
     filteredWorkflows: Workflow[];
 }
 
@@ -37,11 +37,14 @@ interface ProjectProviderProps {
 }
 
 export const ProjectProvider = ({ children }: ProjectProviderProps) => {
+    // 공통
+    const [userName, setUserName] = useState('김재희');
+
+    // AgentContent 전용 상태
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<'all' | 'mine'>('all');
     const [viewMode, setViewMode] = useState<'all' | 'favorites'>('all');
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
-    const [userName, setUserName] = useState('김재희');
 
     const toggleFavorite = (workflowId: string) => {
         setWorkflows((prev) => prev.map((w) => (w.id === workflowId ? { ...w, isFavorite: !w.isFavorite } : w)));
