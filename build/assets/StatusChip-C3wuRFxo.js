@@ -1,2 +1,0 @@
-import{j as r}from"./index-bjheDx0b.js";import{C as s}from"./Chip-DvC8yDsD.js";const c={active:"활성",inactive:"비활성",stop:"중지"},i={active:"success",inactive:"default",stop:"error"},n=t=>c[t??"inactive"]??t??"",a=t=>i[t??"inactive"]??"default",u=({status:t,size:e="small",...o})=>r.jsx(s,{label:n(t),color:a(t),size:e,...o});export{i as STATUS_COLOR,c as STATUS_LABEL,u as StatusChip,a as getStatusColor,n as getStatusLabel};
-//# sourceMappingURL=StatusChip-C3wuRFxo.js.map
