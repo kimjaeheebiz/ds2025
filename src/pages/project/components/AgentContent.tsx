@@ -19,7 +19,7 @@ import {
     ToggleButton,
     ToggleButtonGroup,
 } from '@mui/material';
-import { Star, StarBorder, Build, PlayArrow, MoreVert, Search, Add } from '@mui/icons-material';
+import { Star, StarBorder, Key, Build, SmartToy, MoreVert, Search, Add } from '@mui/icons-material';
 import { formatDate } from '../../../utils';
 import type { Workflow } from '../ProjectContext';
 import { StatusChip } from './StatusChip';
@@ -117,11 +117,11 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                 {/* 검색, 생성 버튼 */}
                 <Stack direction="row" spacing={1}>
                     <TextField
-                        placeholder="Search Agents..."
+                        placeholder="Search"
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
                         size="small"
-                        sx={{ minWidth: 300 }}
+                        sx={{ width: 300 }}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -140,36 +140,41 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                     <colgroup>
                         <col style={{ width: '30%' }} />
                         <col style={{ width: '30%' }} />
-                        <col style={{ width: '8%' }} />
                         <col style={{ width: '10%' }} />
-                        <col />
+                        <col style={{ width: '8%' }} />
+                        <col style={{ width: '8%' }} />
                         <col />
                     </colgroup>
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <Button variant="text" onClick={() => handleSort('name')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    NAME{sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                <Button variant="text" color="inherit" onClick={() => handleSort('name')} sx={{ minWidth: 'auto', p: 0 }}>
+                                    NAME
+                                    {sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" onClick={() => handleSort('description')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    DESCRIPTION{sortKey === 'description' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                <Button variant="text" color="inherit" onClick={() => handleSort('description')} sx={{ minWidth: 'auto', p: 0 }}>
+                                    DESCRIPTION
+                                    {sortKey === 'description' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" onClick={() => handleSort('status')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    STATUS{sortKey === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                <Button variant="text" color="inherit" onClick={() => handleSort('updated_at')} sx={{ minWidth: 'auto', p: 0 }}>
+                                    UPDATED
+                                    {sortKey === 'updated_at' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" onClick={() => handleSort('updated_at')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    UPDATED{sortKey === 'updated_at' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                <Button variant="text" color="inherit" onClick={() => handleSort('user_name')} sx={{ minWidth: 'auto', p: 0 }}>
+                                    OWNER
+                                    {sortKey === 'user_name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" onClick={() => handleSort('user_name')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    OWNER{sortKey === 'user_name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
+                                <Button variant="text" color="inherit" onClick={() => handleSort('status')} sx={{ minWidth: 'auto', p: 0 }}>
+                                    STATUS
+                                    {sortKey === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>ACTIONS</TableCell>
@@ -186,31 +191,34 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                                     <Typography variant="body2" color="text.secondary">{workflow.description}</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <StatusChip status={workflow.status} />
-                                </TableCell>
-                                <TableCell>
                                     <Typography variant="body2">{formatDate(workflow.updated_at || '')}</Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">{workflow.user_name}</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <StatusChip status={workflow.status} />
+                                </TableCell>
+                                <TableCell>
+                                    <Stack direction="row" spacing={1}>
                                         <Tooltip title={workflow.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}>
                                             <IconButton size="small" onClick={() => toggleFavorite(workflow.id)}>
                                                 {workflow.isFavorite ? <Star fontSize="small" color="primary" /> : <StarBorder fontSize="small" />}
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="실행">
-                                            <IconButton size="small"><PlayArrow fontSize="small" /></IconButton>
+                                        <Tooltip title="API KEY 발급">
+                                            <IconButton size="small"><Key fontSize="small" /></IconButton>
                                         </Tooltip>
-                                        <Tooltip title="편집">
+                                        <Tooltip title="챗봇">
+                                            <IconButton size="small"><SmartToy fontSize="small" /></IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="빌더">
                                             <IconButton size="small"><Build fontSize="small" /></IconButton>
                                         </Tooltip>
                                         <Tooltip title="더보기">
                                             <IconButton size="small"><MoreVert fontSize="small" /></IconButton>
                                         </Tooltip>
-                                    </Box>
+                                    </Stack>
                                 </TableCell>
                             </TableRow>
                         ))}
