@@ -94,11 +94,12 @@ const getPageComponent = (pageKey: string) => {
     return componentLoader;
 };
 
-
-
-
 // 페이지 설정에서 라우트 객체 생성
 export const generateRouteFromPage = (pageKey: PageKey, pageConfig: any): RouteObject | null => {
+    // 에러 페이지(404/500)는 별도의 ErrorLayout 라우트로만 처리
+    if (pageKey === 'notFound' || pageKey === 'serverError') {
+        return null;
+    }
     // path가 없는 폴더형 메뉴는 라우트 생성하지 않음
     if (!('path' in pageConfig) || !pageConfig.path) {
         return null;
