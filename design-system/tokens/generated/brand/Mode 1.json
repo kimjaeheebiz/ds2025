@@ -1,0 +1,64 @@
+{
+  "hecto": {
+    "orange": {
+      "$type": "color",
+      "$value": "#ff6114"
+    },
+    "black": {
+      "$type": "color",
+      "$value": "#000000"
+    },
+    "blue": {
+      "$type": "color",
+      "$value": "#0291fe"
+    },
+    "lime": {
+      "$type": "color",
+      "$value": "#cfff1e"
+    },
+    "navy": {
+      "$type": "color",
+      "$value": "#2441b7"
+    },
+    "green": {
+      "$type": "color",
+      "$value": "#25cc9c"
+    },
+    "deepgreen": {
+      "$type": "color",
+      "$value": "#056059"
+    },
+    "gray": {
+      "$type": "color",
+      "$value": "#666666"
+    },
+    "lightgray": {
+      "$type": "color",
+      "$value": "#99989e"
+    },
+    "dark": {
+      "$type": "color",
+      "$value": "#1d1d1f"
+    }
+  },
+  "logo": {
+    "size": {
+      "small": {
+        "$type": "number",
+        "$value": 20
+      },
+      "medium": {
+        "$type": "number",
+        "$value": 24
+      },
+      "large": {
+        "$type": "number",
+        "$value": 28
+      },
+      "extraLarge": {
+        "$type": "number",
+        "$value": 50
+      }
+    }
+  }
+}

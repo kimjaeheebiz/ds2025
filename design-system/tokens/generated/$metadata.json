@@ -1,0 +1,14 @@
+{
+  "tokenSetOrder": [
+    "global",
+    "brand/Mode 1",
+    "palette/Light",
+    "palette/Dark",
+    "material/colors/Mode 1",
+    "typography/Mode 1",
+    "metadata/Mode 1",
+    "breakpoints/Mode 1",
+    "spacing/Mode 1",
+    "shape/Mode 1"
+  ]
+}
