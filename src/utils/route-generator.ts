@@ -13,18 +13,23 @@ const camelToKebab = (str: string): string => {
 };
 
 // (leaf only) path가 있는 실제 페이지 키만 재귀적으로 수집
+// 자식은 pageConfig.key(전체 키)를 우선 사용합니다.
 const getLeafPageKeys = (pages: any): string[] => {
     const keys: string[] = [];
 
     const processPage = (pageKey: string, pageConfig: any) => {
         // children이 없는 leaf + path가 있는 실제 페이지만 추가
         if ('path' in pageConfig && pageConfig.path) {
-            keys.push(pageKey);
+            const configKey = 'key' in pageConfig && pageConfig.key ? String(pageConfig.key) : pageKey;
+            keys.push(configKey);
         }
 
         if ('children' in pageConfig && pageConfig.children) {
             Object.entries(pageConfig.children).forEach(([childKey, childConfig]) => {
-                processPage(childKey, childConfig);
+                const nextKey = 'key' in (childConfig as any) && (childConfig as any).key
+                    ? String((childConfig as any).key)
+                    : `${pageKey}.${childKey}`;
+                processPage(nextKey, childConfig);
             });
         }
     };
@@ -46,26 +51,38 @@ const generateComponentLoader = (pageKey: string) => {
         .split('_')
         .map((p) => (p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
         .join('_');
-    const kebabPath = pathParts.map((p) => camelToKebab(p)).join('/');
+    // 디렉터리 경로는 마지막 세그먼트(파일명 후보)를 제외하여 구성
+    const kebabDir = pathParts.slice(0, -1).map((p) => camelToKebab(p)).join('/');
+    // 혹시 마지막 세그먼트를 디렉터리로 쓰는 구조도 지원 (하위 호환)
+    const kebabDirWithLast = pathParts.map((p) => camelToKebab(p)).join('/');
 
     // 후보 파일 경로들 (tsx 우선)
     const candidates = [
-        `/src/pages/${kebabPath}/${pascal}.tsx`,
-        `/src/pages/${kebabPath}/${pascal}.jsx`,
+        // 권장: 디렉터리는 부모까지, 파일명은 PascalCase
+        `/src/pages/${kebabDir}/${pascal}.tsx`,
+        `/src/pages/${kebabDir}/${pascal}.jsx`,
+        // 호환: 마지막 세그먼트를 디렉터리로도 허용
+        `/src/pages/${kebabDirWithLast}/${pascal}.tsx`,
+        `/src/pages/${kebabDirWithLast}/${pascal}.jsx`,
     ];
 
     const matched = candidates.find((c) => c in PAGE_MODULES);
 
     if (!matched) {
         // 키가 곧 파일인 경우(예: 이미 PascalCase 파일 바로 아래 배치)도 보조적으로 탐색
-        const fallback = Object.keys(PAGE_MODULES).find((p) => p.endsWith(`/${pascal}.tsx`) || p.endsWith(`/${pascal}.jsx`));
+        // 우선 현재 키의 디렉터리 구조와 가장 유사한 경로를 먼저 시도
+        const fallbackPreferred = Object.keys(PAGE_MODULES).find(
+            (p) => p.endsWith(`/src/pages/${kebabDir}/${pascal}.tsx`) || p.endsWith(`/src/pages/${kebabDir}/${pascal}.jsx`)
+        );
+        const fallback = fallbackPreferred || Object.keys(PAGE_MODULES).find(
+            (p) => p.endsWith(`/${pascal}.tsx`) || p.endsWith(`/${pascal}.jsx`)
+        );
         const rawLoader = fallback ? ((PAGE_MODULES as any)[fallback] as () => Promise<any>) : undefined;
         if (!rawLoader) {
             // 조용히 fallback 컴포넌트를 반환 (경고 로그 제거)
-            return () =>
-                Promise.resolve({
-                    default: () => React.createElement('div', null, `Page not found: ${pageKey}`),
-                });
+            const FallbackComponent: React.FC = () =>
+                React.createElement('div', null, `Page not found: ${pageKey}`);
+            return () => Promise.resolve({ default: FallbackComponent as React.ComponentType });
         }
         return () => rawLoader().then((m) => ({ default: (m as any)[pascal] || (m as any).default }));
     }
@@ -86,9 +103,9 @@ const getPageComponent = (pageKey: string) => {
     
     if (!componentLoader) {
         // 기본 컴포넌트 반환 (조용히 처리)
-        return () => Promise.resolve({ 
-            default: () => React.createElement('div', null, `Page not found: ${pageKey}`)
-        });
+        const MissingPage: React.FC = () =>
+            React.createElement('div', null, `Page not found: ${pageKey}`);
+        return () => Promise.resolve({ default: MissingPage as React.ComponentType });
     }
     
     return componentLoader;
@@ -135,8 +152,10 @@ export const generateAllRoutes = (): RouteObject[] => {
     const authLayoutChildren: RouteObject[] = [];
 
     // 페이지 설정을 재귀적으로 순회하며 라우트 생성
-    const processPage = (pageKey: string, pageConfig: any) => {
-        const route = generateRouteFromPage(pageKey as PageKey, pageConfig);
+    const processPage = (accumulatedKey: string, pageConfig: any) => {
+        // 이 노드의 실제 키는 설정의 key가 우선이며, 없으면 누적 키 사용
+        const currentKey = 'key' in pageConfig && pageConfig.key ? String(pageConfig.key) : accumulatedKey;
+        const route = generateRouteFromPage(currentKey as PageKey, pageConfig);
         
         if (route) {
             const { path } = pageConfig;
@@ -151,14 +170,18 @@ export const generateAllRoutes = (): RouteObject[] => {
         // 하위 페이지들도 처리
         if ('children' in pageConfig && pageConfig.children) {
             Object.entries(pageConfig.children).forEach(([childKey, childConfig]) => {
-                processPage(childKey, childConfig);
+                const nextKey = 'key' in (childConfig as any) && (childConfig as any).key
+                    ? String((childConfig as any).key)
+                    : `${currentKey}.${childKey}`;
+                processPage(nextKey, childConfig);
             });
         }
     };
 
     // 모든 페이지 처리
     Object.entries(PAGES).forEach(([pageKey, pageConfig]) => {
-        processPage(pageKey, pageConfig);
+        const rootKey = 'key' in pageConfig && pageConfig.key ? String(pageConfig.key) : pageKey;
+        processPage(rootKey, pageConfig);
     });
 
     // 라우트 구성

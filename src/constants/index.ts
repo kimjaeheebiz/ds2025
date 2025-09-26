@@ -1,6 +1,5 @@
 export {
     APP_INFO,
-    ROUTES,
     PAGE_METADATA,
     NAVIGATION_MENU,
     getPageMetadata,

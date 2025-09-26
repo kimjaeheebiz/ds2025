@@ -34,7 +34,6 @@ export const PAGES = {
         icon: 'HomeOutlined',
         showInSidebar: true,
         showPageHeader: false,
-        
     },
     project: {
         key: 'project' as const,
@@ -47,7 +46,7 @@ export const PAGES = {
                 title: 'Project Name 1',
                 showInSidebar: true,
                 showPageHeader: true,
-                
+
             },
             project2: {
                 key: 'project.project2' as const,
@@ -55,7 +54,7 @@ export const PAGES = {
                 title: 'Project Name 2',
                 showInSidebar: true,
                 showPageHeader: true,
-                
+
             },
         },
     },
@@ -66,7 +65,7 @@ export const PAGES = {
         icon: 'PeopleOutlineOutlined',
         showInSidebar: true,
         showPageHeader: true,
-        
+
     },
     components: {
         key: 'components' as const,
@@ -75,7 +74,6 @@ export const PAGES = {
         icon: 'WidgetsOutlined',
         showInSidebar: true,
         showPageHeader: true,
-        
     },
     login: {
         key: 'login' as const,
@@ -84,7 +82,7 @@ export const PAGES = {
         icon: 'Login',
         showInSidebar: false,
         showPageHeader: false,
-        
+
     },
     signup: {
         key: 'signup' as const,
@@ -93,7 +91,7 @@ export const PAGES = {
         icon: 'PersonAdd',
         showInSidebar: false,
         showPageHeader: false,
-        
+
     },
     notFound: {
         key: 'notFound' as const,
@@ -102,7 +100,7 @@ export const PAGES = {
         icon: 'Error',
         showInSidebar: false,
         showPageHeader: false,
-        
+
     },
     serverError: {
         key: 'serverError' as const,
@@ -111,7 +109,6 @@ export const PAGES = {
         icon: 'Error',
         showInSidebar: false,
         showPageHeader: false,
-        
     },
 } as const;
 
@@ -143,13 +140,6 @@ export interface NavigationMenuItem {
         }>;
     }>;
 }
-
-// 라우트 경로만 추출 (폴더형 메뉴 제외) - children이 있으면 폴더로 인식
-export const ROUTES = Object.fromEntries(
-    Object.entries(PAGES)
-        .filter(([, page]) => !('children' in page && (page as any).children))
-        .map(([key, page]) => [key, 'path' in page ? (page as any).path : '']),
-) as Record<PageKey, string>;
 
 // 페이지 메타데이터만 추출 (하위 페이지 포함)
 export const PAGE_METADATA = (() => {
@@ -204,24 +194,40 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = Object.values(PAGES)
         if ('children' in page && (page as any).children) {
             const children = Object.values((page as any).children)
                 .map((child: any) => {
+                    // leaf child
                     if ('path' in child) {
+                        const visible = 'showInSidebar' in child ? !!child.showInSidebar : true;
+                        if (!visible) return null;
                         return {
                             label: child.title,
                             path: child.path,
                             parent: getParentKey(child.key),
                         };
-                    } else if ('children' in child && child.children) {
-                        const grandChildren = Object.values(child.children).map((grandChild: any) => {
-                            return {
-                                label: grandChild.title,
-                                path: grandChild.path,
-                                parent: getParentKey(grandChild.key),
-                            };
-                        });
+                    }
+                    // folder child (with grandchildren)
+                    if ('children' in child && child.children) {
+                        // 폴더가 숨김이면 폴더와 하위 메뉴 모두 숨김
+                        if ('showInSidebar' in child && !child.showInSidebar) return null;
+
+                        const grandChildren = Object.values(child.children)
+                            .map((grandChild: any) => {
+                                const gcVisible = 'showInSidebar' in grandChild ? !!grandChild.showInSidebar : true;
+                                if (!gcVisible) return null;
+                                return {
+                                    label: grandChild.title,
+                                    path: grandChild.path,
+                                    parent: getParentKey(grandChild.key),
+                                };
+                            })
+                            .filter((gc) => gc !== null) as any[];
+
+                        // 하위 메뉴가 없으면 폴더 미표시
+                        if (grandChildren.length === 0) return null;
+
                         return {
                             label: child.title,
                             parent: getParentKey(child.key),
-                            children: grandChildren.length > 0 ? grandChildren : undefined,
+                            children: grandChildren,
                         };
                     }
                     return null;
@@ -259,35 +265,38 @@ export const getBrowserTitle = (pageKey?: PageKey): string => {
 export const getPageKeyFromPath = (pathname: string): PageKey | null => {
     const pathToKeyMap: Record<string, PageKey> = {} as any;
 
-    Object.entries(PAGES).forEach(([key, page]) => {
-        if ('path' in page) {
-            pathToKeyMap[(page as any).path] = key as PageKey;
+    const walk = (node: any) => {
+        if (!node) return;
+        if ('path' in node && node.path) {
+            pathToKeyMap[node.path] = node.key as PageKey;
         }
-        if ('children' in page && (page as any).children) {
-            Object.values((page as any).children).forEach((child: any) => {
-                if ('path' in child) {
-                    pathToKeyMap[child.path] = child.key as PageKey;
-                }
-            });
+        if ('children' in node && node.children) {
+            Object.values(node.children).forEach((child: any) => walk(child));
         }
-    });
+    };
+
+    Object.values(PAGES).forEach((page: any) => walk(page));
 
     return pathToKeyMap[pathname] || null;
 };
 
 // 페이지 정보 가져오기 (하위 페이지 포함)
 export const getPageInfo = (pageKey: PageKey) => {
-    if (pageKey in PAGES) {
-        return (PAGES as any)[pageKey as any];
-    }
-    for (const page of Object.values(PAGES) as any[]) {
-        if ('children' in page && page.children) {
-            for (const child of Object.values(page.children) as any[]) {
-                if (child.key === pageKey) {
-                    return child;
-                }
+    const search = (node: any): any | null => {
+        if (!node) return null;
+        if ('key' in node && node.key === pageKey) return node;
+        if ('children' in node && node.children) {
+            for (const child of Object.values(node.children) as any[]) {
+                const found = search(child);
+                if (found) return found;
             }
         }
+        return null;
+    };
+
+    for (const page of Object.values(PAGES) as any[]) {
+        const found = search(page);
+        if (found) return found;
     }
     return null;
 };
@@ -316,18 +325,6 @@ export const getFolderPaths = (): string[] => {
 // =========================================================================
 
 import * as MuiIcons from '@mui/icons-material';
-
-export const getAllUsedIcons = () => {
-    const iconNames = new Set<string>();
-    Object.values(PAGES).forEach((page: any) => {
-        if (page.icon) {
-            iconNames.add(page.icon);
-        }
-    });
-    return Array.from(iconNames);
-};
-
-export const USED_ICONS = getAllUsedIcons();
 
 export const getIconComponent = (iconName: string) => {
     const IconComponent = (MuiIcons as any)[iconName];
