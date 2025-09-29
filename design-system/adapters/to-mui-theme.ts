@@ -73,6 +73,23 @@ function getMaterialColorHex(name: string, shade: string): string | undefined {
     }
 }
 
+// Brand colors JSON 캐시 (Tokens Studio 산출물)
+let brandColorsCache: any | undefined;
+function getBrandColorHex(name: string, shade: string): string | undefined {
+    try {
+        if (!brandColorsCache) {
+            const p = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
+            brandColorsCache = readJson(p);
+        }
+        // 지원: brand.color.*, brand.hectoColors.* (둘 다 허용)
+        const v = brandColorsCache?.hectoColors?.[name]?.[shade]?.$value
+            ?? brandColorsCache?.color?.[name]?.[shade]?.$value;
+        return typeof v === 'string' ? v : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 function createFontWeightParser(tokensTypos: Json) {
     const getNumMulti = (...paths: string[][]): number | undefined => {
         for (const p of paths) {
@@ -83,7 +100,7 @@ function createFontWeightParser(tokensTypos: Json) {
         return undefined;
     };
     const dict: Record<string, number> = {
-        thin: getNumMulti(['fontWeightThin'], ['fontWeighThin'], ['fontWeight', 'thin']) ?? 100,
+        thin: getNumMulti(['fontWeightThin'], ['fontWeight', 'thin']) ?? 100,
         extralight: getNumMulti(['fontWeightExtraLight'], ['fontWeight', 'extraLight']) ?? 200,
         light: getNumMulti(['fontWeightLight'], ['fontWeight', 'light']) ?? 300,
         regular: getNumMulti(['fontWeightRegular'], ['fontWeight', 'regular']) ?? 400,
@@ -184,13 +201,33 @@ function buildTypography(tokensGlobal: Json, tokensTypos: Json) {
 // 참조(예: {blue.700}) → MUI colors 해석
 function resolveColorRef(value: any) {
     if (typeof value !== 'string') return value;
-    const m = value.match(/^\{([a-zA-Z]+)\.(A?\d+)\}$/);
-    if (!m) return value;
-    const [, name, shade] = m as [string, keyof typeof MuiColors, any];
-    const palette: any = (MuiColors as any)[name];
-    if (palette && palette[shade]) return palette[shade];
-    const mc = getMaterialColorHex(name, shade);
-    if (mc) return mc;
+
+    // 1) 기본 형식: {blue.700} / {lightBlue.A400}
+    let m = value.match(/^\{([a-zA-Z]+)\.(A?\d+)\}$/);
+    if (m) {
+        let [, name, shade] = m as [string, string, string];
+        const palette: any = (MuiColors as any)[name];
+        if (palette && palette[shade]) return palette[shade];
+        const mc = getMaterialColorHex(name, shade);
+        if (mc) return mc;
+        return value;
+    }
+
+    // 2) 네임스페이스 패턴(단일 처리):
+    //    {hectoColors.orange.500} / {color.orange.500}
+    //    {brand.hectoColors.orange.500} / {brand.color.gray.100}
+    const ns = value.match(/^\{(?:brand\.)?(?:hectoColors|color)\.([a-zA-Z][\w-]*)\.(A?\d+)\}$/);
+    if (ns) {
+        const [, name, shade] = ns as [string, string, string];
+        const brandHex = getBrandColorHex(name, shade);
+        if (brandHex) return brandHex;
+        const palette: any = (MuiColors as any)[name];
+        if (palette && palette[shade]) return palette[shade];
+        const mc = getMaterialColorHex(name, shade);
+        if (mc) return mc;
+        return value;
+    }
+
     return value;
 }
 

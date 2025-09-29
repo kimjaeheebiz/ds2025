@@ -2,15 +2,15 @@
   "palette": {
     "mode": "light",
     "primary": {
-      "light": "#42a5f5",
-      "main": "#1976d2",
-      "dark": "#1565c0",
+      "light": "#ff9061",
+      "main": "#ff6114",
+      "dark": "#e65509",
       "contrastText": "#ffffff"
     },
     "secondary": {
-      "light": "#ba68c8",
-      "main": "#9c27b0",
-      "dark": "#7b1fa2",
+      "light": "#555555",
+      "main": "#262626",
+      "dark": "#000000",
       "contrastText": "#ffffff"
     },
     "error": {
