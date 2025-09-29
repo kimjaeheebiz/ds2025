@@ -19,7 +19,7 @@
       }
     }
   },
-  "color": {
+  "hectoColors": {
     "orange": {
       "50": {
         "$type": "color",
