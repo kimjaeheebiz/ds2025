@@ -5,9 +5,12 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "predev": "npm run tokens:build-theme",
+        "prebuild": "npm run tokens:build-theme",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "tokens:build-theme": "npx --yes tsx design-system/adapters/to-mui-theme.ts"
     },
     "dependencies": {
         "@emotion/react": "11.14.0",
