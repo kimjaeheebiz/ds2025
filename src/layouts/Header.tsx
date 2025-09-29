@@ -1,15 +1,18 @@
-import { AppBar, Toolbar, Box, IconButton, Link } from '@mui/material';
+import { AppBar, Toolbar, Box, Stack, IconButton, Link, useTheme } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Brand } from './Brand';
-import { Person, Menu } from '@mui/icons-material';
+import { Person, Menu, DarkModeOutlined, LightModeOutlined } from '@mui/icons-material';
 import { HEADER_HEIGHT, Z_INDEX } from '@/constants/layout';
 
 export interface HeaderProps {
     onMenuToggle?: () => void;
+    onToggleTheme?: () => void;
 }
 
-export const Header = ({ onMenuToggle }: HeaderProps) => {
+export const Header = ({ onMenuToggle, onToggleTheme }: HeaderProps) => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
 
     return (
         <AppBar
@@ -46,11 +49,14 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
                     </Link>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Stack direction="row" spacing={1}>
+                    <IconButton color="inherit" aria-label="테마 토글" onClick={onToggleTheme}>
+                        {isDark ? <LightModeOutlined /> : <DarkModeOutlined />}
+                    </IconButton>
                     <IconButton color="inherit" aria-label="계정 관리" onClick={() => navigate('/login')}>
                         <Person />
                     </IconButton>
-                </Box>
+                </Stack>
             </Toolbar>
         </AppBar>
     );

@@ -1,0 +1,7 @@
+{
+  "fontFamily": {
+    "primaryFallback": "'맑은 고딕', -apple-system, 'Roboto', 'Arial', sans-serif",
+    "secondaryFallback": "'맑은 고딕', -apple-system, 'Roboto', 'Arial', sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
+  }
+}

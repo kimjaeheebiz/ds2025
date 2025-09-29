@@ -7,6 +7,7 @@ import { PageHeader } from './PageHeader';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
 import { HEADER_HEIGHT } from '@/constants/layout';
 import { getPageKeyFromPath, PAGE_METADATA, getPageInfo } from '@/constants/app-config';
+import { useColorMode } from '@/App';
 
 export const DefaultLayout = () => {
     useRouterPageTitle();
@@ -19,6 +20,7 @@ export const DefaultLayout = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+    const { toggleTheme } = useColorMode();
 
     return (
         <Box
@@ -30,7 +32,7 @@ export const DefaultLayout = () => {
                 pt: `${HEADER_HEIGHT}px`,
             }}
         >
-            <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+            <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} onToggleTheme={toggleTheme} />
 
             <Box
                 sx={{
