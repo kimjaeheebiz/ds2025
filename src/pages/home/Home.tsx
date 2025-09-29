@@ -6,9 +6,9 @@ const HomeContent = () => {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ minHeight: '100%', p: 3, backgroundColor: 'grey.200' }}>
+        <Box sx={{ minHeight: '100%', p: 3 }}>
             <Box sx={{ display: 'flex', gap: 3 }}>
-                <Card sx={{ flex: 1, minWidth: 300 }}>
+                <Card variant="outlined" sx={{ flex: 1 }}>
                     <CardContent>
                         <Typography variant="h5" component="h3" gutterBottom>
                             Project
@@ -20,12 +20,12 @@ const HomeContent = () => {
                     </CardContent>
                 </Card>
 
-                <Card sx={{ flex: 1 }}>
+                <Card variant="outlined" sx={{ flex: 1 }}>
                     <CardContent>
                         <Typography variant="h5" component="h3" gutterBottom>
                             Users
                         </Typography>
-                        <Typography sx={{ mb: 2 }}>사용자 관리 페이지</Typography>
+                        <Typography sx={{ mb: 2 }}>사용자 관리</Typography>
                         <Button
                             variant="contained"
                             endIcon={<ArrowForward />}
@@ -36,12 +36,12 @@ const HomeContent = () => {
                     </CardContent>
                 </Card>
 
-                <Card sx={{ flex: 1 }}>
+                <Card variant="outlined" sx={{ flex: 1 }}>
                     <CardContent>
                         <Typography variant="h5" component="h3" gutterBottom>
                             MUI Components
                         </Typography>
-                        <Typography sx={{ mb: 2 }}>UI Components 페이지</Typography>
+                        <Typography sx={{ mb: 2 }}>주요 MUI 컴포넌트 참고</Typography>
                         <Button
                             variant="contained"
                             color="secondary"

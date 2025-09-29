@@ -88,7 +88,6 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                 {/* 필터 */}
                 <ToggleButtonGroup
                     exclusive
-                    color="secondary"
                     value={viewMode === 'favorites' ? 'favorites' : selectedFilter}
                     aria-label="filter toggle buttons"
                     onChange={(e, newValue) => {

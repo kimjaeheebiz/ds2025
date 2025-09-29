@@ -1,4 +1,5 @@
 import React from 'react';
+import { blue, grey } from '@mui/material/colors';
 import {
     Box,
     Stack,
@@ -83,6 +84,7 @@ export const Components = () => {
     };
 
     const sectionLinks = [
+        { id: 'sectionColors', label: 'Colors' },
         { id: 'sectionTypography', label: 'Typography' },
         { id: 'sectionButtons', label: 'Buttons' },
         { id: 'sectionToggleButtons', label: 'Toggle Buttons' },
@@ -143,6 +145,67 @@ export const Components = () => {
             </Tabs>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Colors */}
+                <Box component="section" className="section" id="sectionColors">
+                    <Typography component="h2" variant="h5" gutterBottom>
+                        Colors
+                    </Typography>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                        Material Color (Mode/Theme 미적용)
+                    </Typography>
+                    <Grid container spacing={1} sx={{ mb: 3 }}>
+                        {([
+                            ['blue', blue],
+                            ['grey', grey],
+                        ] as const).map(([name, palette]) => (
+                            <Grid item xs={12} md={6} key={name}>
+                                <Stack direction="row" flexWrap="wrap">
+                                    {[50,100,200,300,400,500,600,700,800,900].map((s) => (
+                                        <Box key={`${name}-${s}`} sx={{
+                                            width: 70,
+                                            height: 40,
+                                            bgcolor: (palette as any)[s],
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: s >= 500 ? '#fff' : 'text.primary',
+                                            typography: 'caption',
+                                        }}>
+                                            {name}[{s}]
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                        Theme Color (Mode/Theme 자동 반영)
+                    </Typography>
+                    <Grid container spacing={1} sx={{ mb: 3 }}>
+                        {(['primary','secondary', 'info','success','error', 'warning'] as const).map((key) => (
+                            <Grid item xs={12} md={6} lg={3} key={key}>
+                                <Stack direction="row">
+                                    {(['light','main','dark'] as const).map((tone) => (
+                                        <Box key={`${key}-${tone}`} sx={{
+                                            width: 100,
+                                            height: 40,
+                                            bgcolor: `${key}.${tone}`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'common.white',
+                                            typography: 'caption',
+                                        }}>
+                                            {key}.{tone}
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+
                 {/* Typography */}
                 <Box component="section" className="section" id="sectionTypography">
                     <Typography component="h2" variant="h5" gutterBottom>
