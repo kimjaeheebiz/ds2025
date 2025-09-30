@@ -1,7 +1,7 @@
 import { Box, Container, Typography, Button, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
-import { Brand } from './Brand';
+import { Brand } from '@/components';
 
 export interface ErrorLayoutProps {
     statusCode?: number;

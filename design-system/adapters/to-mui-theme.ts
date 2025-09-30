@@ -2,6 +2,25 @@
   Adapter: Tokens Studio → MUI ThemeOptions (px → rem 변환 포함)
   실행: tsx design-system/adapters/to-mui-theme.ts
   - design-system/tokens/generated/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
+
+  아키텍처:
+  1. Core 선반영 (core.json 기반) - 디자인 핵심 UI
+     - typography: core.typography.* (h1~h6, body1, body2, subtitle, caption, overline, button)
+     - spacing: spacing/Mode 1.json
+     - breakpoints: breakpoints/Mode 1.json
+     - shape: shape/Mode 1.json
+     - shadows: core.elevation (elevation 1~24 → MUI shadows)
+     - components: core.button/chip/tooltip/badge/alert/input → MUI components
+
+  2. Palette 오버레이 (Light/Dark) - 컬러 테마
+     - palette/Light.json → theme.light.json
+     - palette/Dark.json → theme.dark.json
+
+  참조:
+  - https://mui.com/material-ui/customization/theming/
+  - https://mui.com/material-ui/customization/default-theme/
+  - https://mui.com/material-ui/customization/typography/
+  - https://mui.com/material-ui/customization/theme-components/
 */
 
 import fs from 'fs';
@@ -56,6 +75,53 @@ function normalizeRem(size: string | number): string {
     }
     const n = parseFloat(s);
     return isFinite(n) ? pxToRem(n) : '1rem';
+}
+
+/**
+ * 토큰 참조 문자열 "{a.b.c}" → 실제 값으로 해석
+ * core.json, typography.json 등 여러 소스에서 우선순위로 조회
+ */
+function resolveTokenRef(raw: any, ...tokenSources: Json[]): any {
+    if (typeof raw !== 'string') return raw;
+    const m = raw.match(/^\{(.+)\}$/);
+    if (!m) return raw;
+    
+    const keys = m[1].split('.');
+    const getValue = (obj: any) => {
+        const result = keys.reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj);
+        return result?.$value !== undefined ? result.$value : result;
+    };
+
+    // 우선순위: 첫 번째 소스부터 순차 조회
+    for (const source of tokenSources) {
+        const val = getValue(source);
+        if (val !== undefined) return val;
+    }
+    return raw;
+}
+
+/**
+ * lineHeight 값을 MUI 형식으로 정규화
+ * "150%" → 1.5, "24" → 1.5(기본값), 숫자 → 그대로
+ */
+function normalizeLineHeight(value: any): number {
+    if (typeof value === 'number') return value;
+    const s = String(value).trim();
+    if (s.endsWith('%')) {
+        const n = parseFloat(s);
+        return isFinite(n) ? n / 100 : 1.5;
+    }
+    const n = parseFloat(s);
+    return isFinite(n) && n > 0 && n < 10 ? n : 1.5; // 배수로 추정
+}
+
+/**
+ * letterSpacing 값을 숫자로 정규화 (px/em 단위 무시, 순수 숫자만)
+ */
+function normalizeLetterSpacing(value: any): number | undefined {
+    if (value === undefined || value === null) return undefined;
+    const n = parseFloat(String(value));
+    return isFinite(n) ? n : undefined;
 }
 
 // Material colors JSON 캐시 (Tokens Studio 산출물)
@@ -134,14 +200,58 @@ function createFontWeightParser(tokensTypos: Json) {
     };
 }
 
-// Typography 추출 및 px→rem 변환
-function buildTypography(tokensGlobal: Json, tokensTypos: Json) {
-    // 폰트 패밀리 (필수) + 폴백은 분리 파일에서 로드
-    const tokenPrimaryCandidate = safeGet(tokensTypos, ['fontFamily', 'primary', '$value'])
-        || undefined;
+/**
+ * core.typography.* 에서 단일 variant 읽기 (MUI 공식 구조 준수)
+ * 참조: https://mui.com/material-ui/customization/typography/
+ */
+function readTypographyVariant(
+    variantKey: string,
+    tokensCore: Json,
+    tokensTypos: Json
+): Record<string, any> | undefined {
+    const variant = tokensCore?.typography?.[variantKey];
+    if (!variant?.$value) return undefined;
 
+    const v = variant.$value;
+    const parseWeight = createFontWeightParser(tokensTypos);
+
+    // fontSize: {_fontSize.6rem} → typography._fontSize → 숫자 → rem 변환
+    const fontSizeRaw = resolveTokenRef(v.fontSize, tokensCore, tokensTypos);
+    const fontSize = normalizeRem(fontSizeRaw);
+
+    // lineHeight: {lineHeights.0} → "120%" → 1.2
+    const lineHeightRaw = resolveTokenRef(v.lineHeight, tokensCore, tokensTypos);
+    const lineHeight = normalizeLineHeight(lineHeightRaw);
+
+    // fontWeight: {fontWeights.pretendard-variable-0} → "Regular" → 400
+    const fontWeightRaw = resolveTokenRef(v.fontWeight, tokensCore, tokensTypos);
+    const fontWeight = parseWeight(fontWeightRaw);
+
+    // letterSpacing: {letterSpacing.0} → "0" → 0
+    const letterSpacingRaw = resolveTokenRef(v.letterSpacing, tokensCore, tokensTypos);
+    const letterSpacing = normalizeLetterSpacing(letterSpacingRaw);
+
+    // textCase: {textCase.uppercase} → "uppercase" → textTransform
+    const textCaseRaw = resolveTokenRef(v.textCase, tokensCore, tokensTypos);
+    const textTransform = String(textCaseRaw).toLowerCase() === 'uppercase' ? 'uppercase' : undefined;
+
+    const result: Record<string, any> = { fontSize, lineHeight, fontWeight };
+    if (letterSpacing !== undefined && letterSpacing !== 0) result.letterSpacing = letterSpacing;
+    if (textTransform) result.textTransform = textTransform;
+
+    return result;
+}
+
+/**
+ * Typography 전체 빌드: core.typography.* 우선, 없으면 기본값
+ * 참조: https://mui.com/material-ui/customization/typography/
+ */
+function buildTypography(tokensCore: Json, tokensTypos: Json) {
+    // fontFamily: tokens/src/fonts.json 우선, 없으면 tokensTypos.fontFamily.primary
+    const tokenPrimaryCandidate = safeGet(tokensTypos, ['fontFamily', 'primary', '$value']) || undefined;
     let fontFamilyPrimary: string | string[] | undefined = undefined;
     let fallback: string | string[] | undefined = undefined;
+    
     try {
         const fontsCfg = readJson(path.join(TOKENS_ROOT, '..', 'src', 'fonts.json'));
         const cfgPrimary = safeGet(fontsCfg, ['fontFamily', 'primary']);
@@ -151,51 +261,24 @@ function buildTypography(tokensGlobal: Json, tokensTypos: Json) {
     } catch {}
 
     const primarySource = fontFamilyPrimary ?? tokenPrimaryCandidate;
-
-    const parseWeight = createFontWeightParser(tokensTypos);
-    const pick = (sizeTokenKey: string, lineKey: string, weightKeyPath: string[]) => {
-        const line = safeGet(tokensTypos, ['lineHeights', lineKey, '$value']) ?? '150%';
-        const weightToken = safeGet(tokensTypos, ['fontWeights', ...weightKeyPath, '$value'])
-            || safeGet(tokensGlobal, ['fontWeights', ...weightKeyPath, '$value'])
-            || '400';
-        const fontWeight = parseWeight(weightToken);
-
-        // lineHeight: 퍼센트면 소수로 변환, 숫자면 배수 기본값
-        const lineHeight = typeof line === 'string' && line.endsWith('%')
-            ? parseFloat(line) / 100
-            : 1.5;
-
-        return {
-            fontSize: normalizeRem(sizeTokenKey ?? 16),
-            lineHeight,
-            fontWeight,
-        };
-    };
-
-    // 문자열/배열 모두 지원하여 최종 font-family 문자열 생성 (따옴표 포함 여부는 입력값 유지)
     const primaryList = parseFontList(primarySource as any);
     const fallbackList = parseFontList(Array.isArray(fallback) ? fallback.join(', ') : (fallback ? String(fallback) : undefined));
     const combinedList = [...primaryList, ...fallbackList];
     const fontFamilyCombined = combinedList.length > 0 ? combinedList.join(', ') : undefined;
 
-    return {
-        ...(fontFamilyCombined ? { fontFamily: fontFamilyCombined } : {}),
-        h1: pick('6rem', '0', ['pretendard-variable-0']),
-        h2: pick('3,75rem', '1', ['pretendard-variable-1']),
-        h3: pick('3rem', '1', ['pretendard-variable-1']),
-        h4: pick('2,125rem', '1', ['pretendard-variable-1']),
-        h5: pick('1,5rem', '1', ['pretendard-variable-1']),
-        h6: pick('1,25rem', '1', ['pretendard-variable-1']),
-        body1: pick('1rem', '6', ['pretendard-variable-0']),
-        body2: pick('0,875rem', '6', ['pretendard-variable-0']),
-        subtitle1: pick('1rem', '1', ['pretendard-variable-2']),
-        subtitle2: pick('0,875rem', '9', ['pretendard-variable-2']),
-        caption: pick('0,75rem', '6', ['pretendard-variable-0']),
-        overline: {
-            ...pick('0,75rem', '10', ['pretendard-variable-0']),
-            textTransform: 'uppercase',
-        },
-    };
+    // MUI Typography variants: h1~h6, body1, body2, subtitle1, subtitle2, caption, overline, button
+    // https://mui.com/material-ui/customization/default-theme/#typography
+    const variants = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'body1', 'body2', 'subtitle1', 'subtitle2', 'caption', 'overline', 'button'];
+    const typography: Record<string, any> = fontFamilyCombined ? { fontFamily: fontFamilyCombined } : {};
+
+    for (const key of variants) {
+        const variant = readTypographyVariant(key, tokensCore, tokensTypos);
+        if (variant) {
+            typography[key] = variant;
+        }
+    }
+
+    return typography;
 }
 
 // 참조(예: {blue.700}) → MUI colors 해석
@@ -320,17 +403,153 @@ function buildPalette(mode: 'light' | 'dark') {
     };
 }
 
-function buildThemeOptions(mode: 'light' | 'dark') {
-    const global = readJson(path.join(TOKENS_ROOT, 'global.json'));
-    const typo = readJson(path.join(TOKENS_ROOT, 'typography', 'Mode 1.json'));
+/**
+ * core.json 컴포넌트 토큰 → MUI theme.components 매핑
+ * 참조: https://mui.com/material-ui/customization/theme-components/
+ * 
+ * core.button.*, chip.*, tooltip.*, alert.*, input.* 등을 MUI 컴포넌트 스타일로 변환
+ */
+function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): Record<string, any> {
+    const components: Record<string, any> = {};
+    const parseWeight = createFontWeightParser(tokensTypos);
+
+    // Helper: 타이포 토큰 → 스타일 객체
+    const parseTypoToken = (tokenValue: any) => {
+        if (!tokenValue) return {};
+        const fontSize = normalizeRem(resolveTokenRef(tokenValue.fontSize, tokensCore, tokensTypos));
+        const lineHeight = normalizeLineHeight(resolveTokenRef(tokenValue.lineHeight, tokensCore, tokensTypos));
+        const fontWeight = parseWeight(resolveTokenRef(tokenValue.fontWeight, tokensCore, tokensTypos));
+        const letterSpacing = normalizeLetterSpacing(resolveTokenRef(tokenValue.letterSpacing, tokensCore, tokensTypos));
+        const textCaseRaw = resolveTokenRef(tokenValue.textCase, tokensCore, tokensTypos);
+        const textTransform = String(textCaseRaw).toLowerCase() === 'uppercase' ? 'uppercase' : undefined;
+
+        const result: Record<string, any> = { fontSize, lineHeight, fontWeight };
+        if (letterSpacing !== undefined && letterSpacing !== 0) result.letterSpacing = letterSpacing;
+        if (textTransform) result.textTransform = textTransform;
+        return result;
+    };
+
+    // MuiButton: core.button.large/medium/small
+    if (tokensCore?.button) {
+        const btn = tokensCore.button;
+        const variants: any[] = [];
+        if (btn.large?.$value) {
+            variants.push({ props: { size: 'large' }, style: parseTypoToken(btn.large.$value) });
+        }
+        if (btn.medium?.$value) {
+            variants.push({ props: { size: 'medium' }, style: parseTypoToken(btn.medium.$value) });
+        }
+        if (btn.small?.$value) {
+            variants.push({ props: { size: 'small' }, style: parseTypoToken(btn.small.$value) });
+        }
+        if (variants.length > 0) {
+            components.MuiButton = { variants };
+        }
+    }
+
+    // MuiChip: core.chip.label
+    if (tokensCore?.chip?.label?.$value) {
+        components.MuiChip = {
+            styleOverrides: {
+                label: parseTypoToken(tokensCore.chip.label.$value),
+            },
+        };
+    }
+
+    // MuiTooltip: core.tooltip.label
+    if (tokensCore?.tooltip?.label?.$value) {
+        components.MuiTooltip = {
+            styleOverrides: {
+                tooltip: parseTypoToken(tokensCore.tooltip.label.$value),
+            },
+        };
+    }
+
+    // MuiBadge: core.badge.label
+    if (tokensCore?.badge?.label?.$value) {
+        components.MuiBadge = {
+            styleOverrides: {
+                badge: parseTypoToken(tokensCore.badge.label.$value),
+            },
+        };
+    }
+
+    // MuiAlert: core.alert.title/description
+    if (tokensCore?.alert) {
+        const alert = tokensCore.alert;
+        const styleOverrides: Record<string, any> = {};
+        if (alert.title?.$value) styleOverrides.message = parseTypoToken(alert.title.$value);
+        if (Object.keys(styleOverrides).length > 0) {
+            components.MuiAlert = { styleOverrides };
+        }
+    }
+
+    // MuiTextField (Input): core.input.label/value/helper
+    if (tokensCore?.input) {
+        const input = tokensCore.input;
+        const inputOverrides: Record<string, any> = {};
+        if (input.label?.$value) inputOverrides.label = parseTypoToken(input.label.$value);
+        if (input.value?.$value) inputOverrides.input = parseTypoToken(input.value.$value);
+        if (input.helper?.$value) inputOverrides.helperText = parseTypoToken(input.helper.$value);
+        if (Object.keys(inputOverrides).length > 0) {
+            components.MuiTextField = { styleOverrides: inputOverrides };
+        }
+    }
+
+    return components;
+}
+
+/**
+ * Brand 토큰 → custom theme 확장
+ * brand/Mode 1.json의 logo.size.*, hectoColors 등을 theme에 추가
+ * 
+ * 하드코딩 금지: 토큰이 없으면 에러 발생 (Figma 토큰 필수)
+ */
+function buildBrandExtensions() {
+    try {
+        const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
+        const brand = readJson(brandPath);
+        
+        // 토큰 필수: fallback 없음 (Figma Variables가 단일 진실 소스)
+        if (!brand?.logo?.size) {
+            throw new Error('Brand logo size tokens not found in brand/Mode 1.json');
+        }
+        
+        const result = {
+            brand: {
+                logo: {
+                    size: {
+                        small: brand.logo.size.small?.$value,
+                        medium: brand.logo.size.medium?.$value,
+                        large: brand.logo.size.large?.$value,
+                        extraLarge: brand.logo.size.extraLarge?.$value,
+                    },
+                },
+            },
+        };
+        
+        return result;
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load brand tokens:', error);
+        // 토큰 없으면 빌드 실패 (의도적)
+        throw error;
+    }
+}
+
+/**
+ * Core 테마 옵션 빌드 (palette 제외)
+ * core.json을 우선 반영 → spacing/breakpoints/shape/shadows/typography/components
+ */
+function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
     const spacingTokensPath = path.join(TOKENS_ROOT, 'spacing', 'Mode 1.json');
     const breakpointsPath = path.join(TOKENS_ROOT, 'breakpoints', 'Mode 1.json');
     const shapePath = path.join(TOKENS_ROOT, 'shape', 'Mode 1.json');
 
-    const typography = buildTypography(global, typo);
-    const palette = buildPalette(mode);
+    // Typography: core.typography.* 우선 (하드코딩 제거)
+    const typography = buildTypography(tokensCore, tokensTypos);
 
-    // spacing: 기본 factor를 spacing['1'] 값으로 유추, 없으면 8
+    // spacing: spacing/Mode 1.json → ['1'].$value (기본 8)
     let spacing: number = 8;
     try {
         const sp = readJson(spacingTokensPath);
@@ -338,7 +557,7 @@ function buildThemeOptions(mode: 'light' | 'dark') {
         spacing = base && isFinite(base) ? base : 8;
     } catch {}
 
-    // breakpoints
+    // breakpoints: breakpoints/Mode 1.json
     let breakpoints: { values: { xs: number; sm: number; md: number; lg: number; xl: number } } | undefined;
     try {
         const bp = readJson(breakpointsPath);
@@ -353,7 +572,7 @@ function buildThemeOptions(mode: 'light' | 'dark') {
         };
     } catch {}
 
-    // shape
+    // shape: shape/Mode 1.json → borderRadius
     let shape: { borderRadius: number } | undefined;
     try {
         const sh = readJson(shapePath);
@@ -361,7 +580,7 @@ function buildThemeOptions(mode: 'light' | 'dark') {
         shape = r !== undefined ? { borderRadius: isNaN(Number(r)) ? 4 : Number(r) } : undefined;
     } catch {}
 
-    // shadows (elevation 0..24)
+    // shadows: core.elevation → MUI shadows array
     const toCssShadow = (arr: any): string => {
         if (!Array.isArray(arr)) return 'none';
         const parts = arr.map((d: any) => {
@@ -374,21 +593,50 @@ function buildThemeOptions(mode: 'light' | 'dark') {
         });
         return parts.join(', ');
     };
-
     const shadows: string[] = ['none'];
     for (let i = 1; i <= 24; i++) {
-        const e = (global as any)?.elevation?.[String(i)]?.$value;
+        const e = tokensCore?.elevation?.[String(i)]?.$value;
         shadows[i] = toCssShadow(e);
     }
 
-    const themeOptions = {
-        palette,
+    // components: core.button/chip/tooltip/... → MUI components
+    const components = buildComponentsOverrides(tokensCore, tokensTypos);
+
+    // brand: brand/Mode 1.json → custom theme extensions
+    const brandExtensions = buildBrandExtensions();
+
+    return {
         typography,
         spacing,
         ...(breakpoints ? { breakpoints } : {}),
         ...(shape ? { shape } : {}),
         shadows,
+        ...(Object.keys(components).length > 0 ? { components } : {}),
+        ...brandExtensions,
+    };
+}
+
+/**
+ * 최종 테마 옵션 빌드: Core(core.json) + Palette(Light/Dark 오버레이)
+ * 참조: https://mui.com/material-ui/customization/theming/
+ */
+function buildThemeOptions(mode: 'light' | 'dark') {
+    const core = readJson(path.join(TOKENS_ROOT, 'core.json'));
+    const typo = readJson(path.join(TOKENS_ROOT, 'typography', 'Mode 1.json'));
+
+    // 1. Core 선반영 (core.json 기반)
+    const coreTheme = buildCoreThemeOptions(core, typo);
+
+    // 2. Palette 오버레이 (Light/Dark)
+    const palette = buildPalette(mode);
+
+    // 3. Core + Palette 병합
+    const themeOptions = {
+        ...core,        // core.json (figma styles - raw tokens)
+        ...coreTheme,   // 처리된 MUI theme options (typography, brand, shadows, components 등)
+        palette,        // palette/Light.json, palette/Dark.json (figma colors)
     } as const;
+
     return themeOptions;
 }
 
