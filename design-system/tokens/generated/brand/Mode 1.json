@@ -7,7 +7,7 @@
       },
       "medium": {
         "$type": "number",
-        "$value": 30
+        "$value": 24
       },
       "large": {
         "$type": "number",
