@@ -72,7 +72,7 @@
   "error": {
     "main": {
       "$type": "color",
-      "$value": "{red.700}"
+      "$value": "{red.600}"
     },
     "dark": {
       "$type": "color",
@@ -111,34 +111,34 @@
   "warning": {
     "main": {
       "$type": "color",
-      "$value": "{orange.800}"
+      "$value": "{orange.600}"
     },
     "dark": {
       "$type": "color",
-      "$value": "{orange.900}"
+      "$value": "{orange.800}"
     },
     "light": {
       "$type": "color",
-      "$value": "{orange.500}"
+      "$value": "{orange.300}"
     },
     "_states": {
       "hover": {
         "$type": "color",
-        "$value": "#ef6c000a",
+        "$value": "#fb8c000a",
         "$description": "Used for hover states. The token represents the value of action.hoverOpacity (0.04 by default) of the main token."
       },
       "selected": {
         "$type": "color",
-        "$value": "#ef6c0014",
+        "$value": "#fb8c0014",
         "$description": "Used for selected states. The token represents the value of action.selectedOpacity (0.08 by default) of the main token."
       },
       "focusVisible": {
         "$type": "color",
-        "$value": "#ef6c004d"
+        "$value": "#fb8c004d"
       },
       "outlinedBorder": {
         "$type": "color",
-        "$value": "#ef6c0080",
+        "$value": "#fb8c0080",
         "$description": "Used for enabled states (e.g Button outlined variant). The token represents the value of outlinedBorderOpacity (0.5 by default) of the main token."
       }
     },
@@ -150,35 +150,35 @@
   "info": {
     "main": {
       "$type": "color",
-      "$value": "{lightBlue.700}"
+      "$value": "{hectoColors.blue.500}"
     },
     "dark": {
       "$type": "color",
-      "$value": "{lightBlue.900}"
+      "$value": "{hectoColors.blue.700}"
     },
     "light": {
       "$type": "color",
-      "$value": "{lightBlue.500}"
+      "$value": "{lightBlue.400}"
     },
     "_states": {
       "hover": {
         "$type": "color",
-        "$value": "#0288d10a",
+        "$value": "#0291fe0a",
         "$description": "Used for hover states. The token represents the value of action.hoverOpacity (0.04 by default) of the main token."
       },
       "selected": {
         "$type": "color",
-        "$value": "#0288d114",
+        "$value": "#0291fe14",
         "$description": "Used for selected states. The token represents the value of action.selectedOpacity (0.08 by default) of the main token."
       },
       "focusVisible": {
         "$type": "color",
-        "$value": "#0288d14d",
+        "$value": "#0291fe4d",
         "$description": "Used for selected states. The token represents the value of action.selectedOpacity (0.08 by default) of the main token."
       },
       "outlinedBorder": {
         "$type": "color",
-        "$value": "#0288d180",
+        "$value": "#0291fe80",
         "$description": "Used for enabled states (e.g Button outlined variant). The token represents the value of outlinedBorderOpacity (0.5 by default) of the main token."
       }
     },
