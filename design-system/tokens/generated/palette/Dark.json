@@ -89,15 +89,15 @@
   "secondary": {
     "main": {
       "$type": "color",
-      "$value": "{hectoColors.gray.100}"
+      "$value": "{hectoColors.grey.100}"
     },
     "dark": {
       "$type": "color",
-      "$value": "{hectoColors.gray.300}"
+      "$value": "{hectoColors.grey.300}"
     },
     "light": {
       "$type": "color",
-      "$value": "{hectoColors.gray.50}"
+      "$value": "{hectoColors.grey.50}"
     },
     "contrastText": {
       "$type": "color",
