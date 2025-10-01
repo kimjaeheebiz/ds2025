@@ -1,9 +1,5 @@
 {
   "colors": {
-    "11": {
-      "$type": "color",
-      "$value": "#ffffff"
-    },
     "hecto": {
       "orange": {
         "50": {
