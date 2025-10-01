@@ -41,17 +41,17 @@
   "primary": {
     "main": {
       "$type": "color",
-      "$value": "{hectoColors.orange.500}",
+      "$value": "{colors.hecto.orange.500}",
       "$description": "Reflects the primary.main variable from the theme object"
     },
     "dark": {
       "$type": "color",
-      "$value": "{hectoColors.orange.700}",
+      "$value": "{colors.hecto.orange.700}",
       "$description": "Used for hover states. Reflects the primary.dark variable from the theme object"
     },
     "light": {
       "$type": "color",
-      "$value": "{hectoColors.orange.300}",
+      "$value": "{colors.hecto.orange.300}",
       "$description": "Reflects the primary.light variable from the theme object"
     },
     "contrastText": {
@@ -89,15 +89,15 @@
   "secondary": {
     "main": {
       "$type": "color",
-      "$value": "{hectoColors.grey.100}"
+      "$value": "{colors.hecto.grey.100}"
     },
     "dark": {
       "$type": "color",
-      "$value": "{hectoColors.grey.300}"
+      "$value": "{colors.hecto.grey.300}"
     },
     "light": {
       "$type": "color",
-      "$value": "{hectoColors.grey.50}"
+      "$value": "{colors.hecto.grey.50}"
     },
     "contrastText": {
       "$type": "color",
@@ -242,15 +242,15 @@
   "info": {
     "main": {
       "$type": "color",
-      "$value": "{hectoColors.blue.400}"
+      "$value": "{colors.hecto.blue.400}"
     },
     "dark": {
       "$type": "color",
-      "$value": "{hectoColors.blue.600}"
+      "$value": "{colors.hecto.blue.600}"
     },
     "light": {
       "$type": "color",
-      "$value": "{hectoColors.blue.200}"
+      "$value": "{colors.hecto.blue.200}"
     },
     "_states": {
       "hover": {
