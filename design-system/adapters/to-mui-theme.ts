@@ -62,6 +62,25 @@ function parseFontList(input: string | string[] | undefined): string[] {
     return [raw];
 }
 
+/**
+ * Figma Tokens Studio $value 추출 헬퍼 함수
+ * 중첩된 토큰 객체에서 재귀적으로 $value를 추출하고 메타데이터($type, $description 등)는 제외
+ */
+function extractTokenValues(obj: any): any {
+    if (!obj || typeof obj !== 'object') return obj;
+    
+    // $value가 있으면 반환
+    if (obj.$value !== undefined) return obj.$value;
+    
+    // 중첩된 객체 재귀 처리
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (key.startsWith('$')) continue; // $type 등 메타데이터 제외
+        result[key] = extractTokenValues(value);
+    }
+    return result;
+}
+
 function normalizeRem(size: string | number): string {
     if (typeof size === 'number') return pxToRem(size);
     const s = String(size).trim().replace(',', '.');
@@ -124,37 +143,19 @@ function normalizeLetterSpacing(value: any): number | undefined {
     return isFinite(n) ? n : undefined;
 }
 
-// Material colors JSON 캐시 (Tokens Studio 산출물)
-let materialColorsCache: any | undefined;
+// Material colors에서 HEX 값 추출
 function getMaterialColorHex(name: string, shade: string): string | undefined {
     try {
-        if (!materialColorsCache) {
-            const p = path.join(TOKENS_ROOT, 'material', 'colors', 'Mode 1.json');
-            materialColorsCache = readJson(p);
-        }
-        const v = materialColorsCache?.[name]?.[shade]?.$value;
-        return typeof v === 'string' ? v : undefined;
-    } catch {
+        const materialPath = path.join(TOKENS_ROOT, 'material', 'colors', 'Mode 1.json');
+        const materialData = readJson(materialPath);
+        const colorValue = materialData?.[name]?.[shade]?.$value;
+        return typeof colorValue === 'string' ? colorValue : undefined;
+    } catch (error) {
+        console.error(`Failed to get material color ${name}.${shade}:`, error);
         return undefined;
     }
 }
 
-// Brand colors JSON 캐시 (Tokens Studio 산출물)
-let brandColorsCache: any | undefined;
-function getBrandColorHex(name: string, shade: string): string | undefined {
-    try {
-        if (!brandColorsCache) {
-            const p = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
-            brandColorsCache = readJson(p);
-        }
-        // 지원: brand.color.*, brand.hectoColors.* (둘 다 허용)
-        const v = brandColorsCache?.hectoColors?.[name]?.[shade]?.$value
-            ?? brandColorsCache?.color?.[name]?.[shade]?.$value;
-        return typeof v === 'string' ? v : undefined;
-    } catch {
-        return undefined;
-    }
-}
 
 function createFontWeightParser(tokensTypos: Json) {
     const getNumMulti = (...paths: string[][]): number | undefined => {
@@ -281,6 +282,37 @@ function buildTypography(tokensCore: Json, tokensTypos: Json) {
     return typography;
 }
 
+// 브랜드 색상에서 HEX 값 추출 (새로운 colors 구조만 지원)
+function getBrandColorHex(colorName: string, shade: string, groupName?: string): string | undefined {
+    try {
+        const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
+        const brandData = readJson(brandPath);
+        
+        // 새로운 구조: colors 하위에서 검색
+        if (brandData.colors && groupName) {
+            const colorValue = brandData.colors[groupName]?.[colorName]?.[shade]?.$value;
+            if (typeof colorValue === 'string') {
+                return colorValue;
+            }
+        }
+        
+        // 그룹명이 없으면 모든 색상 그룹에서 검색
+        if (!groupName && brandData.colors) {
+            for (const colorGroup of Object.values(brandData.colors)) {
+                const colorValue = (colorGroup as any)?.[colorName]?.[shade]?.$value;
+                if (typeof colorValue === 'string') {
+                    return colorValue;
+                }
+            }
+        }
+        
+        return undefined;
+    } catch (error) {
+        console.error(`Failed to get brand color ${groupName}.${colorName}.${shade}:`, error);
+        return undefined;
+    }
+}
+
 // 참조(예: {blue.700}) → MUI colors 해석
 function resolveColorRef(value: any) {
     if (typeof value !== 'string') return value;
@@ -296,18 +328,21 @@ function resolveColorRef(value: any) {
         return value;
     }
 
-    // 2) 네임스페이스 패턴(단일 처리):
-    //    {hectoColors.orange.500} / {color.orange.500}
-    //    {brand.hectoColors.orange.500} / {brand.color.gray.100}
-    const ns = value.match(/^\{(?:brand\.)?(?:hectoColors|color)\.([a-zA-Z][\w-]*)\.(A?\d+)\}$/);
-    if (ns) {
-        const [, name, shade] = ns as [string, string, string];
-        const brandHex = getBrandColorHex(name, shade);
+    // 2) 새로운 브랜드 색상 패턴: {colors.brandColorGroup.colorName.shade}
+    const newBrandColor = value.match(/^\{colors\.([a-zA-Z][\w-]*)\.([a-zA-Z][\w-]*)\.(A?\d+)\}$/);
+    if (newBrandColor) {
+        const [, groupName, colorName, shade] = newBrandColor as [string, string, string, string];
+        const brandHex = getBrandColorHex(colorName, shade, groupName);
         if (brandHex) return brandHex;
-        const palette: any = (MuiColors as any)[name];
-        if (palette && palette[shade]) return palette[shade];
-        const mc = getMaterialColorHex(name, shade);
-        if (mc) return mc;
+        return value;
+    }
+
+    // 3) 기존 브랜드 색상 패턴: {brandColorGroup.colorName.shade}
+    const brandColor = value.match(/^\{([a-zA-Z][\w-]*)\.([a-zA-Z][\w-]*)\.(A?\d+)\}$/);
+    if (brandColor) {
+        const [, groupName, colorName, shade] = brandColor as [string, string, string, string];
+        const brandHex = getBrandColorHex(colorName, shade, groupName);
+        if (brandHex) return brandHex;
         return value;
     }
 
@@ -317,6 +352,8 @@ function resolveColorRef(value: any) {
 function buildPalette(mode: 'light' | 'dark') {
     const file = path.join(TOKENS_ROOT, 'palette', mode === 'dark' ? 'Dark.json' : 'Light.json');
     const p = readJson(file);
+
+    // Brand 토큰은 coreTheme에서 처리하므로 palette에서는 제외
 
     const primary = p.primary ? {
         light: resolveColorRef(p.primary.light?.$value),
@@ -500,42 +537,44 @@ function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): Record<s
 }
 
 /**
- * Brand 토큰 → custom theme 확장
- * brand/Mode 1.json의 logo.size.*, hectoColors 등을 theme에 추가
- * 
- * 하드코딩 금지: 토큰이 없으면 에러 발생 (Figma 토큰 필수)
+ * Brand 토큰 → custom theme 확장 (새로운 colors/sizes 구조 지원)
+ * brand/Mode 1.json의 새로운 구조에 따라 theme.brand에 추가
  */
 function buildBrandExtensions() {
     try {
         const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
-        const brand = readJson(brandPath);
+        const brandData = readJson(brandPath);
         
-        // 토큰 필수: fallback 없음 (Figma Variables가 단일 진실 소스)
-        if (!brand?.logo?.size) {
-            throw new Error('Brand logo size tokens not found in brand/Mode 1.json');
+        const brand: Record<string, any> = {};
+        
+        // Colors 처리: colors 하위의 모든 색상 그룹 추출
+        if (brandData.colors) {
+            brand.colors = {};
+            for (const [colorGroupName, colorGroup] of Object.entries(brandData.colors)) {
+                brand.colors[colorGroupName] = extractTokenValues(colorGroup);
+            }
         }
         
-        const result = {
-            brand: {
-                logo: {
-                    size: {
-                        small: brand.logo.size.small?.$value,
-                        medium: brand.logo.size.medium?.$value,
-                        large: brand.logo.size.large?.$value,
-                        extraLarge: brand.logo.size.extraLarge?.$value,
-                    },
-                },
-            },
-        };
+        // Sizes 처리: sizes 하위의 모든 사이즈 그룹 추출
+        if (brandData.sizes) {
+            brand.sizes = {};
+            for (const [sizeGroupName, sizeGroup] of Object.entries(brandData.sizes)) {
+                brand.sizes[sizeGroupName] = extractTokenValues(sizeGroup);
+            }
+        }
         
-        return result;
+        // Logo 처리: 하위 호환성을 위해 유지
+        if (brandData.logo) {
+            brand.logo = extractTokenValues(brandData.logo);
+        }
+        
+        return { brand };
     } catch (error) {
-        // eslint-disable-next-line no-console
         console.error('Failed to load brand tokens:', error);
-        // 토큰 없으면 빌드 실패 (의도적)
         throw error;
     }
 }
+
 
 /**
  * Core 테마 옵션 빌드 (palette 제외)
@@ -604,7 +643,7 @@ function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
 
     // brand: brand/Mode 1.json → custom theme extensions
     const brandExtensions = buildBrandExtensions();
-
+    
     return {
         typography,
         spacing,

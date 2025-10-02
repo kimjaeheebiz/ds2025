@@ -1,5 +1,5 @@
 import React from 'react';
-import { blue, grey } from '@mui/material/colors';
+import { orange, grey, blue, indigo, green, red } from '@mui/material/colors';
 import {
     Box,
     Stack,
@@ -52,6 +52,7 @@ import {
     MenuItem as MenuItemComponent,
     ListItemIcon as ListItemIconComponent,
     ListItemText as ListItemTextComponent,
+    useTheme,
 } from '@mui/material';
 import {
     Add,
@@ -68,6 +69,15 @@ import {
 } from '@mui/icons-material';
 
 export const Components = () => {
+    const theme = useTheme();
+
+    // brand 하위에서 색상 그룹명 추출 (새로운 colors 구조)
+    const brandColorGroupNames = theme.brand?.colors ? Object.keys(theme.brand.colors) : [];
+
+    // 동적 색상 그룹명 (첫 번째 그룹을 기본으로 사용)
+    const primaryColorGroup = brandColorGroupNames[0] || 'hecto';
+    const testColorGroup = brandColorGroupNames.find(name => name.toLowerCase().includes('test')) || 'test';
+
     const [checked, setChecked] = React.useState(false);
     const [switchChecked, setSwitchChecked] = React.useState(false);
     const [radioValue, setRadioValue] = React.useState('option1');
@@ -79,10 +89,22 @@ export const Components = () => {
     const [toggleValueLarge, setToggleValueLarge] = React.useState('left');
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
+    // 코드 힌트 공통 스타일
+    const codeHintSx = {
+        px: 0.6,
+        bgcolor: 'action.selected',
+        border: '1px solid',
+        borderColor: 'action.focus',
+        borderRadius: 1,
+        color: 'info.dark'
+    };
+
+    // 섹션 이동 효과
     const scrollTo = (sectionId: string) => {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
+    // 섹션 링크
     const sectionLinks = [
         { id: 'sectionColors', label: 'Colors' },
         { id: 'sectionTypography', label: 'Typography' },
@@ -98,7 +120,7 @@ export const Components = () => {
         { id: 'sectionSnackbar', label: 'Snackbar' },
     ];
 
-    const [activeSection, setActiveSection] = React.useState<string>('sectionTypography');
+    const [activeSection, setActiveSection] = React.useState<string>('sectionColors');
 
     const toggleSizeState: Record<'small' | 'medium' | 'large', [string, React.Dispatch<React.SetStateAction<string>>]> = {
         small: [toggleValueSmall, setToggleValueSmall],
@@ -130,11 +152,12 @@ export const Components = () => {
                 onChange={(e, v) => { setActiveSection(v); scrollTo(v); }}
                 variant="scrollable"
                 scrollButtons="auto"
+                aria-label="섹션 이동 메뉴"
                 sx={{
                     position: 'sticky',
                     top: 0,
                     zIndex: 1000,
-                    backgroundColor: 'background.default',
+                    bgcolor: 'background.default',
                     borderBottom: '1px solid',
                     borderColor: 'divider',
                 }}
@@ -150,28 +173,32 @@ export const Components = () => {
                     <Typography component="h2" variant="h5" gutterBottom>
                         Colors
                     </Typography>
-                    <Typography variant="h6" sx={{ mb: 1 }}>
-                        Material Color (Mode/Theme 미적용)
-                    </Typography>
-                    <Grid container spacing={1} sx={{ mb: 3 }}>
-                        {([
-                            ['blue', blue],
-                            ['grey', grey],
-                        ] as const).map(([name, palette]) => (
-                            <Grid item xs={12} md={6} key={name}>
-                                <Stack direction="row" flexWrap="wrap">
-                                    {[50,100,200,300,400,500,600,700,800,900].map((s) => (
-                                        <Box key={`${name}-${s}`} sx={{
-                                            width: 70,
-                                            height: 40,
-                                            bgcolor: (palette as any)[s],
+
+                    <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
+                        <Typography component="h3" variant="h6">
+                            Theme Color (Mode/Theme 자동 반영)
+                        </Typography>
+                        <Typography component="code" variant="caption" sx={codeHintSx}>
+                            {`{color}.{tone}`}
+                        </Typography>
+                    </Stack>
+                    <Grid container spacing={2} sx={{ mb: 5 }}>
+                        {(['primary', 'secondary', 'info', 'success', 'error', 'warning'] as const).map((key) => (
+                            <Grid item key={key}>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>{key}</Typography>
+                                <Stack direction="row">
+                                    {(['light', 'main', 'dark'] as const).map((tone) => (
+                                        <Box key={`${key}-${tone}`} sx={{
+                                            width: 40,
+                                            height: 30,
+                                            bgcolor: `${key}.${tone}`,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: s >= 500 ? '#fff' : 'text.primary',
+                                            color: 'primary.contrastText',
                                             typography: 'caption',
                                         }}>
-                                            {name}[{s}]
+                                            {tone}
                                         </Box>
                                     ))}
                                 </Stack>
@@ -179,31 +206,170 @@ export const Components = () => {
                         ))}
                     </Grid>
 
-                    <Typography variant="h6" sx={{ mb: 1 }}>
-                        Theme Color (Mode/Theme 자동 반영)
-                    </Typography>
-                    <Grid container spacing={1} sx={{ mb: 3 }}>
-                        {(['primary','secondary', 'info','success','error', 'warning'] as const).map((key) => (
-                            <Grid item xs={12} md={6} lg={3} key={key}>
-                                <Stack direction="row">
-                                    {(['light','main','dark'] as const).map((tone) => (
-                                        <Box key={`${key}-${tone}`} sx={{
-                                            width: 100,
-                                            height: 40,
-                                            bgcolor: `${key}.${tone}`,
+                    <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
+                        <Typography component="h3" variant="h6">
+                            Brand Colors ({primaryColorGroup})
+                        </Typography>
+                        <Typography component="code" variant="caption" sx={codeHintSx}>
+                            {`${primaryColorGroup}.{color}.{shade}`}
+                        </Typography>
+                    </Stack>
+                    <Grid container spacing={1} sx={{ mb: 5 }}>
+                        {(['orange', 'blue', 'indigo', 'lime', 'green', 'deepgreen', 'grey'] as const).map((colorName) => (
+                            <Grid item xs={12} xl={4} key={colorName}>
+                                <Typography variant="caption">
+                                    {colorName}
+                                </Typography>
+                                <Stack direction="row" flexWrap="wrap">
+                                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => (
+                                        <Box key={`${colorName}-${shade}`} sx={{
+                                            width: 40,
+                                            height: 30,
+                                            bgcolor: `${primaryColorGroup}.${colorName}.${shade}`,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: 'common.white',
+                                            color: shade >= 500 ? '#fff' : '#000',
                                             typography: 'caption',
                                         }}>
-                                            {key}.{tone}
+                                            {shade}
                                         </Box>
                                     ))}
                                 </Stack>
                             </Grid>
                         ))}
                     </Grid>
+
+                    {/* Test Color 그룹 */}
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
+                        <Typography component="h3" variant="h6">
+                            Test Color Group
+                        </Typography>
+                        <Typography component="code" variant="caption" sx={codeHintSx}>
+                            {`${testColorGroup}.{color}.{shade}`}
+                        </Typography>
+                    </Stack>
+                    <Grid container spacing={1} sx={{ mb: 5 }}>
+                        {(['blue', 'green', 'orange'] as const).map((colorName) => (
+                            <Grid item xs={12} xl={4} key={colorName}>
+                                <Typography variant="caption">
+                                    {colorName}
+                                </Typography>
+                                <Stack direction="row" flexWrap="wrap">
+                                    {[300, 500, 700].map((shade) => (
+                                        <Box key={`${colorName}-${shade}`} sx={{
+                                            width: 40,
+                                            height: 30,
+                                            bgcolor: `${testColorGroup}.${colorName}.${shade}`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: shade >= 500 ? '#fff' : '#000',
+                                            typography: 'caption',
+                                        }}>
+                                            {shade}
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
+                        <Typography component="h3" variant="h6">
+                            Material Color
+                        </Typography>
+                        <Typography component="code" variant="caption" sx={codeHintSx}>
+                            {`{color}[{shade}]`}
+                        </Typography>
+                    </Stack>
+                    <Grid container spacing={1} sx={{ mb: 3 }}>
+                        {([
+                            ['orange', orange],
+                            ['blue', blue],
+                            ['indigo', indigo],
+                            ['green', green],
+                            ['red', red],
+                            ['grey', grey],
+                        ] as const).map(([name, palette]) => (
+                            <Grid item xs={12} xl={4} key={name}>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>{name}</Typography>
+                                <Stack direction="row" flexWrap="wrap">
+                                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((s) => (
+                                        <Box key={`${name}-${s}`} sx={{
+                                            width: 40,
+                                            height: 30,
+                                            bgcolor: (palette as any)[s],
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: s >= 500 ? '#fff' : 'text.primary',
+                                            typography: 'caption',
+                                        }}>
+                                            {s}
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    {/* 색상 패턴 테스트 */}
+                    <Typography component="h3" variant="h6" sx={{ mb: 1 }}>
+                        *Color Pattern Test
+                    </Typography>
+                    <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                        {/* Brand Color 풀네임 패턴 테스트 */}
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: theme.brand.colors.hecto.green[500],
+                            color: 'white',
+                        }}>
+                            <Typography variant="subtitle2">
+                                theme.brand.colors.hecto.green[500]
+                            </Typography>
+                        </Box>
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: theme.brand.colors.test.green[500],
+                            color: 'white',
+                        }}>
+                            <Typography variant="subtitle2">
+                                theme.brand.colors.test.green[500]
+                            </Typography>
+                        </Box>
+
+                        {/* Brand Color 패턴 테스트 */}
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: `${primaryColorGroup}.green.500`,
+                            color: 'white',
+                        }}>
+                            <Typography variant="subtitle2">
+                                {primaryColorGroup}.green.500
+                            </Typography>
+                        </Box>
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: `${testColorGroup}.green.500`,
+                            color: 'white',
+                        }}>
+                            <Typography variant="subtitle2">
+                                {testColorGroup}.green.500
+                            </Typography>
+                        </Box>
+
+                        {/* Material Color 패턴 테스트 */}
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: green[500],
+                            color: 'white',
+                        }}>
+                            <Typography variant="subtitle2">
+                                green[500]
+                            </Typography>
+                        </Box>
+                    </Stack>
                 </Box>
 
                 {/* Typography */}
@@ -568,7 +734,7 @@ export const Components = () => {
                     <Typography component="h2" variant="h5" gutterBottom>
                         Tables
                     </Typography>
-                    
+
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         <Box>

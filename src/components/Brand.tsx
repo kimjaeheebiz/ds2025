@@ -24,8 +24,8 @@ export interface BrandProps {
 export const Brand = ({ size = 'medium', showText = true, variant = 'logo', color = 'default' }: BrandProps) => {
     const theme = useTheme();
     
-    // Figma 토큰에서 로고 사이즈 가져오기 (하드코딩 제거)
-    const logoHeight = theme.brand.logo.size[size];
+    // Figma 토큰에서 로고 사이즈 가져오기 (colors/sizes 분리 구조 지원)
+    const logoHeight = theme.brand.sizes?.logo?.[size] || theme.brand.logo?.size?.[size] || 24;
     const imageSrc = variant === 'mark' ? markImage : logoImage;
 
     // Typography variant 매핑

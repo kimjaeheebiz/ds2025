@@ -24,12 +24,12 @@ export const ProjectSubMenu: React.FC<ProjectSubMenuProps> = ({
             onChange={(_, newValue) => onTabChange(newValue)}
             variant="scrollable"
             scrollButtons="auto"
-            aria-label="project sub menu tabs"
+            aria-label="서브 메뉴"
             sx={{
                 position: 'sticky',
                 top: 0,
                 zIndex: 1000,
-                backgroundColor: 'background.default',
+                bgcolor: 'background.default',
                 borderBottom: '1px solid',
                 borderColor: 'divider',
             }}

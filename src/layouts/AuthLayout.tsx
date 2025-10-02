@@ -13,7 +13,7 @@ export const AuthLayout = () => {
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: 'grey.100',
+                bgcolor: 'background.default',
             }}
         >
             <Box
@@ -26,7 +26,13 @@ export const AuthLayout = () => {
                 }}
             >
                 <Container maxWidth="sm">
-                    <Paper sx={{ px: 4, py: 5 }}>
+                    <Paper
+                        sx={{
+                            px: 4,
+                            py: 5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                        }}>
                         <Box sx={{ mb: 3 }}>
                             <Brand size="medium" showText={true} />
                         </Box>

@@ -108,7 +108,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                     ].map((tab) => (
                         <ToggleButton size="small" key={tab.id} value={tab.value} sx={{ gap: 1 }}>
                             {tab.label}
-                            <Chip label={tab.count} size="small" sx={{ backgroundColor: 'grey.300' }} />
+                            <Chip label={tab.count} size="small" />
                         </ToggleButton>
                     ))}
                 </ToggleButtonGroup>

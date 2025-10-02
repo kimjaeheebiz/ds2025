@@ -70,7 +70,7 @@ export const PAGES = {
     components: {
         key: 'components' as const,
         path: '/components',
-        title: 'MUI Components',
+        title: 'Components',
         icon: 'WidgetsOutlined',
         showInSidebar: true,
         showPageHeader: true,
