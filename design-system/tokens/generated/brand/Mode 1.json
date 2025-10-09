@@ -305,6 +305,10 @@
         "500": {
           "$type": "color",
           "$value": "#0000ff"
+        },
+        "700": {
+          "$type": "color",
+          "$value": "#00008b"
         }
       },
       "green": {
@@ -315,35 +319,31 @@
         "500": {
           "$type": "color",
           "$value": "#008000"
-        }
-      },
-      "orange": {
-        "500": {
+        },
+        "700": {
           "$type": "color",
-          "$value": "#ffa500"
+          "$value": "#006400"
         }
       }
     }
   },
   "sizes": {
     "logo": {
-      "size": {
-        "small": {
-          "$type": "number",
-          "$value": 20
-        },
-        "medium": {
-          "$type": "number",
-          "$value": 24
-        },
-        "large": {
-          "$type": "number",
-          "$value": 28
-        },
-        "extraLarge": {
-          "$type": "number",
-          "$value": 50
-        }
+      "small": {
+        "$type": "number",
+        "$value": "20"
+      },
+      "medium": {
+        "$type": "number",
+        "$value": "24"
+      },
+      "large": {
+        "$type": "number",
+        "$value": "28"
+      },
+      "extraLarge": {
+        "$type": "number",
+        "$value": "50"
       }
     }
   }
