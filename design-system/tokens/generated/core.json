@@ -1192,7 +1192,7 @@
         "fontFamily": "{fontFamily.primary}",
         "fontWeight": "{fontWeights.pretendard-variable-0}",
         "lineHeight": "{lineHeights.0}",
-        "fontSize": "{_fontSize.1,5rem}",
+        "fontSize": "{_fontSize.6rem}",
         "letterSpacing": "{letterSpacing.0}",
         "paragraphSpacing": "{paragraphSpacing.0}",
         "paragraphIndent": "{paragraphIndent.0}",
