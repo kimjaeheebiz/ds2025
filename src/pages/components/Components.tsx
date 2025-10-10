@@ -74,9 +74,20 @@ export const Components = () => {
     // brand 하위에서 색상 그룹명 추출 (새로운 colors 구조)
     const brandColorGroupNames = theme.brand?.colors ? Object.keys(theme.brand.colors) : [];
 
-    // 동적 색상 그룹명 (첫 번째 그룹을 기본으로 사용)
-    const primaryColorGroup = brandColorGroupNames[0] || 'hecto';
-    const testColorGroup = brandColorGroupNames.find(name => name.toLowerCase().includes('test')) || 'test';
+    // 동적 색상 그룹명 처리 - 완전 동적 처리
+    const colorGroups = brandColorGroupNames; // 모든 색상 그룹
+    const firstColorGroup = colorGroups[0] || ''; // 첫 번째 그룹 (패턴 테스트용)
+    const secondColorGroup = colorGroups[1] || ''; // 두 번째 그룹 (패턴 테스트용)
+
+    // 각 그룹의 색상 이름들을 동적으로 추출
+    const getColorNamesForGroup = (groupName: string) => {
+        return theme.brand?.colors?.[groupName] ? Object.keys(theme.brand.colors[groupName]) : [];
+    };
+
+    // 각 색상의 shade 값들을 동적으로 추출
+    const getShadesForColor = (groupName: string, colorName: string) => {
+        return theme.brand?.colors?.[groupName]?.[colorName] ? Object.keys(theme.brand.colors[groupName][colorName]) : [];
+    };
 
     const [checked, setChecked] = React.useState(false);
     const [switchChecked, setSwitchChecked] = React.useState(false);
@@ -162,8 +173,8 @@ export const Components = () => {
                     borderColor: 'divider',
                 }}
             >
-                {sectionLinks.map((s) => (
-                    <Tab key={s.id} value={s.id} label={s.label} />
+                {sectionLinks.map((section) => (
+                    <Tab key={section.id} value={section.id} label={section.label} />
                 ))}
             </Tabs>
 
@@ -179,19 +190,19 @@ export const Components = () => {
                             Theme Color (Mode/Theme 자동 반영)
                         </Typography>
                         <Typography component="code" variant="caption" sx={codeHintSx}>
-                            {`{color}.{tone}`}
+                            {`{colorName}.{tone}`}
                         </Typography>
                     </Stack>
                     <Grid container spacing={2} sx={{ mb: 5 }}>
-                        {(['primary', 'secondary', 'info', 'success', 'error', 'warning'] as const).map((key) => (
-                            <Grid item key={key}>
-                                <Typography variant="caption" sx={{ mb: 0.5 }}>{key}</Typography>
+                        {(['primary', 'secondary', 'info', 'success', 'error', 'warning'] as const).map((colorName) => (
+                            <Grid item key={colorName}>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>{colorName}</Typography>
                                 <Stack direction="row">
                                     {(['light', 'main', 'dark'] as const).map((tone) => (
-                                        <Box key={`${key}-${tone}`} sx={{
+                                        <Box key={`${colorName}-${tone}`} sx={{
                                             width: 40,
                                             height: 30,
-                                            bgcolor: `${key}.${tone}`,
+                                            bgcolor: `${colorName}.${tone}`,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
@@ -206,81 +217,51 @@ export const Components = () => {
                         ))}
                     </Grid>
 
-                    <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
-                        <Typography component="h3" variant="h6">
-                            Brand Colors ({primaryColorGroup})
-                        </Typography>
-                        <Typography component="code" variant="caption" sx={codeHintSx}>
-                            {`${primaryColorGroup}.{color}.{shade}`}
-                        </Typography>
-                    </Stack>
-                    <Grid container spacing={1} sx={{ mb: 5 }}>
-                        {(['orange', 'blue', 'indigo', 'lime', 'green', 'deepgreen', 'grey'] as const).map((colorName) => (
-                            <Grid item xs={12} xl={4} key={colorName}>
-                                <Typography variant="caption">
-                                    {colorName}
+                    {/* 모든 색상 그룹들을 동적으로 렌더링 */}
+                    {colorGroups.map((groupName) => (
+                        <React.Fragment key={groupName}>
+                            <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
+                                <Typography component="h3" variant="h6">
+                                    Brand Colors ({groupName})
                                 </Typography>
-                                <Stack direction="row" flexWrap="wrap">
-                                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => (
-                                        <Box key={`${colorName}-${shade}`} sx={{
-                                            width: 40,
-                                            height: 30,
-                                            bgcolor: `${primaryColorGroup}.${colorName}.${shade}`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: shade >= 500 ? '#fff' : '#000',
-                                            typography: 'caption',
-                                        }}>
-                                            {shade}
-                                        </Box>
-                                    ))}
-                                </Stack>
-                            </Grid>
-                        ))}
-                    </Grid>
-
-                    {/* Test Color 그룹 */}
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
-                        <Typography component="h3" variant="h6">
-                            Test Color Group
-                        </Typography>
-                        <Typography component="code" variant="caption" sx={codeHintSx}>
-                            {`${testColorGroup}.{color}.{shade}`}
-                        </Typography>
-                    </Stack>
-                    <Grid container spacing={1} sx={{ mb: 5 }}>
-                        {(['blue', 'green', 'orange'] as const).map((colorName) => (
-                            <Grid item xs={12} xl={4} key={colorName}>
-                                <Typography variant="caption">
-                                    {colorName}
+                                <Typography component="code" variant="caption" sx={codeHintSx}>
+                                    {`${groupName}.{colorName}.{shade}`}
                                 </Typography>
-                                <Stack direction="row" flexWrap="wrap">
-                                    {[300, 500, 700].map((shade) => (
-                                        <Box key={`${colorName}-${shade}`} sx={{
-                                            width: 40,
-                                            height: 30,
-                                            bgcolor: `${testColorGroup}.${colorName}.${shade}`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: shade >= 500 ? '#fff' : '#000',
-                                            typography: 'caption',
-                                        }}>
-                                            {shade}
-                                        </Box>
-                                    ))}
-                                </Stack>
+                            </Stack>
+                            <Grid container spacing={1} sx={{ mb: 5 }}>
+                                {getColorNamesForGroup(groupName).map((colorName) => (
+                                    <Grid item xs={12} xl={4} key={colorName}>
+                                        <Typography variant="caption">
+                                            {colorName}
+                                        </Typography>
+                                        <Stack direction="row" flexWrap="wrap">
+                                            {getShadesForColor(groupName, colorName).map((shade) => (
+                                                <Box key={`${colorName}-${shade}`} sx={{
+                                                    width: 40,
+                                                    height: 30,
+                                                    bgcolor: `${groupName}.${colorName}.${shade}`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: parseInt(shade) >= 500 ? '#fff' : '#000',
+                                                    typography: 'caption',
+                                                }}>
+                                                    {shade}
+                                                </Box>
+                                            ))}
+                                        </Stack>
+                                    </Grid>
+                                ))}
                             </Grid>
-                        ))}
-                    </Grid>
+                        </React.Fragment>
+                    ))}
 
                     <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ mb: 1 }}>
                         <Typography component="h3" variant="h6">
                             Material Color
                         </Typography>
                         <Typography component="code" variant="caption" sx={codeHintSx}>
-                            {`{color}[{shade}]`}
+                            {`{colorName}[{shade}]`}
                         </Typography>
                     </Stack>
                     <Grid container spacing={1} sx={{ mb: 3 }}>
@@ -291,22 +272,22 @@ export const Components = () => {
                             ['green', green],
                             ['red', red],
                             ['grey', grey],
-                        ] as const).map(([name, palette]) => (
-                            <Grid item xs={12} xl={4} key={name}>
-                                <Typography variant="caption" sx={{ mb: 0.5 }}>{name}</Typography>
+                        ] as const).map(([colorName, colorPalette]) => (
+                            <Grid item xs={12} xl={4} key={colorName}>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>{colorName}</Typography>
                                 <Stack direction="row" flexWrap="wrap">
-                                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((s) => (
-                                        <Box key={`${name}-${s}`} sx={{
+                                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => (
+                                        <Box key={`${colorName}-${shade}`} sx={{
                                             width: 40,
                                             height: 30,
-                                            bgcolor: (palette as any)[s],
+                                            bgcolor: (colorPalette as any)[shade],
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: s >= 500 ? '#fff' : 'text.primary',
+                                            color: shade >= 500 ? '#fff' : '#000',
                                             typography: 'caption',
                                         }}>
-                                            {s}
+                                            {shade}
                                         </Box>
                                     ))}
                                 </Stack>
@@ -318,46 +299,54 @@ export const Components = () => {
                     <Typography component="h3" variant="h6" sx={{ mb: 1 }}>
                         *Color Pattern Test
                     </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                    <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap">
                         {/* Brand Color 풀네임 패턴 테스트 */}
-                        <Box sx={{
-                            p: 1,
-                            bgcolor: theme.brand.colors.hecto.green[500],
-                            color: 'white',
-                        }}>
-                            <Typography variant="subtitle2">
-                                theme.brand.colors.hecto.green[500]
-                            </Typography>
-                        </Box>
-                        <Box sx={{
-                            p: 1,
-                            bgcolor: theme.brand.colors.test.green[500],
-                            color: 'white',
-                        }}>
-                            <Typography variant="subtitle2">
-                                theme.brand.colors.test.green[500]
-                            </Typography>
-                        </Box>
+                        {firstColorGroup && theme.brand.colors[firstColorGroup]?.green?.[500] && (
+                            <Box sx={{
+                                p: 1,
+                                bgcolor: theme.brand.colors[firstColorGroup].green[500],
+                                color: 'white',
+                            }}>
+                                <Typography variant="subtitle2">
+                                    theme.brand.colors.{firstColorGroup}.green[500]
+                                </Typography>
+                            </Box>
+                        )}
+                        {secondColorGroup && theme.brand.colors[secondColorGroup]?.blue?.[500] && (
+                            <Box sx={{
+                                p: 1,
+                                bgcolor: theme.brand.colors[secondColorGroup].blue[500],
+                                color: 'white',
+                            }}>
+                                <Typography variant="subtitle2">
+                                    theme.brand.colors.{secondColorGroup}.blue[500]
+                                </Typography>
+                            </Box>
+                        )}
 
                         {/* Brand Color 패턴 테스트 */}
-                        <Box sx={{
-                            p: 1,
-                            bgcolor: `${primaryColorGroup}.green.500`,
-                            color: 'white',
-                        }}>
-                            <Typography variant="subtitle2">
-                                {primaryColorGroup}.green.500
-                            </Typography>
-                        </Box>
-                        <Box sx={{
-                            p: 1,
-                            bgcolor: `${testColorGroup}.green.500`,
-                            color: 'white',
-                        }}>
-                            <Typography variant="subtitle2">
-                                {testColorGroup}.green.500
-                            </Typography>
-                        </Box>
+                        {firstColorGroup && (
+                            <Box sx={{
+                                p: 1,
+                                bgcolor: `${firstColorGroup}.green.500`,
+                                color: 'white',
+                            }}>
+                                <Typography variant="subtitle2">
+                                    {firstColorGroup}.green.500
+                                </Typography>
+                            </Box>
+                        )}
+                        {secondColorGroup && (
+                            <Box sx={{
+                                p: 1,
+                                bgcolor: `${secondColorGroup}.blue.500`,
+                                color: 'white',
+                            }}>
+                                <Typography variant="subtitle2">
+                                    {secondColorGroup}.blue.500
+                                </Typography>
+                            </Box>
+                        )}
 
                         {/* Material Color 패턴 테스트 */}
                         <Box sx={{

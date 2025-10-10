@@ -14,26 +14,23 @@ export interface BrandProps {
  * Brand 컴포넌트
  * 
  * Figma 연동:
- * - size: theme.brand.logo.size.* (Figma Variables → Tokens Studio → theme)
+ * - size: theme.brand.logo.* (Figma Variables → Tokens Studio → theme)
  * - variant: logo(전체) / mark(심볼만)
  * - showText: 텍스트 표시 여부
  * - color: default(테마 자동) / white(어두운 배경용)
- * 
- * 디자인 변경 시: Figma에서 logo.size.* Variables 수정 → Tokens Studio 커밋 → npm run tokens:build-theme
  */
+
 export const Brand = ({ size = 'medium', showText = true, variant = 'logo', color = 'default' }: BrandProps) => {
     const theme = useTheme();
-    
-    // Figma 토큰에서 로고 사이즈 가져오기 (colors/sizes 분리 구조 지원)
-    const logoHeight = theme.brand.sizes?.logo?.[size] || theme.brand.logo?.size?.[size] || 24;
+    const logoHeight = theme.brand.sizes?.logo?.[size] || theme.brand.logo?.[size] || 24;
     const imageSrc = variant === 'mark' ? markImage : logoImage;
 
     // Typography variant 매핑
     const textVariantMap = {
-        small: 'body1',        // 1rem
-        medium: 'h6',          // 1.25rem
-        large: 'h5',           // 1.5rem
-        extraLarge: 'h4',      // 2.125rem
+        small: 'body1',
+        medium: 'h6',
+        large: 'h5',
+        extraLarge: 'h4',
     } as const;
 
     return (

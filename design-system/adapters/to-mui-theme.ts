@@ -684,8 +684,6 @@ function writeTheme(mode: 'light' | 'dark') {
     ensureDir(OUTPUT_ROOT);
     const outPath = path.join(OUTPUT_ROOT, `theme.${mode}.json`);
     fs.writeFileSync(outPath, JSON.stringify(themeOptions, null, 2), 'utf8');
-    // eslint-disable-next-line no-console
-    console.log(`Wrote: ${path.relative(REPO_ROOT, outPath)}`);
 }
 
 // 실행 스크립트

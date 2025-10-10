@@ -45,7 +45,7 @@ export const Header = ({ onMenuToggle, onToggleTheme }: HeaderProps) => {
                             alignItems: 'center',
                         }}
                     >
-                        <Brand variant="mark" showText={true} />
+                        <Brand variant="mark" />
                     </Link>
                 </Box>
 
