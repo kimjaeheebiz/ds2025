@@ -421,7 +421,7 @@
       },
       "medium": {
         "$type": "number",
-        "$value": 40
+        "$value": 24
       },
       "large": {
         "$type": "number",
