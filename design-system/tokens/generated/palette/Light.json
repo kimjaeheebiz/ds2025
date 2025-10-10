@@ -600,17 +600,17 @@
   "primary": {
     "main": {
       "$type": "color",
-      "$value": "{colors.hecto.blue.500}",
+      "$value": "{colors.hecto.orange.500}",
       "$description": "Reflects the primary.main variable from the theme object"
     },
     "dark": {
       "$type": "color",
-      "$value": "{colors.hecto.blue.700}",
+      "$value": "{colors.hecto.orange.700}",
       "$description": "Used for hover states. Reflects the primary.dark variable from the theme object"
     },
     "light": {
       "$type": "color",
-      "$value": "{colors.hecto.blue.300}",
+      "$value": "{colors.hecto.orange.300}",
       "$description": "Reflects the primary.light variable from the theme object"
     },
     "contrastText": {
