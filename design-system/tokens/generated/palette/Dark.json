@@ -41,17 +41,17 @@
   "primary": {
     "main": {
       "$type": "color",
-      "$value": "{colors.hecto.orange.500}",
+      "$value": "{colors.hecto.blue.400}",
       "$description": "Reflects the primary.main variable from the theme object"
     },
     "dark": {
       "$type": "color",
-      "$value": "{colors.hecto.orange.700}",
+      "$value": "{colors.hecto.blue.600}",
       "$description": "Used for hover states. Reflects the primary.dark variable from the theme object"
     },
     "light": {
       "$type": "color",
-      "$value": "{colors.hecto.orange.300}",
+      "$value": "{colors.hecto.blue.200}",
       "$description": "Reflects the primary.light variable from the theme object"
     },
     "contrastText": {
@@ -62,26 +62,26 @@
     "_states": {
       "hover": {
         "$type": "color",
-        "$value": "#ff611414",
+        "$value": "#36a1ff14",
         "$description": "Used for hover states. The token represents the value of action.hoverOpacity (0.04 by default) of the main token."
       },
       "selected": {
         "$type": "color",
-        "$value": "#ff611429",
+        "$value": "#36a1ff29",
         "$description": "Used for selected states. The token represents the value of action.selectedOpacity (0.08 by default) of the main token."
       },
       "focus": {
         "$type": "color",
-        "$value": "#ff61141f",
+        "$value": "#36a1ff1f",
         "$description": "Used for focus states. The token represents the value of action.focusOpacity (0.12 by default) of the main token."
       },
       "focusVisible": {
         "$type": "color",
-        "$value": "#ff61144d"
+        "$value": "#36a1ff4d"
       },
       "outlinedBorder": {
         "$type": "color",
-        "$value": "#ff611480",
+        "$value": "#36a1ff80",
         "$description": "Used for enabled states (e.g Button outlined variant). The token represents the value of outlinedBorderOpacity (0.5 by default) of the main token."
       }
     }
