@@ -280,7 +280,7 @@ export const Components = () => {
                                         <Box key={`${colorName}-${shade}`} sx={{
                                             width: 40,
                                             height: 30,
-                                            bgcolor: (colorPalette as any)[shade],
+                                            bgcolor: (colorPalette as Record<string, string>)[shade],
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',

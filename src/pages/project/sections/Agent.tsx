@@ -20,10 +20,10 @@ import {
     ToggleButtonGroup,
 } from '@mui/material';
 import { Star, StarBorder, Key, Build, SmartToy, MoreVert, Search, Add } from '@mui/icons-material';
-import { formatDate } from '../../../utils';
-import type { Workflow } from '../ProjectContext';
-import { StatusChip } from './StatusChip';
-import { useProject } from '../ProjectContext';
+import { formatDate } from '@/utils';
+import type { Workflow } from '@/contexts';
+import { StatusChip } from '../components';
+import { useProject } from '@/hooks';
 
 export interface AgentContentProps {
     workflowData?: Workflow[];
@@ -69,8 +69,8 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
     }, [filteredWorkflows, sortKey, sortOrder]);
 
     React.useEffect(() => {
-        if (workflows.length === 0) {
-            setWorkflows(workflowData as any);
+        if (workflows.length === 0 && workflowData) {
+            setWorkflows(workflowData);
         }
     }, [workflows.length, setWorkflows, workflowData]);
 
@@ -181,7 +181,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                     </TableHead>
                     <TableBody>
                         {sortedWorkflows.map((workflow) => (
-                            <TableRow key={(workflow as any).seq} hover>
+                            <TableRow key={workflow.seq ?? workflow.id} hover>
                                 <TableCell>
                                     <Typography variant="body2" sx={{ fontWeight: 500 }}>{workflow.name}</Typography>
                                     <Typography variant="caption" color="text.secondary">{workflow.id}</Typography>

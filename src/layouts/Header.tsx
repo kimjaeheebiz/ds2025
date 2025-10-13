@@ -2,7 +2,7 @@ import { AppBar, Toolbar, Box, Stack, IconButton, Link, useTheme } from '@mui/ma
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Brand } from '@/components';
 import { Person, Menu, DarkModeOutlined, LightModeOutlined } from '@mui/icons-material';
-import { HEADER_HEIGHT, Z_INDEX } from '@/constants/layout';
+import { HEADER_HEIGHT, Z_INDEX } from '@/config';
 
 export interface HeaderProps {
     onMenuToggle?: () => void;

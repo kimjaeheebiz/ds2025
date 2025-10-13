@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getBrowserTitle, getPageKeyFromPath } from '@/constants/app-config';
+import { getBrowserTitle, getPageKeyFromPath } from '@/config';
 
 // 라우터 기반 자동 페이지 제목 관리 훅
 export const useRouterPageTitle = () => {

@@ -26,8 +26,18 @@
 import fs from 'fs';
 import path from 'path';
 import * as MuiColors from '@mui/material/colors';
-
-type Json = any;
+import {
+    Json,
+    JsonRecord,
+    PaletteColorGroup,
+    TextColorGroup,
+    BackgroundColorGroup,
+    ActionColorGroup,
+    CommonColorGroup,
+    isTokenValue,
+    hasProperty,
+    asJsonRecord,
+} from './types';
 
 const REPO_ROOT = process.cwd();
 const TOKENS_ROOT = path.join(REPO_ROOT, 'design-system', 'tokens', 'generated');
@@ -45,8 +55,13 @@ function readJson(p: string): Json {
     return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
 
-function safeGet(obj: any, pathKeys: string[], fallback?: any) {
-    return pathKeys.reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj) ?? fallback;
+function safeGet(obj: Record<string, unknown>, pathKeys: string[], fallback?: unknown): unknown {
+    return pathKeys.reduce((acc: unknown, k: string) => {
+        if (acc && typeof acc === 'object' && acc !== null && k in acc) {
+            return (acc as Record<string, unknown>)[k];
+        }
+        return undefined;
+    }, obj as unknown) ?? fallback;
 }
 
 function ensureDir(dir: string) {
@@ -66,14 +81,14 @@ function parseFontList(input: string | string[] | undefined): string[] {
  * Figma Tokens Studio $value 추출 헬퍼 함수
  * 중첩된 토큰 객체에서 재귀적으로 $value를 추출하고 메타데이터($type, $description 등)는 제외
  */
-function extractTokenValues(obj: any): any {
+function extractTokenValues(obj: unknown): unknown {
     if (!obj || typeof obj !== 'object') return obj;
     
     // $value가 있으면 반환
-    if (obj.$value !== undefined) return obj.$value;
+    if ('$value' in obj && obj.$value !== undefined) return obj.$value;
     
     // 중첩된 객체 재귀 처리
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
         if (key.startsWith('$')) continue; // $type 등 메타데이터 제외
         result[key] = extractTokenValues(value);
@@ -100,15 +115,20 @@ function normalizeRem(size: string | number): string {
  * 토큰 참조 문자열 "{a.b.c}" → 실제 값으로 해석
  * core.json, typography.json 등 여러 소스에서 우선순위로 조회
  */
-function resolveTokenRef(raw: any, ...tokenSources: Json[]): any {
+function resolveTokenRef(raw: unknown, ...tokenSources: Json[]): unknown {
     if (typeof raw !== 'string') return raw;
     const m = raw.match(/^\{(.+)\}$/);
     if (!m) return raw;
     
     const keys = m[1].split('.');
-    const getValue = (obj: any) => {
-        const result = keys.reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj);
-        return result?.$value !== undefined ? result.$value : result;
+    const getValue = (obj: Record<string, unknown>) => {
+        const result = keys.reduce((acc: unknown, k: string) => {
+            if (acc && typeof acc === 'object' && acc !== null && k in acc) {
+                return (acc as Record<string, unknown>)[k];
+            }
+            return undefined;
+        }, obj as unknown);
+        return result && typeof result === 'object' && '$value' in result ? (result as { $value: unknown }).$value : result;
     };
 
     // 우선순위: 첫 번째 소스부터 순차 조회
@@ -123,7 +143,7 @@ function resolveTokenRef(raw: any, ...tokenSources: Json[]): any {
  * lineHeight 값을 MUI 형식으로 정규화
  * "150%" → 1.5, "24" → 1.5(기본값), 숫자 → 그대로
  */
-function normalizeLineHeight(value: any): number {
+function normalizeLineHeight(value: unknown): number {
     if (typeof value === 'number') return value;
     const s = String(value).trim();
     if (s.endsWith('%')) {
@@ -137,7 +157,7 @@ function normalizeLineHeight(value: any): number {
 /**
  * letterSpacing 값을 숫자로 정규화 (px/em 단위 무시, 순수 숫자만)
  */
-function normalizeLetterSpacing(value: any): number | undefined {
+function normalizeLetterSpacing(value: unknown): number | undefined {
     if (value === undefined || value === null) return undefined;
     const n = parseFloat(String(value));
     return isFinite(n) ? n : undefined;
@@ -209,7 +229,7 @@ function readTypographyVariant(
     variantKey: string,
     tokensCore: Json,
     tokensTypos: Json
-): Record<string, any> | undefined {
+): Record<string, unknown> | undefined {
     const variant = tokensCore?.typography?.[variantKey];
     if (!variant?.$value) return undefined;
 
@@ -218,15 +238,15 @@ function readTypographyVariant(
 
     // fontSize: {_fontSize.6rem} → typography._fontSize → 숫자 → rem 변환
     const fontSizeRaw = resolveTokenRef(v.fontSize, tokensCore, tokensTypos);
-    const fontSize = normalizeRem(fontSizeRaw);
+    const fontSize = normalizeRem(fontSizeRaw as string | number);
 
     // lineHeight: {lineHeights.0} → "120%" → 1.2
     const lineHeightRaw = resolveTokenRef(v.lineHeight, tokensCore, tokensTypos);
-    const lineHeight = normalizeLineHeight(lineHeightRaw);
+    const lineHeight = normalizeLineHeight(lineHeightRaw as string | number);
 
     // fontWeight: {fontWeights.pretendard-variable-0} → "Regular" → 400
     const fontWeightRaw = resolveTokenRef(v.fontWeight, tokensCore, tokensTypos);
-    const fontWeight = parseWeight(fontWeightRaw);
+    const fontWeight = parseWeight(fontWeightRaw as string | number);
 
     // letterSpacing: {letterSpacing.0} → "0" → 0
     const letterSpacingRaw = resolveTokenRef(v.letterSpacing, tokensCore, tokensTypos);
@@ -236,7 +256,7 @@ function readTypographyVariant(
     const textCaseRaw = resolveTokenRef(v.textCase, tokensCore, tokensTypos);
     const textTransform = String(textCaseRaw).toLowerCase() === 'uppercase' ? 'uppercase' : undefined;
 
-    const result: Record<string, any> = { fontSize, lineHeight, fontWeight };
+    const result: Record<string, unknown> = { fontSize, lineHeight, fontWeight };
     if (letterSpacing !== undefined && letterSpacing !== 0) result.letterSpacing = letterSpacing;
     if (textTransform) result.textTransform = textTransform;
 
@@ -256,13 +276,15 @@ function buildTypography(tokensCore: Json, tokensTypos: Json) {
     try {
         const fontsCfg = readJson(path.join(TOKENS_ROOT, '..', 'src', 'fonts.json'));
         const cfgPrimary = safeGet(fontsCfg, ['fontFamily', 'primary']);
-        if (cfgPrimary !== undefined) fontFamilyPrimary = cfgPrimary;
+        if (cfgPrimary !== undefined && cfgPrimary !== null) fontFamilyPrimary = cfgPrimary as string | string[];
         const cfgFallback = safeGet(fontsCfg, ['fontFamily', 'primaryFallback']);
-        if (cfgFallback !== undefined) fallback = cfgFallback;
-    } catch {}
+        if (cfgFallback !== undefined && cfgFallback !== null) fallback = cfgFallback as string | string[];
+    } catch {
+        // 폰트 설정 로드 실패 시 기본값 사용
+    }
 
     const primarySource = fontFamilyPrimary ?? tokenPrimaryCandidate;
-    const primaryList = parseFontList(primarySource as any);
+    const primaryList = parseFontList(primarySource as string | string[]);
     const fallbackList = parseFontList(Array.isArray(fallback) ? fallback.join(', ') : (fallback ? String(fallback) : undefined));
     const combinedList = [...primaryList, ...fallbackList];
     const fontFamilyCombined = combinedList.length > 0 ? combinedList.join(', ') : undefined;
@@ -270,7 +292,7 @@ function buildTypography(tokensCore: Json, tokensTypos: Json) {
     // MUI Typography variants: h1~h6, body1, body2, subtitle1, subtitle2, caption, overline, button
     // https://mui.com/material-ui/customization/default-theme/#typography
     const variants = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'body1', 'body2', 'subtitle1', 'subtitle2', 'caption', 'overline', 'button'];
-    const typography: Record<string, any> = fontFamilyCombined ? { fontFamily: fontFamilyCombined } : {};
+    const typography: Record<string, unknown> = fontFamilyCombined ? { fontFamily: fontFamilyCombined } : {};
 
     for (const key of variants) {
         const variant = readTypographyVariant(key, tokensCore, tokensTypos);
@@ -289,19 +311,34 @@ function getBrandColorHex(colorName: string, shade: string, groupName?: string):
         const brandData = readJson(brandPath);
         
         // 새로운 구조: colors 하위에서 검색
-        if (brandData.colors && groupName) {
-            const colorValue = brandData.colors[groupName]?.[colorName]?.[shade]?.$value;
-            if (typeof colorValue === 'string') {
-                return colorValue;
+        if (hasProperty(brandData, 'colors') && groupName) {
+            const colors = asJsonRecord(brandData.colors);
+            if (hasProperty(colors, groupName)) {
+                const colorGroup = asJsonRecord(colors[groupName]);
+                if (hasProperty(colorGroup, colorName)) {
+                    const color = asJsonRecord(colorGroup[colorName]);
+                    if (hasProperty(color, shade)) {
+                        const shadeValue = color[shade];
+                        if (isTokenValue(shadeValue) && typeof shadeValue.$value === 'string') {
+                            return shadeValue.$value;
+                        }
+                    }
+                }
             }
         }
         
         // 그룹명이 없으면 모든 색상 그룹에서 검색
-        if (!groupName && brandData.colors) {
-            for (const colorGroup of Object.values(brandData.colors)) {
-                const colorValue = (colorGroup as any)?.[colorName]?.[shade]?.$value;
-                if (typeof colorValue === 'string') {
-                    return colorValue;
+        if (!groupName && hasProperty(brandData, 'colors')) {
+            const colors = asJsonRecord(brandData.colors);
+            for (const colorGroup of Object.values(colors)) {
+                if (hasProperty(colorGroup, colorName)) {
+                    const color = asJsonRecord(asJsonRecord(colorGroup)[colorName]);
+                    if (hasProperty(color, shade)) {
+                        const shadeValue = color[shade];
+                        if (isTokenValue(shadeValue) && typeof shadeValue.$value === 'string') {
+                            return shadeValue.$value;
+                        }
+                    }
                 }
             }
         }
@@ -314,14 +351,14 @@ function getBrandColorHex(colorName: string, shade: string, groupName?: string):
 }
 
 // 참조(예: {blue.700}) → MUI colors 해석
-function resolveColorRef(value: any) {
+function resolveColorRef(value: unknown) {
     if (typeof value !== 'string') return value;
 
     // 1) 기본 형식: {blue.700} / {lightBlue.A400}
-    let m = value.match(/^\{([a-zA-Z]+)\.(A?\d+)\}$/);
+    const m = value.match(/^\{([a-zA-Z]+)\.(A?\d+)\}$/);
     if (m) {
-        let [, name, shade] = m as [string, string, string];
-        const palette: any = (MuiColors as any)[name];
+        const [, name, shade] = m as [string, string, string];
+        const palette = (MuiColors as Record<string, unknown>)[name] as Record<string, string> | undefined;
         if (palette && palette[shade]) return palette[shade];
         const mc = getMaterialColorHex(name, shade);
         if (mc) return mc;
@@ -349,80 +386,73 @@ function resolveColorRef(value: any) {
     return value;
 }
 
+// 헬퍼: 색상 그룹에서 값 추출
+function extractPaletteColor(group: unknown): { light?: unknown; main?: unknown; dark?: unknown; contrastText?: unknown } | undefined {
+    if (!hasProperty(group, 'main')) return undefined;
+    
+    const colorGroup = group as PaletteColorGroup;
+    return {
+        light: colorGroup.light?.$value ? resolveColorRef(colorGroup.light.$value) : undefined,
+        main: colorGroup.main?.$value ? resolveColorRef(colorGroup.main.$value) : undefined,
+        dark: colorGroup.dark?.$value ? resolveColorRef(colorGroup.dark.$value) : undefined,
+        contrastText: colorGroup.contrastText?.$value,
+    };
+}
+
 function buildPalette(mode: 'light' | 'dark') {
     const file = path.join(TOKENS_ROOT, 'palette', mode === 'dark' ? 'Dark.json' : 'Light.json');
     const p = readJson(file);
 
     // Brand 토큰은 coreTheme에서 처리하므로 palette에서는 제외
+    const primary = hasProperty(p, 'primary') ? extractPaletteColor(p.primary) : undefined;
+    const secondary = hasProperty(p, 'secondary') ? extractPaletteColor(p.secondary) : undefined;
+    const error = hasProperty(p, 'error') ? extractPaletteColor(p.error) : undefined;
+    const warning = hasProperty(p, 'warning') ? extractPaletteColor(p.warning) : undefined;
+    const info = hasProperty(p, 'info') ? extractPaletteColor(p.info) : undefined;
+    const success = hasProperty(p, 'success') ? extractPaletteColor(p.success) : undefined;
 
-    const primary = p.primary ? {
-        light: resolveColorRef(p.primary.light?.$value),
-        main: resolveColorRef(p.primary.main?.$value),
-        dark: resolveColorRef(p.primary.dark?.$value),
-        contrastText: p.primary.contrastText?.$value,
-    } : undefined;
+    const text = hasProperty(p, 'text') ? (() => {
+        const textGroup = p.text as TextColorGroup;
+        return {
+            primary: textGroup.primary?.$value ? resolveColorRef(textGroup.primary.$value) : undefined,
+            secondary: textGroup.secondary?.$value ? resolveColorRef(textGroup.secondary.$value) : undefined,
+            disabled: textGroup.disabled?.$value ? resolveColorRef(textGroup.disabled.$value) : undefined,
+        };
+    })() : undefined;
 
-    const secondary = p.secondary ? {
-        light: resolveColorRef(p.secondary.light?.$value),
-        main: resolveColorRef(p.secondary.main?.$value),
-        dark: resolveColorRef(p.secondary.dark?.$value),
-        contrastText: p.secondary.contrastText?.$value,
-    } : undefined;
+    const background = hasProperty(p, 'background') ? (() => {
+        const bgGroup = p.background as BackgroundColorGroup;
+        const defaultBg = bgGroup.default?.$value ? resolveColorRef(bgGroup.default.$value) : undefined;
+        const paperBg = bgGroup['paper-elevation-0']?.$value ? resolveColorRef(bgGroup['paper-elevation-0'].$value) : defaultBg;
+        return {
+            default: defaultBg,
+            paper: paperBg,
+        };
+    })() : undefined;
 
-    const error = p.error ? {
-        light: resolveColorRef(p.error.light?.$value),
-        main: resolveColorRef(p.error.main?.$value),
-        dark: resolveColorRef(p.error.dark?.$value),
-        contrastText: p.error.contrastText?.$value,
-    } : undefined;
+    const action = hasProperty(p, 'action') ? (() => {
+        const actionGroup = p.action as ActionColorGroup;
+        return {
+            active: actionGroup.active?.$value ? resolveColorRef(actionGroup.active.$value) : undefined,
+            hover: actionGroup.hover?.$value ? resolveColorRef(actionGroup.hover.$value) : undefined,
+            selected: actionGroup.selected?.$value ? resolveColorRef(actionGroup.selected.$value) : undefined,
+            disabled: actionGroup.disabled?.$value ? resolveColorRef(actionGroup.disabled.$value) : undefined,
+            disabledBackground: actionGroup.disabledBackground?.$value ? resolveColorRef(actionGroup.disabledBackground.$value) : undefined,
+            focus: actionGroup.focus?.$value ? resolveColorRef(actionGroup.focus.$value) : undefined,
+        };
+    })() : undefined;
 
-    const warning = p.warning ? {
-        light: resolveColorRef(p.warning.light?.$value),
-        main: resolveColorRef(p.warning.main?.$value),
-        dark: resolveColorRef(p.warning.dark?.$value),
-        contrastText: p.warning.contrastText?.$value,
-    } : undefined;
+    const common = hasProperty(p, 'common') ? (() => {
+        const commonGroup = p.common as CommonColorGroup;
+        return {
+            white: commonGroup.white_states?.main?.$value ? resolveColorRef(commonGroup.white_states.main.$value) : undefined,
+            black: commonGroup.black_states?.main?.$value ? resolveColorRef(commonGroup.black_states.main.$value) : undefined,
+        };
+    })() : undefined;
 
-    const info = p.info ? {
-        light: resolveColorRef(p.info.light?.$value),
-        main: resolveColorRef(p.info.main?.$value),
-        dark: resolveColorRef(p.info.dark?.$value),
-        contrastText: p.info.contrastText?.$value,
-    } : undefined;
-
-    const success = p.success ? {
-        light: resolveColorRef(p.success.light?.$value),
-        main: resolveColorRef(p.success.main?.$value),
-        dark: resolveColorRef(p.success.dark?.$value),
-        contrastText: p.success.contrastText?.$value,
-    } : undefined;
-
-    const text = p.text ? {
-        primary: resolveColorRef(p.text.primary?.$value),
-        secondary: resolveColorRef(p.text.secondary?.$value),
-        disabled: resolveColorRef(p.text.disabled?.$value),
-    } : undefined;
-
-    const background = p.background ? {
-        default: resolveColorRef(p.background.default?.$value),
-        paper: resolveColorRef(p.background['paper-elevation-0']?.$value || p.background.default?.$value),
-    } : undefined;
-
-    const action = p.action ? {
-        active: resolveColorRef(p.action.active?.$value),
-        hover: resolveColorRef(p.action.hover?.$value),
-        selected: resolveColorRef(p.action.selected?.$value),
-        disabled: resolveColorRef(p.action.disabled?.$value),
-        disabledBackground: resolveColorRef(p.action.disabledBackground?.$value),
-        focus: resolveColorRef(p.action.focus?.$value),
-    } : undefined;
-
-    const common = p.common ? {
-        white: resolveColorRef(p.common.white_states?.main?.$value),
-        black: resolveColorRef(p.common.black_states?.main?.$value),
-    } : undefined;
-
-    const divider = resolveColorRef(p.divider?.$value);
+    const divider = hasProperty(p, 'divider') && isTokenValue(p.divider) 
+        ? resolveColorRef(p.divider.$value) 
+        : undefined;
 
     return {
         mode,
@@ -446,21 +476,23 @@ function buildPalette(mode: 'light' | 'dark') {
  * 
  * core.button.*, chip.*, tooltip.*, alert.*, input.* 등을 MUI 컴포넌트 스타일로 변환
  */
-function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): Record<string, any> {
-    const components: Record<string, any> = {};
+function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): JsonRecord {
+    const components: JsonRecord = {};
     const parseWeight = createFontWeightParser(tokensTypos);
 
     // Helper: 타이포 토큰 → 스타일 객체
-    const parseTypoToken = (tokenValue: any) => {
-        if (!tokenValue) return {};
-        const fontSize = normalizeRem(resolveTokenRef(tokenValue.fontSize, tokensCore, tokensTypos));
-        const lineHeight = normalizeLineHeight(resolveTokenRef(tokenValue.lineHeight, tokensCore, tokensTypos));
-        const fontWeight = parseWeight(resolveTokenRef(tokenValue.fontWeight, tokensCore, tokensTypos));
-        const letterSpacing = normalizeLetterSpacing(resolveTokenRef(tokenValue.letterSpacing, tokensCore, tokensTypos));
-        const textCaseRaw = resolveTokenRef(tokenValue.textCase, tokensCore, tokensTypos);
+    const parseTypoToken = (tokenValue: unknown): JsonRecord => {
+        if (!tokenValue || typeof tokenValue !== 'object') return {};
+        const token = asJsonRecord(tokenValue);
+        
+        const fontSize = normalizeRem(resolveTokenRef(token.fontSize, tokensCore, tokensTypos) as string | number);
+        const lineHeight = normalizeLineHeight(resolveTokenRef(token.lineHeight, tokensCore, tokensTypos) as string | number);
+        const fontWeight = parseWeight(resolveTokenRef(token.fontWeight, tokensCore, tokensTypos) as string | number);
+        const letterSpacing = normalizeLetterSpacing(resolveTokenRef(token.letterSpacing, tokensCore, tokensTypos));
+        const textCaseRaw = resolveTokenRef(token.textCase, tokensCore, tokensTypos);
         const textTransform = String(textCaseRaw).toLowerCase() === 'uppercase' ? 'uppercase' : undefined;
 
-        const result: Record<string, any> = { fontSize, lineHeight, fontWeight };
+        const result: JsonRecord = { fontSize, lineHeight, fontWeight };
         if (letterSpacing !== undefined && letterSpacing !== 0) result.letterSpacing = letterSpacing;
         if (textTransform) result.textTransform = textTransform;
         return result;
@@ -468,16 +500,16 @@ function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): Record<s
 
     // MuiButton: core.button.large/medium/small
     if (tokensCore?.button) {
-        const btn = tokensCore.button;
-        const variants: any[] = [];
-        if (btn.large?.$value) {
-            variants.push({ props: { size: 'large' }, style: parseTypoToken(btn.large.$value) });
+        const btn = asJsonRecord(tokensCore.button);
+        const variants: Array<{ props: JsonRecord; style: JsonRecord }> = [];
+        if (btn.large && typeof btn.large === 'object' && btn.large !== null && '$value' in btn.large) {
+            variants.push({ props: { size: 'large' }, style: parseTypoToken(asJsonRecord(btn.large).$value) });
         }
-        if (btn.medium?.$value) {
-            variants.push({ props: { size: 'medium' }, style: parseTypoToken(btn.medium.$value) });
+        if (btn.medium && typeof btn.medium === 'object' && btn.medium !== null && '$value' in btn.medium) {
+            variants.push({ props: { size: 'medium' }, style: parseTypoToken(asJsonRecord(btn.medium).$value) });
         }
-        if (btn.small?.$value) {
-            variants.push({ props: { size: 'small' }, style: parseTypoToken(btn.small.$value) });
+        if (btn.small && typeof btn.small === 'object' && btn.small !== null && '$value' in btn.small) {
+            variants.push({ props: { size: 'small' }, style: parseTypoToken(asJsonRecord(btn.small).$value) });
         }
         if (variants.length > 0) {
             components.MuiButton = { variants };
@@ -485,49 +517,66 @@ function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): Record<s
     }
 
     // MuiChip: core.chip.label
-    if (tokensCore?.chip?.label?.$value) {
-        components.MuiChip = {
-            styleOverrides: {
-                label: parseTypoToken(tokensCore.chip.label.$value),
-            },
-        };
+    if (hasProperty(tokensCore, 'chip')) {
+        const chip = asJsonRecord(tokensCore.chip);
+        if (hasProperty(chip, 'label') && isTokenValue(chip.label)) {
+            components.MuiChip = {
+                styleOverrides: {
+                    label: parseTypoToken(chip.label.$value),
+                },
+            };
+        }
     }
 
     // MuiTooltip: core.tooltip.label
-    if (tokensCore?.tooltip?.label?.$value) {
-        components.MuiTooltip = {
-            styleOverrides: {
-                tooltip: parseTypoToken(tokensCore.tooltip.label.$value),
-            },
-        };
+    if (hasProperty(tokensCore, 'tooltip')) {
+        const tooltip = asJsonRecord(tokensCore.tooltip);
+        if (hasProperty(tooltip, 'label') && isTokenValue(tooltip.label)) {
+            components.MuiTooltip = {
+                styleOverrides: {
+                    tooltip: parseTypoToken(tooltip.label.$value),
+                },
+            };
+        }
     }
 
     // MuiBadge: core.badge.label
-    if (tokensCore?.badge?.label?.$value) {
-        components.MuiBadge = {
-            styleOverrides: {
-                badge: parseTypoToken(tokensCore.badge.label.$value),
-            },
-        };
+    if (hasProperty(tokensCore, 'badge')) {
+        const badge = asJsonRecord(tokensCore.badge);
+        if (hasProperty(badge, 'label') && isTokenValue(badge.label)) {
+            components.MuiBadge = {
+                styleOverrides: {
+                    badge: parseTypoToken(badge.label.$value),
+                },
+            };
+        }
     }
 
     // MuiAlert: core.alert.title/description
-    if (tokensCore?.alert) {
-        const alert = tokensCore.alert;
-        const styleOverrides: Record<string, any> = {};
-        if (alert.title?.$value) styleOverrides.message = parseTypoToken(alert.title.$value);
+    if (hasProperty(tokensCore, 'alert')) {
+        const alert = asJsonRecord(tokensCore.alert);
+        const styleOverrides: JsonRecord = {};
+        if (hasProperty(alert, 'title') && isTokenValue(alert.title)) {
+            styleOverrides.message = parseTypoToken(alert.title.$value);
+        }
         if (Object.keys(styleOverrides).length > 0) {
             components.MuiAlert = { styleOverrides };
         }
     }
 
     // MuiTextField (Input): core.input.label/value/helper
-    if (tokensCore?.input) {
-        const input = tokensCore.input;
-        const inputOverrides: Record<string, any> = {};
-        if (input.label?.$value) inputOverrides.label = parseTypoToken(input.label.$value);
-        if (input.value?.$value) inputOverrides.input = parseTypoToken(input.value.$value);
-        if (input.helper?.$value) inputOverrides.helperText = parseTypoToken(input.helper.$value);
+    if (hasProperty(tokensCore, 'input')) {
+        const input = asJsonRecord(tokensCore.input);
+        const inputOverrides: JsonRecord = {};
+        if (hasProperty(input, 'label') && isTokenValue(input.label)) {
+            inputOverrides.label = parseTypoToken(input.label.$value);
+        }
+        if (hasProperty(input, 'value') && isTokenValue(input.value)) {
+            inputOverrides.input = parseTypoToken(input.value.$value);
+        }
+        if (hasProperty(input, 'helper') && isTokenValue(input.helper)) {
+            inputOverrides.helperText = parseTypoToken(input.helper.$value);
+        }
         if (Object.keys(inputOverrides).length > 0) {
             components.MuiTextField = { styleOverrides: inputOverrides };
         }
@@ -545,22 +594,24 @@ function buildBrandExtensions() {
         const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
         const brandData = readJson(brandPath);
         
-        const brand: Record<string, any> = {};
+        const brand: JsonRecord = {};
         
         // Colors 처리: colors 하위의 모든 색상 그룹 추출
         if (brandData.colors) {
-            brand.colors = {};
+            const colors: JsonRecord = {};
             for (const [colorGroupName, colorGroup] of Object.entries(brandData.colors)) {
-                brand.colors[colorGroupName] = extractTokenValues(colorGroup);
+                colors[colorGroupName] = extractTokenValues(colorGroup);
             }
+            brand.colors = colors;
         }
         
         // Sizes 처리: sizes 하위의 모든 사이즈 그룹 추출
         if (brandData.sizes) {
-            brand.sizes = {};
+            const sizes: JsonRecord = {};
             for (const [sizeGroupName, sizeGroup] of Object.entries(brandData.sizes)) {
-                brand.sizes[sizeGroupName] = extractTokenValues(sizeGroup);
+                sizes[sizeGroupName] = extractTokenValues(sizeGroup);
             }
+            brand.sizes = sizes;
         }
         
         // Logo 처리: 하위 호환성을 위해 유지
@@ -592,9 +643,11 @@ function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
     let spacing: number = 8;
     try {
         const sp = readJson(spacingTokensPath);
-        const base = sp['1']?.$value ? parseFloat(sp['1'].$value) : undefined;
+        const base = (sp['1'] as Record<string, unknown>)?.$value ? parseFloat((sp['1'] as Record<string, unknown>).$value as string) : undefined;
         spacing = base && isFinite(base) ? base : 8;
-    } catch {}
+    } catch {
+        // spacing 토큰 파일이 없으면 기본값(8) 사용
+    }
 
     // breakpoints: breakpoints/Mode 1.json
     let breakpoints: { values: { xs: number; sm: number; md: number; lg: number; xl: number } } | undefined;
@@ -602,32 +655,38 @@ function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
         const bp = readJson(breakpointsPath);
         breakpoints = {
             values: {
-                xs: parseInt(bp.xs.$value, 10),
-                sm: parseInt(bp.sm.$value, 10),
-                md: parseInt(bp.md.$value, 10),
-                lg: parseInt(bp.lg.$value, 10),
-                xl: parseInt(bp.xl.$value, 10),
+                xs: parseInt((bp.xs as Record<string, unknown>).$value as string, 10),
+                sm: parseInt((bp.sm as Record<string, unknown>).$value as string, 10),
+                md: parseInt((bp.md as Record<string, unknown>).$value as string, 10),
+                lg: parseInt((bp.lg as Record<string, unknown>).$value as string, 10),
+                xl: parseInt((bp.xl as Record<string, unknown>).$value as string, 10),
             },
         };
-    } catch {}
+    } catch {
+        // breakpoints 토큰 파일이 없으면 MUI 기본값 사용
+    }
 
     // shape: shape/Mode 1.json → borderRadius
     let shape: { borderRadius: number } | undefined;
     try {
         const sh = readJson(shapePath);
-        const r = sh.borderRadius?.$value;
+        const r = (sh.borderRadius as Record<string, unknown>)?.$value;
         shape = r !== undefined ? { borderRadius: isNaN(Number(r)) ? 4 : Number(r) } : undefined;
-    } catch {}
+    } catch {
+        // shape 토큰 파일이 없으면 MUI 기본값 사용
+    }
 
     // shadows: core.elevation → MUI shadows array
-    const toCssShadow = (arr: any): string => {
+    const toCssShadow = (arr: unknown): string => {
         if (!Array.isArray(arr)) return 'none';
-        const parts = arr.map((d: any) => {
-            const color = d.color;
-            const x = `${d.x}px`;
-            const y = `${d.y}px`;
-            const blur = `${d.blur}px`;
-            const spread = `${d.spread}px`;
+        const parts = arr.map((d: unknown) => {
+            if (!d || typeof d !== 'object') return 'none';
+            const shadow = d as Record<string, unknown>;
+            const color = shadow.color;
+            const x = `${shadow.x}px`;
+            const y = `${shadow.y}px`;
+            const blur = `${shadow.blur}px`;
+            const spread = `${shadow.spread}px`;
             return `${x} ${y} ${blur} ${spread} ${color}`;
         });
         return parts.join(', ');

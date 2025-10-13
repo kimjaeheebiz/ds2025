@@ -1,7 +1,7 @@
 import { Box, Typography, useTheme } from '@mui/material';
 import logoImage from '@/assets/images/logo.svg';
 import markImage from '@/assets/images/mark.svg';
-import { APP_INFO } from '@/constants/app-config';
+import { APP_INFO } from '@/config';
 
 export interface BrandProps {
     size?: 'small' | 'medium' | 'large' | 'extraLarge';

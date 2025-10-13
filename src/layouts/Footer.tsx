@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { APP_INFO } from '@/constants/app-config';
+import { APP_INFO } from '@/config';
 
 export const Footer = () => (
     <Box component="footer" sx={{ py: 2, px: 3 }}>

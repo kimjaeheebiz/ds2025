@@ -1,5 +1,5 @@
 import { Drawer, useMediaQuery, useTheme } from '@mui/material';
-import { SIDEBAR_WIDTH, SIDEBAR_MINI_WIDTH, HEADER_HEIGHT, Z_INDEX } from '@/constants/layout';
+import { SIDEBAR_WIDTH, SIDEBAR_MINI_WIDTH, HEADER_HEIGHT, Z_INDEX } from '@/config';
 import { Navigation } from './Navigation';
 
 interface SidebarProps {

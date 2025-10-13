@@ -2,10 +2,23 @@ import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolti
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { NAVIGATION_MENU, NavigationMenuItem, getIconComponent, PAGES } from '../constants/app-config';
+import { 
+    NAVIGATION_MENU, 
+    NavigationMenuItem, 
+    getIconComponent, 
+    PAGES, 
+    isPageNode, 
+    isFolderNode 
+} from '@/config';
 
 interface NavigationProps {
     open: boolean;
+}
+
+// 경로 활성화 체크 헬퍼 함수
+function isPathActive(currentPath: string, targetPath?: string): boolean {
+    if (!targetPath) return false;
+    return currentPath === targetPath || (targetPath !== '/' && currentPath.startsWith(targetPath));
 }
 
 export const Navigation = ({ open }: NavigationProps) => {
@@ -17,28 +30,33 @@ export const Navigation = ({ open }: NavigationProps) => {
         const folders = new Set<string>();
 
         Object.values(PAGES).forEach((page) => {
-            if ('children' in page && page.children) {
-                const hasMatchingChild = Object.values(page.children).some((child) => {
-                    if ('path' in child && child.path && currentPath.startsWith(child.path)) {
+            if (!isPageNode(page) || !isFolderNode(page)) return;
+
+            Object.values(page.children).some((child) => {
+                if (!isPageNode(child)) return false;
+
+                // Leaf 자식이 현재 경로와 매칭되면 부모 폴더 열기
+                if ('path' in child && isPathActive(currentPath, child.path)) {
+                    folders.add(page.title);
+                    return true;
+                }
+
+                // Folder 자식인 경우 손자 노드 확인
+                if (isFolderNode(child)) {
+                    const hasMatchingGrandChild = Object.values(child.children).some((grandChild) => {
+                        if (!isPageNode(grandChild)) return false;
+                        return 'path' in grandChild && isPathActive(currentPath, grandChild.path);
+                    });
+
+                    if (hasMatchingGrandChild) {
                         folders.add(page.title);
+                        folders.add(child.title);
                         return true;
                     }
-                    if ('children' in child && child.children) {
-                        const hasMatchingGrandChild = Object.values(child.children).some(
-                            (grandChild) => {
-                                const grandChildConfig = grandChild as any;
-                                return grandChildConfig.path && currentPath.startsWith(grandChildConfig.path);
-                            }
-                        );
-                        if (hasMatchingGrandChild) {
-                            folders.add(page.title);
-                            folders.add(child.title);
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-            }
+                }
+
+                return false;
+            });
         });
 
         return folders;
@@ -51,9 +69,7 @@ export const Navigation = ({ open }: NavigationProps) => {
         return {
             ...item,
             icon: <IconComponent />,
-            isActive: item.path
-                ? location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path))
-                : false,
+            isActive: isPathActive(location.pathname, item.path),
         };
     });
 
@@ -66,7 +82,11 @@ export const Navigation = ({ open }: NavigationProps) => {
     const handleFolderToggle = (folderLabel: string) => {
         setExpandedFolders((prev) => {
             const newSet = new Set(prev);
-            newSet.has(folderLabel) ? newSet.delete(folderLabel) : newSet.add(folderLabel);
+            if (newSet.has(folderLabel)) {
+                newSet.delete(folderLabel);
+            } else {
+                newSet.add(folderLabel);
+            }
             return newSet;
         });
     };
@@ -80,11 +100,7 @@ export const Navigation = ({ open }: NavigationProps) => {
                     const isActive =
                         item.isActive ||
                         (hasChildren &&
-                            item.children?.some(
-                                (child) =>
-                                    (child.path && location.pathname === child.path) ||
-                                    (child.path && child.path !== '/' && location.pathname.startsWith(child.path)),
-                            ));
+                            item.children?.some((child) => isPathActive(location.pathname, child.path)));
 
                     return (
                         <ListItem 
@@ -142,15 +158,11 @@ export const Navigation = ({ open }: NavigationProps) => {
                                             const hasGrandChildren = child.children && child.children.length > 0;
                                             const isChildExpanded = expandedFolders.has(child.label);
                                             const isChildActive = child.path
-                                                ? location.pathname === child.path ||
-                                                 (child.path !== '/' && location.pathname.startsWith(child.path))
+                                                ? isPathActive(location.pathname, child.path)
                                                 : hasGrandChildren &&
-                                                 child.children?.some(
-                                                     (grandChild) =>
-                                                         location.pathname === grandChild.path ||
-                                                         (grandChild.path !== '/' &&
-                                                             location.pathname.startsWith(grandChild.path)),
-                                                     );
+                                                 child.children?.some((grandChild) => 
+                                                     isPathActive(location.pathname, grandChild.path)
+                                                 );
 
                                             return (
                                                 <ListItem key={child.path || child.label} disablePadding sx={{ display: 'block' }}>
@@ -189,12 +201,7 @@ export const Navigation = ({ open }: NavigationProps) => {
                                                         >
                                                             <List component="ul" disablePadding dense>
                                                                 {child.children?.map((grandChild) => {
-                                                                    const isGrandChildActive =
-                                                                        location.pathname === grandChild.path ||
-                                                                        (grandChild.path !== '/' &&
-                                                                            location.pathname.startsWith(
-                                                                                grandChild.path,
-                                                                            ));
+                                                                    const isGrandChildActive = isPathActive(location.pathname, grandChild.path);
                                                                     return (
                                                                         <ListItem key={grandChild.path} disablePadding sx={{ display: 'block' }}>
                                                                             <Tooltip

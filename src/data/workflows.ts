@@ -1,4 +1,4 @@
-import type { Workflow } from './ProjectContext';
+import type { Workflow } from '@/contexts';
 
 // 샘플 프로젝트 워크플로우 데이터
 export const sampleWorkflows: Workflow[] = [

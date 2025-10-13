@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import { ProjectSubMenu, ProjectSubMenuTab, DEFAULT_PROJECT_TABS } from './ProjectSubMenu';
-import { AgentContent } from './AgentContent';
-import { CredentialContent, KnowledgeBaseContent, ApiKeyContent, MemberContent, SettingsContent } from './index';
-import type { Workflow } from '../ProjectContext';
+import { ProjectSubMenu } from './layout';
+import { Agent, Credential, KnowledgeBase, ApiKey, Member, Settings } from './sections';
+import { DEFAULT_PROJECT_TABS } from '@/config';
+import type { ProjectSubMenuTab } from '@/config';
+import type { Workflow } from '@/contexts';
 
 interface ProjectPageProps {
     tabs?: ProjectSubMenuTab[];
@@ -18,31 +19,27 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({ tabs, content, agentWo
 
     const effectiveTabs = tabs ?? DEFAULT_PROJECT_TABS;
     const defaultContent: Record<string, React.ReactNode> = {
-        credential: <CredentialContent />,
-        knowledgebase: <KnowledgeBaseContent />,
-        apikey: <ApiKeyContent />,
-        member: <MemberContent />,
-        settings: <SettingsContent />,
+        credential: <Credential />,
+        knowledgebase: <KnowledgeBase />,
+        apikey: <ApiKey />,
+        member: <Member />,
+        settings: <Settings />,
     };
     const effectiveContent = { ...defaultContent, ...(content ?? {}) };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 3 }}>
-            {/* 탭 메뉴(서브 메뉴) */}
             <ProjectSubMenu
                 tabs={effectiveTabs}
                 activeTab={activeTab}
                 onTabChange={(tab) => setSearchParams({ tab })}
             />
 
-            {/* 탭 컨텐츠(서브 페이지 메인 콘텐츠) */}
             {activeTab === 'agent' ? (
-                <AgentContent workflowData={agentWorkflowData} />
+                <Agent workflowData={agentWorkflowData} />
             ) : (
                 effectiveContent[activeTab] ?? null
             )}
         </Box>
     );
 };
-
-

@@ -41,6 +41,7 @@ declare module '@mui/material/styles' {
     }
 
     // Theme에 BrandColorGroups 확장
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface Theme extends BrandColorGroups {}
 
     interface ThemeOptions {
@@ -71,11 +72,14 @@ declare module '@mui/material/styles' {
     }
 
     // ThemeOptions에 BrandColorGroups 확장
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface ThemeOptions extends Partial<BrandColorGroups> {}
 
     // Palette에 동적 브랜드 색상 그룹 추가 ({colorGroup.colorName.shade} 패턴 지원)
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface Palette extends BrandColorGroups {}
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface PaletteOptions extends Partial<BrandColorGroups> {}
 }
 

@@ -3,16 +3,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RecoilRoot } from 'recoil';
 import { RouterProvider } from 'react-router-dom';
 import { router } from '@/router';
-import { MIN_WIDTH } from '@/constants/layout';
+import { MIN_WIDTH } from '@/config';
 import { lightTheme, darkTheme } from '@/theme';
 import './styles/globals.css';
-import { useMemo, useState, createContext, useContext } from 'react';
+import { useMemo, useState } from 'react';
+import { ColorModeContext } from '@/contexts/ColorModeContext';
 
 const queryClient = new QueryClient();
-
-// 라이트/다크 모드(테마) 토글 컨텍스트
-export const ColorModeContext = createContext<{ mode: 'light' | 'dark'; toggleTheme: () => void }>({ mode: 'light', toggleTheme: () => {} });
-export const useColorMode = () => useContext(ColorModeContext);
 
 function App() {
     const [mode, setMode] = useState<'light' | 'dark'>('light'); // 기본 모드 설정

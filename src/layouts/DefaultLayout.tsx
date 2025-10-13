@@ -5,9 +5,8 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { PageHeader } from './PageHeader';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
-import { HEADER_HEIGHT } from '@/constants/layout';
-import { getPageKeyFromPath, PAGE_METADATA, getPageInfo } from '@/constants/app-config';
-import { useColorMode } from '@/App';
+import { HEADER_HEIGHT, getPageKeyFromPath, PAGE_METADATA, getPageInfo } from '@/config';
+import { useColorMode } from '@/contexts/ColorModeContext';
 
 export const DefaultLayout = () => {
     useRouterPageTitle();

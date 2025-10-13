@@ -5,7 +5,7 @@ import {
     getPageKeyFromPath,
     APP_INFO,
     type PAGE_METADATA,
-} from '@/constants/app-config';
+} from '@/config';
 
 type PageKey = keyof typeof PAGE_METADATA;
 
