@@ -80,7 +80,7 @@ npm run build
 ### 크기 (theme 함수)
 ```jsx
 const theme = useTheme();
-const logoSize = theme.brand.sizes.logo.medium;
+const logoSize = theme.brand.sizes.logo.medium;  // Figma: brand/sizes/logo/medium
 ```
 
 ## 실전 예시: Brand 컴포넌트
@@ -101,10 +101,10 @@ Component: Brand
 ```
 
 **Variables 바인딩**
-- `logo/small` → Height: `{logo/small}`
-- `logo/medium` → Height: `{logo/medium}`
-- `logo/large` → Height: `{logo/large}`
-- `logo/extraLarge` → Height: `{logo/extraLarge}`
+- `brand/sizes/logo/small` → Height: 20px
+- `brand/sizes/logo/medium` → Height: 24px
+- `brand/sizes/logo/large` → Height: 28px
+- `brand/sizes/logo/extraLarge` → Height: 50px
 
 ### Tokens Studio 동기화
 1. Plugins → Tokens Studio → GitHub 연결
@@ -118,8 +118,13 @@ Component: Brand
   - `brandData.sizes` → `theme.brand.sizes`
 
 ### TypeScript 타입
-- **위치**: `src/theme/theme.d.ts`
-- **기능**: MUI 테마에 브랜드 토큰 타입 확장
+- **타입 정의**: `design-system/adapters/types/`
+  - `tokens.ts`: Figma 토큰 기본 타입 + 타입 가드
+  - `palette.ts`: MUI 팔레트 타입
+  - `brand.ts`: 브랜드 토큰 타입
+  - `index.ts`: 통합 export
+- **모듈 확장**: `src/theme/theme.d.ts`
+  - MUI 테마에 브랜드 토큰 타입 확장
 
 ### React 컴포넌트
 - **위치**: `src/components/Brand.tsx`

@@ -1,13 +1,9 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { BrandTokens } from '../../design-system/adapters/types';
 import lightThemeOptions from './generated/theme.light.json';
 import darkThemeOptions from './generated/theme.dark.json';
 
-// 타입 정의
-interface BrandTokens {
-    colors?: Record<string, Record<string, Record<string, string>>>; // colorGroup.colorName.shade -> hex
-    sizes?: Record<string, Record<string, number>>; // sizeGroup.sizeName -> number
-}
-
+// 확장된 테마 옵션 타입
 interface ExtendedThemeOptions {
     palette?: Record<string, unknown>;
     brand?: BrandTokens;
@@ -15,8 +11,14 @@ interface ExtendedThemeOptions {
 }
 
 // 타입 가드: brand.colors 존재 여부 확인
-function hasBrandColors(brand: unknown): brand is { colors: Record<string, unknown> } {
-    return brand !== null && typeof brand === 'object' && 'colors' in brand && typeof (brand as { colors: unknown }).colors === 'object';
+function hasBrandColors(brand: unknown): brand is BrandTokens & { colors: NonNullable<BrandTokens['colors']> } {
+    return (
+        brand !== null && 
+        typeof brand === 'object' && 
+        'colors' in brand && 
+        typeof (brand as BrandTokens).colors === 'object' &&
+        (brand as BrandTokens).colors !== null
+    );
 }
 
 /**

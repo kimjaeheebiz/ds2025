@@ -2,84 +2,26 @@
 // https://mui.com/material-ui/customization/theming/#custom-variables
 
 import '@mui/material/styles';
+import { BrandTokens, BrandColorGroup } from '../../design-system/adapters/types';
 
 declare module '@mui/material/styles' {
+    // Theme에 brand 속성 추가
     interface Theme {
-        brand: {
-            // 새로운 구조: colors/sizes 분리
-            colors: {
-                [colorGroupName: string]: {
-                    [colorName: string]: {
-                        [shade: string]: string;
-                    };
-                };
-            };
-            sizes: {
-                [sizeGroupName: string]: {
-                    [sizeName: string]: number;
-                };
-            };
-            // 하위 호환성: logo 속성
-            logo?: {
-                size: {
-                    small: number;
-                    medium: number;
-                    large: number;
-                    extraLarge: number;
-                };
-            };
-        };
+        brand: Required<BrandTokens>;
     }
 
-    // 동적 브랜드 색상 그룹을 위한 별도 인터페이스
-    interface BrandColorGroups {
-        [colorGroupName: string]: {
-            [colorName: string]: {
-                [shade: string]: string;
-            };
-        };
-    }
-
-    // Theme에 BrandColorGroups 확장
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface Theme extends BrandColorGroups {}
-
+    // ThemeOptions에 brand 속성 추가
     interface ThemeOptions {
-        brand?: {
-            // 새로운 구조: colors/sizes 분리
-            colors?: {
-                [colorGroupName: string]: {
-                    [colorName: string]: {
-                        [shade: string]: string;
-                    };
-                };
-            };
-            sizes?: {
-                [sizeGroupName: string]: {
-                    [sizeName: string]: number;
-                };
-            };
-            // 하위 호환성: logo 속성
-            logo?: {
-                size?: {
-                    small?: number;
-                    medium?: number;
-                    large?: number;
-                    extraLarge?: number;
-                };
-            };
-        };
+        brand?: BrandTokens;
     }
 
-    // ThemeOptions에 BrandColorGroups 확장
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface ThemeOptions extends Partial<BrandColorGroups> {}
+    // Palette에 동적 브랜드 색상 그룹 추가 (sx prop에서 사용 가능)
+    interface Palette {
+        [colorGroupName: string]: BrandColorGroup | unknown;
+    }
 
-    // Palette에 동적 브랜드 색상 그룹 추가 ({colorGroup.colorName.shade} 패턴 지원)
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface Palette extends BrandColorGroups {}
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface PaletteOptions extends Partial<BrandColorGroups> {}
+    interface PaletteOptions {
+        [colorGroupName: string]: Partial<BrandColorGroup> | unknown;
+    }
 }
 

@@ -90,7 +90,7 @@ src/
 design-system/
 ├── adapters/                     # 토큰 → MUI 테마 변환기
 │   ├── to-mui-theme.ts           # 핵심 어댑터
-│   └── types.ts                  # 타입 정의
+│   └── types/                    # 타입 정의
 └── tokens/                       # Figma 토큰 파일들
     └── generated/                # Figma Tokens Studio 생성 파일들
 ```
