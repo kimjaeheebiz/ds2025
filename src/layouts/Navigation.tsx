@@ -1,5 +1,19 @@
-import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Tooltip, Collapse } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { 
+    Box, 
+    List, 
+    ListItem, 
+    ListItemButton, 
+    ListItemIcon, 
+    ListItemText, 
+    Tooltip, 
+    Collapse,
+} from '@mui/material';
+import { 
+    ExpandLess, 
+    ExpandMore,
+    ArrowUpward as ArrowUpwardIcon,
+    ArrowDownward as ArrowDownwardIcon,
+} from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { 
@@ -8,7 +22,10 @@ import {
     getIconComponent, 
     PAGES, 
     isPageNode, 
-    isFolderNode 
+    isFolderNode,
+    ActionButton,
+    SortDirection,
+    SortOption,
 } from '@/config';
 
 interface NavigationProps {
@@ -24,6 +41,9 @@ function isPathActive(currentPath: string, targetPath?: string): boolean {
 export const Navigation = ({ open }: NavigationProps) => {
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // 정렬 상태 관리 (key: sortKey, value: direction)
+    const [sortStates, setSortStates] = useState<Record<string, SortDirection>>({});
 
     // 현재 경로 메뉴 폴더 열기
     const getFoldersToExpand = (currentPath: string): Set<string> => {
@@ -91,6 +111,113 @@ export const Navigation = ({ open }: NavigationProps) => {
         });
     };
 
+    // 정렬 옵션 렌더링 함수
+    const renderSortOption = (sortOption: SortOption, onSort: (key: string, direction: SortDirection) => void) => {
+        const currentDirection = sortStates[sortOption.key];
+        
+        const handleSort = () => {
+            let newDirection: SortDirection;
+            
+            if (currentDirection === null || currentDirection === undefined) {
+                newDirection = 'asc';
+            } else if (currentDirection === 'asc') {
+                newDirection = 'desc';
+            } else {
+                newDirection = null;
+            }
+            
+            setSortStates(prev => ({
+                ...prev,
+                [sortOption.key]: newDirection,
+            }));
+            
+            onSort(sortOption.key, newDirection);
+        };
+
+        return (
+            <ListItemButton
+                key={sortOption.key}
+                onClick={handleSort}
+                sx={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                    fontSize: '13px',  // 14px (small 사이즈)
+                    color: 'text.secondary',
+                    bgcolor: 'action.hover',
+                    '&:hover': {
+                        bgcolor: 'action.focus',
+                    },
+                }}
+            >
+                <Box component="span">
+                    {sortOption.label}
+                </Box>
+                {currentDirection === 'asc' && (
+                    <ArrowUpwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />
+                )}
+                {currentDirection === 'desc' && (
+                    <ArrowDownwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />
+                )}
+            </ListItemButton>
+        );
+    };
+
+    // 액션 버튼 렌더링 함수
+    const renderActionButton = (action: ActionButton) => {
+        // Button 타입 (일반 버튼)
+        if (action.type === 'button') {
+            return (
+                <ListItem key={action.key} disablePadding sx={{ display: 'block' }}>
+                    <ListItemButton
+                        onClick={action.onClick}
+                        sx={{
+                            pl: 8,
+                            pr: 2,
+                        }}
+                    >
+                        <ListItemText 
+                            primary={action.label}
+                            sx={{
+                                '& .MuiListItemText-primary': {
+                                    color: action.textColor || 'text.primary',
+                                },
+                            }}
+                        />
+                    </ListItemButton>
+                </ListItem>
+            );
+        }
+
+        // Sort Group 타입 (정렬 버튼 그룹)
+        if (action.type === 'sort-group' && action.sortOptions) {
+            return (
+                <ListItem key={action.key} disablePadding sx={{ display: 'block' }}>
+                    <Box
+                        sx={{
+                            pl: 8,
+                            pr: 2,
+                            py: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}
+                    >
+                        {action.sortOptions.map((sortOption) => 
+                            renderSortOption(sortOption, action.onSort!)
+                        )}
+                    </Box>
+                </ListItem>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <List dense sx={{ p: 0 }}>
@@ -101,6 +228,10 @@ export const Navigation = ({ open }: NavigationProps) => {
                         item.isActive ||
                         (hasChildren &&
                             item.children?.some((child) => isPathActive(location.pathname, child.path)));
+
+                    // 원본 페이지 데이터에서 actions 가져오기
+                    const pageData = Object.values(PAGES).find(p => p.title === item.label);
+                    const actions = pageData && isFolderNode(pageData) ? pageData.actions : undefined;
 
                     return (
                         <ListItem 
@@ -154,6 +285,10 @@ export const Navigation = ({ open }: NavigationProps) => {
                             {hasChildren && (
                                 <Collapse in={isExpanded && open} timeout="auto" unmountOnExit>
                                     <List component="ul" disablePadding dense>
+                                        {/* 액션 버튼 영역 */}
+                                        {actions && actions.length > 0 && actions.map((action) => renderActionButton(action))}
+                                        
+                                        {/* 기존 children 리스트 */}
                                         {item.children?.map((child) => {
                                             const hasGrandChildren = child.children && child.children.length > 0;
                                             const isChildExpanded = expandedFolders.has(child.label);

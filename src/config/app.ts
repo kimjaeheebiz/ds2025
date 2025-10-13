@@ -28,6 +28,28 @@ export const APP_INFO = {
 // 2. 타입 정의 및 타입 가드
 // =========================================================================
 
+// 액션 버튼 타입
+export type ActionButtonType = 'button' | 'sort-group';
+
+export type SortDirection = 'asc' | 'desc' | null;
+
+export interface SortOption {
+    key: string;
+    label: string;
+}
+
+export interface ActionButton {
+    key: string;
+    label?: string;
+    type: ActionButtonType;
+    onClick?: () => void;
+    textColor?: string;  // 텍스트 색상 커스터마이징
+    
+    // sort-group 타입용
+    sortOptions?: SortOption[];
+    onSort?: (key: string, direction: SortDirection) => void;
+}
+
 // 페이지 노드 기본 인터페이스
 interface BasePageNode {
     key: string;
@@ -45,6 +67,7 @@ export interface LeafPageNode extends BasePageNode {
 // Folder 페이지 (자식이 있는 페이지)
 export interface FolderPageNode extends BasePageNode {
     children: Record<string, PageNode>;
+    actions?: ActionButton[];
 }
 
 // 통합 페이지 노드 타입
@@ -98,6 +121,30 @@ export const PAGES: Record<string, PageNode> = {
         icon: 'FolderOutlined',
         showInSidebar: true,
         showPageHeader: false,
+        actions: [
+            {
+                key: 'new-project',
+                label: '+ New Project',
+                type: 'button',
+                onClick: () => {
+                    // TODO: 새 프로젝트 생성 모달 열기
+                    console.log('Create new project');
+                },
+                textColor: 'primary.main',
+            },
+            {
+                key: 'sort-projects',
+                type: 'sort-group',
+                sortOptions: [
+                    { key: 'name', label: '이름순' },
+                    { key: 'date', label: '참여일순' },
+                ],
+                onSort: (key: string, direction) => {
+                    // TODO: 정렬 로직 구현
+                    console.log('Sort by:', key, direction);
+                },
+            },
+        ],
         children: {
             project1: {
                 key: 'project.project1',
