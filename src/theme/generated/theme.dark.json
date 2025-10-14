@@ -1843,9 +1843,9 @@
   "palette": {
     "mode": "dark",
     "primary": {
-      "light": "#8dc8ff",
-      "main": "#36a1ff",
-      "dark": "#0e83ef",
+      "light": "#ff9061",
+      "main": "#ff6114",
+      "dark": "#e65509",
       "contrastText": "#000000"
     },
     "secondary": {
