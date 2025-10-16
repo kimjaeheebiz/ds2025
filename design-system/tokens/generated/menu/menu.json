@@ -36,11 +36,11 @@
     },
     "project1": {
       "$type": "text",
-      "$value": "Project 11"
+      "$value": "Project test 1"
     },
     "project2": {
       "$type": "text",
-      "$value": "Project 22"
+      "$value": "Project test 2"
     },
     "users": {
       "$type": "text",
@@ -48,7 +48,7 @@
     },
     "components": {
       "$type": "text",
-      "$value": "Components"
+      "$value": "UI Components"
     }
   },
   "path": {
