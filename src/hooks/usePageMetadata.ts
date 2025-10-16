@@ -2,35 +2,32 @@ import { useLocation } from 'react-router-dom';
 import {
     getPageMetadata,
     getBrowserTitle,
-    getPageKeyFromPath,
+    findRouteByUrl,
     APP_INFO,
-    type PAGE_METADATA,
 } from '@/config';
 
-type PageKey = keyof typeof PAGE_METADATA;
-
 export interface UsePageMetadataOptions {
-    pageKey?: PageKey;
+    pageId?: string;
     customTitle?: string;
 }
 
-export const usePageMetadata = ({ pageKey, customTitle }: UsePageMetadataOptions = {}) => {
+export const usePageMetadata = ({ pageId, customTitle }: UsePageMetadataOptions = {}) => {
     const location = useLocation();
 
-    // URL에서 페이지 키 추출
-    const detectedPageKey = getPageKeyFromPath(location.pathname);
-    const finalPageKey = pageKey || detectedPageKey;
+    // URL에서 라우트 정보 가져오기
+    const currentRoute = findRouteByUrl(location.pathname);
+    const finalPageId = pageId || currentRoute?.id;
 
     // 페이지 메타데이터 가져오기
-    const pageMetadata = finalPageKey ? getPageMetadata(finalPageKey) : null;
+    const pageMetadata = finalPageId ? getPageMetadata(finalPageId) : null;
 
     // 최종 타이틀 결정
     const finalTitle = customTitle || pageMetadata?.title || APP_INFO.name;
 
     return {
-        pageKey: finalPageKey,
+        pageId: finalPageId,
         title: finalTitle,
-        browserTitle: finalPageKey ? getBrowserTitle(finalPageKey) : APP_INFO.name,
+        browserTitle: finalPageId ? getBrowserTitle(finalPageId) : APP_INFO.name,
         metadata: pageMetadata,
     };
 };

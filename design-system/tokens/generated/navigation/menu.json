@@ -1,0 +1,82 @@
+{
+  "id": {
+    "home": {
+      "value": "home",
+      "type": "text"
+    },
+    "project": {
+      "value": "project",
+      "type": "text"
+    },
+    "project1": {
+      "value": "project1",
+      "type": "text"
+    },
+    "project2": {
+      "value": "project2",
+      "type": "text"
+    },
+    "users": {
+      "value": "users",
+      "type": "text"
+    },
+    "components": {
+      "value": "components",
+      "type": "text"
+    }
+  },
+  "label": {
+    "home": {
+      "value": "Home",
+      "type": "text"
+    },
+    "project": {
+      "value": "Project",
+      "type": "text"
+    },
+    "project1": {
+      "value": "Project 1",
+      "type": "text"
+    },
+    "project2": {
+      "value": "Project 2",
+      "type": "text"
+    },
+    "users": {
+      "value": "Users",
+      "type": "text"
+    },
+    "components": {
+      "value": "UI Components",
+      "type": "text"
+    }
+  },
+  "path": {
+    "home": {
+      "value": "/",
+      "type": "text"
+    },
+    "project": {
+      "value": "",
+      "type": "text",
+      "description": "2 뎁스 페이지의 부모 폴더"
+    },
+    "project1": {
+      "value": "/project/project1",
+      "type": "text"
+    },
+    "project2": {
+      "value": "/project/project2",
+      "type": "text"
+    },
+    "users": {
+      "value": "/users",
+      "type": "text"
+    },
+    "components": {
+      "value": "/components",
+      "type": "text"
+    }
+  }
+}
+
