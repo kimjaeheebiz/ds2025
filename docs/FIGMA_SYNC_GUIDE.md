@@ -57,7 +57,7 @@ Figma에서 Tokens Studio for Figma 플러그인 설치
 내보낸 JSON을 다음 위치에 저장:
 
 ```
-design-system/tokens/generated/navigation/menu.json
+design-system/tokens/generated/menu/menu.json
 ```
 
 ### 3단계: 동기화 스크립트 실행
@@ -246,7 +246,7 @@ function generatePageId(id: string, parentId?: string): string {
 
 3. **토큰 파일 저장**
    ```bash
-   design-system/tokens/generated/navigation/menu.json
+   design-system/tokens/generated/menu/menu.json
    ```
 
 4. **동기화 실행**

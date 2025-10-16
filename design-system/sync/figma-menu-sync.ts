@@ -3,7 +3,7 @@
  * 
  * 사용법:
  * 1. Tokens Studio에서 JSON 내보내기
- * 2. design-system/tokens/generated/navigation/menu.json에 저장
+ * 2. design-system/tokens/generated/menu/menu.json에 저장
  * 3. npx tsx design-system/sync/figma-menu-sync.ts
  */
 
@@ -15,9 +15,9 @@ import path from 'path';
 // =========================================================================
 
 interface TokenValue {
-    value: string;
-    type: string;
-    description?: string;
+    $type: string;
+    $value: string;
+    $description?: string;
 }
 
 interface TokenSet {
@@ -67,7 +67,7 @@ function generatePageId(id: string, parentId?: string): string {
 // =========================================================================
 
 function loadTokens(): TokenSet {
-    const tokenPath = path.join(process.cwd(), 'design-system/tokens/generated/navigation/menu.json');
+    const tokenPath = path.join(process.cwd(), 'design-system/tokens/generated/menu/menu.json');
     
     if (!fs.existsSync(tokenPath)) {
         throw new Error(`토큰 파일을 찾을 수 없습니다: ${tokenPath}`);
@@ -89,9 +89,9 @@ function buildMenuStructure(tokens: TokenSet): MenuItem[] {
     const allItems: MenuItem[] = [];
     
     Object.keys(tokens.id).forEach(key => {
-        const id = tokens.id[key].value;
-        const label = tokens.label[key]?.value || id;
-        const path = tokens.path[key]?.value || '';
+        const id = tokens.id[key].$value;
+        const label = tokens.label[key]?.$value || id;
+        const path = tokens.path[key]?.$value || '';
         
         // path가 비어있으면 group, 있으면 item
         const type: 'item' | 'group' = path === '' ? 'group' : 'item';
@@ -331,14 +331,6 @@ function main() {
         
         // 4. 파일 저장
         const outputPath = path.join(process.cwd(), 'src/config/menus.ts');
-        const backupPath = path.join(process.cwd(), 'src/config/menus.backup.ts');
-        
-        // 기존 파일 백업
-        if (fs.existsSync(outputPath)) {
-            console.log('💾 기존 파일 백업 중...');
-            fs.copyFileSync(outputPath, backupPath);
-            console.log(`✅ 백업 완료: ${backupPath}\n`);
-        }
         
         // 새 파일 저장
         fs.writeFileSync(outputPath, code, 'utf-8');

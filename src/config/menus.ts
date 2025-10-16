@@ -4,7 +4,7 @@
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
  * 
- * 생성 일시: 2025-10-16T07:05:09.208Z
+ * 생성 일시: 2025-10-16T09:19:18.110Z
  */
 
 import { findPageById } from './pages';
@@ -75,41 +75,17 @@ export const MENUS: MenuItem[] = [
         title: 'Project',
         type: 'group',
         icon: 'FolderOutlined',
-        actions: [
-            {
-                key: 'add',
-                label: '+ New Project',
-                type: 'button',
-                onClick: () => {
-                    // TODO: 프로젝트 생성 모달 열기 구현
-                    console.log('Create new project');
-                },
-                textColor: 'text.secondary',
-            },
-            {
-                key: 'sort',
-                type: 'sort-group',
-                sortOptions: [
-                    { key: 'name', label: '이름순' },
-                    { key: 'date', label: '참여일순' },
-                ],
-                onSort: (key: string, direction) => {
-                    // TODO: 프로젝트 정렬 로직 구현
-                    console.log('Sort by:', key, direction);
-                },
-            },
-        ],
         children: [
             {
                 id: 'project1',
-                title: 'Project 1',
+                title: 'Project 11',
                 type: 'item',
                 url: '/project/project1',
                 pageId: 'project.project1',
             },
             {
                 id: 'project2',
-                title: 'Project 2',
+                title: 'Project 22',
                 type: 'item',
                 url: '/project/project2',
                 pageId: 'project.project2',
@@ -126,7 +102,7 @@ export const MENUS: MenuItem[] = [
     },
     {
         id: 'components',
-        title: 'UI Components',
+        title: 'Components',
         type: 'item',
         url: '/components',
         icon: 'WidgetsOutlined',
