@@ -605,11 +605,22 @@ function buildBrandExtensions() {
             brand.colors = colors;
         }
         
-        // Sizes 처리: sizes 하위의 모든 사이즈 그룹 추출
+        // Sizes 처리: sizes 하위의 모든 사이즈 그룹 추출 (문자열 → 숫자 변환)
         if (brandData.sizes) {
             const sizes: JsonRecord = {};
             for (const [sizeGroupName, sizeGroup] of Object.entries(brandData.sizes)) {
-                sizes[sizeGroupName] = extractTokenValues(sizeGroup);
+                const extractedSizes = extractTokenValues(sizeGroup) as Record<string, unknown>;
+                const convertedSizes: Record<string, number> = {};
+                
+                for (const [sizeName, sizeValue] of Object.entries(extractedSizes)) {
+                    // 문자열을 숫자로 변환
+                    const numericValue = typeof sizeValue === 'string' ? parseFloat(sizeValue) : Number(sizeValue);
+                    if (!isNaN(numericValue)) {
+                        convertedSizes[sizeName] = numericValue;
+                    }
+                }
+                
+                sizes[sizeGroupName] = convertedSizes;
             }
             brand.sizes = sizes;
         }
