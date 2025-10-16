@@ -3,7 +3,7 @@
  * 
  * 사용법:
  * 1. Tokens Studio에서 JSON 내보내기
- * 2. design-system/tokens/generated/menu/menu.json에 저장
+ * 2. design-system/tokens/views/menu/menu.json에 저장
  * 3. npx tsx design-system/sync/figma-menu-sync.ts
  */
 
@@ -67,7 +67,7 @@ function generatePageId(id: string, parentId?: string): string {
 // =========================================================================
 
 function loadTokens(): TokenSet {
-    const tokenPath = path.join(process.cwd(), 'design-system/tokens/generated/menu/menu.json');
+    const tokenPath = path.join(process.cwd(), 'design-system/tokens/views/menu/menu.json');
     
     if (!fs.existsSync(tokenPath)) {
         throw new Error(`토큰 파일을 찾을 수 없습니다: ${tokenPath}`);
