@@ -1,174 +1,132 @@
 # Agent Platform Design System 2025
 
-## 프로젝트 개요
+React + TypeScript + Vite 기반 관리 시스템
 
-Agent Platform Frontend 디자인 시스템 테스트 프로젝트(2025.09 ~)
-
-## 주요 기술 스택
-
-- **프론트엔드**: React 18.3, TypeScript
-- **상태 관리**: Recoil
-- **스타일링**: Material-UI (MUI), TailwindCSS, Emotion
-- **라우팅**: React Router v7
-- **데이터 페칭**: TanStack React Query (v5)
-- **빌드 도구**: Vite
-- **코드 품질**: ESLint, Prettier
-
-## 개발 환경 설정 및 명령어
-
-### 의존성 설치
+## 🚀 시작하기
 
 ```bash
+# 설치
 npm install
-```
 
-### 개발 서버 실행
-
-```bash
-# 개발 서버 실행 (포트 3000)
+# 개발 서버
 npm run dev
-```
 
-### 코드 품질 관리
-
-```bash
-# ESLint 실행
-npm run lint
-
-# 특정 파일 ESLint 자동 수정
-npx eslint 경로/파일명 --fix
-```
-
-### 빌드 및 미리보기
-
-```bash
-# 프로덕션 빌드
+# 빌드
 npm run build
-
-# 빌드 결과 미리보기
-npm run preview
 ```
 
-## 프로젝트 아키텍처
+---
 
-### 폴더 구조
+## ✨ 새 페이지 추가
+
+### 1. 페이지 메타데이터 정의
+
+```typescript
+// src/config/pages.ts
+export const PAGES: PageConfig[] = [
+    {
+        id: 'myNewPage',
+        title: '새로운 페이지',
+        showPageHeader: true,
+    },
+];
+```
+
+### 2. 메뉴에 추가
+
+```typescript
+// src/config/menus.ts
+export const MENUS: MenuItem[] = [
+    {
+        id: 'myNewPage',
+        type: 'item',
+        url: '/my-new-page',
+        icon: 'StarOutlined',
+        pageId: 'myNewPage',
+    },
+];
+```
+
+### 3. 페이지 컴포넌트 생성
+
+```tsx
+// src/pages/my-new-page/MyNewPage.tsx
+export const MyNewPage = () => {
+    return <div>새로운 페이지</div>;
+};
+```
+
+이제 다음이 자동으로 처리됩니다:
+- ✅ React Router 라우팅
+- ✅ 사이드바 메뉴 표시
+- ✅ Breadcrumb 생성
+- ✅ 페이지 타이틀 설정
+
+---
+
+## 📁 프로젝트 구조
 
 ```
 src/
-├── assets/             # 정적 자원 (폰트, 이미지)
-├── components/         # 재사용 가능한 공통 컴포넌트
-├── constants/          # 앱 설정 및 상수
-├── hooks/              # 전역 커스텀 훅
-├── layouts/            # 레이아웃 컴포넌트
-├── pages/              # 페이지 컴포넌트 (라우팅 단위)
-├── router/             # 라우팅 설정
-├── styles/             # 전역 스타일
-├── theme/              # MUI 테마 설정
-├── utils/              # 유틸리티 함수
-└── App.tsx             # 메인 앱 컴포넌트
+├── config/              # 설정
+│   ├── pages.ts         # 페이지 메타데이터
+│   ├── menus.ts         # 메뉴 + 라우팅
+│   ├── navigation.ts    # 빌더
+│   └── app.ts           # 앱 설정
+├── pages/               # 페이지 컴포넌트
+├── layouts/             # 레이아웃
+├── components/          # 공통 컴포넌트
+├── hooks/               # 커스텀 훅
+└── theme/               # 테마
+
+design-system/
+├── tokens/              # 디자인 토큰 (Figma 동기화)
+├── schemas/             # JSON Schema
+└── validators/          # 유효성 검사
+
+docs/
+├── CONFIG_STRUCTURE.md  # 설정 파일 가이드
+├── MENU_STRUCTURE.md    # 메뉴 구조 가이드
+└── FIGMA_SYNC_GUIDE.md  # Figma 동기화 가이드
 ```
 
-### 주요 기능 모듈
+---
 
-1. **layouts/**: 레이아웃 구성 요소
-   - `DefaultLayout`: 기본 레이아웃 (헤더/사이드바/푸터)
-   - `AuthLayout`: 인증 레이아웃
-   - `ErrorLayout`: 오류 레이아웃
+## 🎨 Figma 동기화
 
-2. **pages/**: 페이지 구성
-   - `home/Home.tsx`: 홈페이지
-   - `project/project1/Project1.tsx`, `project/project2/Project2.tsx`: 프로젝트 페이지(공통 `ProjectPage` 사용)
-   - `project/components/*`: 프로젝트 공통 컴포넌트(`ProjectPage`, `ProjectSubMenu`, `StatusChip` 등)
-   - `users/Users.tsx`: 회원 관리
-   - `components/Components.tsx`: UI 컴포넌트 데모
-   - `login/Login.tsx`, `signup/Signup.tsx`: 인증
+Tokens Studio로 Figma 디자인과 자동 동기화:
 
-3. **constants/**: 앱 설정 모듈
-   - `app-config.ts`: 페이지/라우팅/메타데이터 통합 설정
-   - `layout.ts`: 레이아웃 상수
+```bash
+# Figma 토큰 → menus.ts 동기화
+npm run sync:figma
 
-### 상태 관리 패턴
+# 테마 토큰 빌드
+npm run tokens:build-theme
 
-- **Recoil**: 전역 상태 관리
-- **React Query**: 서버 상태 관리 및 캐싱
-- **로컬 상태**: 컴포넌트별 useState 및 커스텀 훅 활용
-
-### 컴포넌트 설계 패턴
-
-기능 디렉터리 구조
-
-```
-feature/
-├── FeatureName.tsx        # 메인 컴포넌트
-├── components/            # 기능별 하위 컴포넌트
-├── hooks/                 # 커스텀 훅
-├── recoil/                # Recoil 상태
-├── types/                 # 타입 정의
-└── utils/                 # 유틸리티 함수
+# 네비게이션 검증
+npm run validate:navigation
 ```
 
-## 라우팅 구조
+자세한 내용은 [Figma 동기화 가이드](docs/FIGMA_SYNC_GUIDE.md) 참조
 
-주요 라우트
+---
 
-- `/`: 홈
-- `/project/project1`, `/project/project2`: 프로젝트 상세(공통 페이지 사용)
-- `/users`: 회원 관리
-- `/components`: UI 컴포넌트
-- `/login`: 로그인
-- `/signup`: 계정 등록
+## 🔧 주요 기능
 
-### 라우팅 자동화 규칙 (파일 기반)
+- **자동 라우팅**: 설정 기반 라우트 생성 + Lazy loading
+- **스마트 네비게이션**: 3-depth 계층, 액션 버튼, 자동 활성화
+- **Breadcrumb**: URL 기반 자동 생성
+- **Design System**: Figma 토큰 동기화
 
-- 기준 파일: `src/utils/route-generator.ts`
-- 설정 소스: `app-config.ts`의 `PAGES`
-- 규칙 요약(2뎁스까지 지원)
-  - 키 계층: 점(`.`) 구분(예: `project.project1`)
-  - 폴더 경로: 소문자 kebab-case 변환
-  - 파일명: PascalCase, 언더스코어(`_`) 유지
-- 매핑 예시
-  - `home` → `src/pages/home/Home.tsx`
-  - `project.project1` → `src/pages/project/project1/Project1.tsx`
-  - `project.project2` → `src/pages/project/project2/Project2.tsx`
-- 로딩 방식: `import.meta.glob('/src/pages/**/*.{tsx,jsx}')` 지연 로딩
-- 레이아웃 규칙: `login`/`signup` → `AuthLayout`, 404/500 → `ErrorLayout`
-- 네이밍 주의: 폴더 소문자 시작, 파일 PascalCase
+---
 
-## 환경 설정
+## 🛠️ 기술 스택
 
-### TypeScript 경로 매핑
+- React 18, TypeScript, Vite
+- Material-UI (MUI)
+- React Router v6
+- Design Tokens (Figma 연동)
 
-프로젝트는 TypeScript 경로 별칭 사용
+---
 
-```typescript
-{
-  "@": "./src",
-  "@src": "./src",
-  "@layouts": "./src/layouts",
-  "@pages": "./src/pages",
-  "@components": "./src/components",
-  "@constants": "./src/constants",
-  "@styles": "./src/styles",
-  "@utils": "./src/utils",
-  "@router": "./src/router"
-}
-```
-
-### Vite 설정
-
-- **개발 서버**: 포트 3000, 자동 브라우저 열기
-- **빌드 출력**: `build/` 디렉토리
-- **소스맵**: 환경변수에 따라 제어
-- **콘솔 제거**: 프로덕션 빌드 시 자동 제거 (빌드 설정에 따름)
-
-## 개발 가이드라인
-
-### 코드 스타일
-
-- ESLint 자동 수정(필요 시): `npx eslint 경로/파일명 --fix`
-- TypeScript strict 모드 사용 (단, `noImplicitAny: false` 설정)
-- Prettier + ESLint 조합으로 코드 포맷팅
-
-## 라이선스
-
-© 2025 Hecto. All Rights Reserved.
+**버전**: 1.0.0

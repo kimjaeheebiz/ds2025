@@ -1,38 +1,58 @@
 import React from 'react';
 import { Chip, ChipProps } from '@mui/material';
 
+// ===== 타입 정의 =====
 export type WorkflowStatus = 'active' | 'inactive' | 'stop';
-
-export const STATUS_LABEL: Record<WorkflowStatus, string> = {
-    active: '활성',
-    inactive: '비활성',
-    stop: '중지',
-};
-
-export const STATUS_COLOR: Record<WorkflowStatus, 'success' | 'default' | 'error'> = {
-    active: 'success',
-    inactive: 'default',
-    stop: 'error',
-};
-
-export const getStatusLabel = (status?: string): string => {
-    const key = (status as WorkflowStatus) ?? 'inactive';
-    return STATUS_LABEL[key] ?? (status ?? '');
-};
-
-export const getStatusColor = (status?: string): 'success' | 'default' | 'error' => {
-    const key = (status as WorkflowStatus) ?? 'inactive';
-    return STATUS_COLOR[key] ?? 'default';
-};
 
 type Props = {
     status?: string;
 } & Omit<ChipProps, 'label' | 'color'>;
 
-export const StatusChip: React.FC<Props> = ({ status, size = 'small', ...rest }) => {
+// ===== 내부 유틸리티 =====
+
+// 타입 가드: status가 유효한 WorkflowStatus인지 확인
+function isWorkflowStatus(status: unknown): status is WorkflowStatus {
     return (
-        <Chip label={getStatusLabel(status)} color={getStatusColor(status) as any} size={size} {...rest} />
+        typeof status === 'string' &&
+        (status === 'active' || status === 'inactive' || status === 'stop')
     );
+}
+
+const STATUS_LABEL: Record<WorkflowStatus, string> = {
+    active: '활성',
+    inactive: '비활성',
+    stop: '중지',
 };
 
+const STATUS_COLOR: Record<WorkflowStatus, ChipProps['color']> = {
+    active: 'success',
+    inactive: 'default',
+    stop: 'error',
+};
 
+const getStatusLabel = (status?: string): string => {
+    if (isWorkflowStatus(status)) {
+        return STATUS_LABEL[status];
+    }
+    return status ?? STATUS_LABEL.inactive;
+};
+
+const getStatusColor = (status?: string): ChipProps['color'] => {
+    if (isWorkflowStatus(status)) {
+        return STATUS_COLOR[status];
+    }
+    return 'default';
+};
+
+// ===== 컴포넌트 =====
+
+export const StatusChip: React.FC<Props> = ({ status, size = 'small', ...rest }) => {
+    return (
+        <Chip 
+            label={getStatusLabel(status)} 
+            color={getStatusColor(status)} 
+            size={size} 
+            {...rest} 
+        />
+    );
+};

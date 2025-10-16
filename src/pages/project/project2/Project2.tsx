@@ -1,10 +1,10 @@
 import React from 'react';
-import { ProjectProvider } from '../ProjectContext';
-import { ProjectPage } from '../components';
-import { sampleWorkflows } from '../ProjectData';
+import { ProjectProvider } from '@/contexts';
+import { ProjectPage } from '../ProjectPage';
+import { sampleWorkflows } from '@/data';
 
 const Project2Content = () => {
-    return <ProjectPage agentWorkflowData={sampleWorkflows as any} />;
+    return <ProjectPage agentWorkflowData={sampleWorkflows} />;
 };
 
 export const Project2 = () => (

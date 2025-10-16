@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hecto.co.kr/schemas/navigation.schema.json",
+  "title": "Navigation Schema",
+  "description": "Figma와 동기화되는 네비게이션 메뉴 구조 정의",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "스키마 버전",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "lastSync": {
+      "type": "string",
+      "description": "마지막 Figma 동기화 시간 (ISO 8601)",
+      "format": "date-time"
+    },
+    "figmaFileKey": {
+      "type": "string",
+      "description": "Figma 파일 키"
+    },
+    "navigation": {
+      "type": "array",
+      "description": "네비게이션 메뉴 아이템 목록",
+      "items": {
+        "$ref": "#/definitions/NavigationItem"
+      }
+    }
+  },
+  "required": ["version", "navigation"],
+  "definitions": {
+    "NavigationItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "고유 식별자 (Figma Node ID와 매핑)"
+        },
+        "key": {
+          "type": "string",
+          "description": "페이지 키 (app.ts의 PAGES 키와 매칭)"
+        },
+        "label": {
+          "type": "string",
+          "description": "표시될 메뉴 이름"
+        },
+        "icon": {
+          "type": "string",
+          "description": "MUI 아이콘 이름"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["leaf", "folder"],
+          "description": "메뉴 타입"
+        },
+        "path": {
+          "type": "string",
+          "description": "라우트 경로 (leaf 타입만 필수)"
+        },
+        "showInSidebar": {
+          "type": "boolean",
+          "description": "사이드바 표시 여부",
+          "default": true
+        },
+        "order": {
+          "type": "number",
+          "description": "정렬 순서"
+        },
+        "actions": {
+          "type": "array",
+          "description": "폴더형 메뉴의 액션 버튼",
+          "items": {
+            "$ref": "#/definitions/ActionButton"
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "하위 메뉴 (folder 타입만)",
+          "items": {
+            "$ref": "#/definitions/NavigationChild"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Figma 메타데이터",
+          "properties": {
+            "figmaNodeId": {
+              "type": "string"
+            },
+            "figmaComponentKey": {
+              "type": "string"
+            },
+            "lastModified": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "required": ["id", "key", "label", "icon", "type"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "leaf" } }
+          },
+          "then": {
+            "required": ["path"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "folder" } }
+          },
+          "then": {
+            "required": ["children"]
+          }
+        }
+      ]
+    },
+    "NavigationChild": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["leaf", "folder"]
+        },
+        "path": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "children": {
+          "type": "array",
+          "description": "3-depth 메뉴 (손자)",
+          "items": {
+            "$ref": "#/definitions/NavigationGrandChild"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "figmaNodeId": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": ["id", "key", "label", "type"]
+    },
+    "NavigationGrandChild": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "figmaNodeId": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": ["id", "key", "label", "path"]
+    },
+    "ActionButton": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "액션 버튼 고유 키"
+        },
+        "label": {
+          "type": "string",
+          "description": "버튼 레이블"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["button", "sort-group"],
+          "description": "버튼 타입"
+        },
+        "textColor": {
+          "type": "string",
+          "description": "텍스트 색상 (MUI color token)"
+        },
+        "sortOptions": {
+          "type": "array",
+          "description": "정렬 옵션 (sort-group 타입만)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": ["key", "label"]
+          }
+        }
+      },
+      "required": ["key", "type"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "button" } }
+          },
+          "then": {
+            "required": ["label"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "sort-group" } }
+          },
+          "then": {
+            "required": ["sortOptions"]
+          }
+        }
+      ]
+    }
+  }
+}
+

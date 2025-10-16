@@ -1,84 +1,78 @@
+/**
+ * Breadcrumb 컴포넌트 (Mantis 스타일)
+ * 
+ * 메뉴 구조를 기반으로 Breadcrumb를 생성합니다.
+ */
+
 import { Breadcrumbs, Link, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { getPageKeyFromPath, PAGES } from '@/constants/app-config';
+import { getBreadcrumbPath } from '@/config';
+import { useMemo } from 'react';
 
 export const Breadcrumb = () => {
-    const location = useLocation();
-    const pageKey = getPageKeyFromPath(location.pathname);
+  const location = useLocation();
 
-    const generateBreadcrumbs = () => {
-        const breadcrumbs: Array<{ label: string; path: string; isLast: boolean }> = [
-            { label: 'Home', path: '/', isLast: pageKey === 'home' },
-        ];
+  const generateBreadcrumbs = () => {
+    // Home은 항상 첫 번째
+    const list: Array<{ label: string; path?: string; isLast: boolean; isClickable: boolean }> = [
+      { 
+        label: 'Home', 
+        path: '/', 
+        isLast: location.pathname === '/', 
+        isClickable: location.pathname !== '/' 
+      },
+    ];
 
-        if (pageKey && pageKey !== 'home') {
-            const keyParts = pageKey.split('.');
-            let currentLevel: any = PAGES;
+    // 현재 경로가 Home이 아니면 메뉴 구조에서 경로 찾기
+    if (location.pathname !== '/') {
+      const breadcrumbPath = getBreadcrumbPath(location.pathname);
+      
+      breadcrumbPath.forEach((item, index) => {
+        const isLast = index === breadcrumbPath.length - 1;
+        const isClickable = !!item.url && !isLast;
+        
+        list.push({
+          label: item.title,
+          path: item.url,
+          isLast,
+          isClickable,
+        });
+      });
+    }
 
-            for (let i = 0; i < keyParts.length; i++) {
-                const part = keyParts[i];
-                const isLast = i === keyParts.length - 1;
+    return list;
+  };
 
-                if (i === 0) {
-                    const page = currentLevel[part];
-                    if (page && 'title' in page) {
-                        if ('children' in page && page.children) {
-                            breadcrumbs.push({ label: page.title, path: '#', isLast: false });
-                            currentLevel = page.children;
-                        } else {
-                            breadcrumbs.push({
-                                label: page.title,
-                                path: location.pathname,
-                                isLast: true,
-                            });
-                        }
-                    }
-                } else {
-                    const currentKey = keyParts.slice(0, i + 1).join('.');
-                    const childPage = Object.values(currentLevel).find((child: any) => child.key === currentKey);
+  const breadcrumbs = useMemo(generateBreadcrumbs, [location.pathname]);
 
-                    if (childPage && typeof childPage === 'object' && 'title' in childPage) {
-                        if ('children' in childPage && childPage.children) {
-                            breadcrumbs.push({
-                                label: childPage.title as string,
-                                path: '#',
-                                isLast: false,
-                            });
-                            currentLevel = childPage.children;
-                        } else {
-                            breadcrumbs.push({
-                                label: childPage.title as string,
-                                path: location.pathname,
-                                isLast: true,
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-        return breadcrumbs;
-    };
-
-    const breadcrumbs = generateBreadcrumbs();
-
-    return (
-        <Breadcrumbs aria-label="breadcrumb" sx={{ fontSize: '0.875rem' }}>
-            {breadcrumbs.map((breadcrumb, index) =>
-                breadcrumb.isLast ? (
-                    <Typography key={index} variant="body2" sx={{ color: 'text.primary' }}>
-                        {breadcrumb.label}
-                    </Typography>
-                ) : breadcrumb.path === '#' ? (
-                    <Typography key={index} variant="body2" sx={{ color: 'text.secondary' }}>
-                        {breadcrumb.label}
-                    </Typography>
-                ) : (
-                    <Link key={index} component={RouterLink} to={breadcrumb.path} underline="hover" color="inherit">
-                        {breadcrumb.label}
-                    </Link>
-                ),
-            )}
-        </Breadcrumbs>
-    );
+  return (
+    <Breadcrumbs aria-label="breadcrumb" sx={{ fontSize: '0.875rem' }}>
+      {breadcrumbs.map((bc, index) =>
+        bc.isLast ? (
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{ color: 'text.primary' }}
+            aria-current="page"
+          >
+            {bc.label}
+          </Typography>
+        ) : bc.isClickable && bc.path ? (
+          <Link
+            key={index}
+            component={RouterLink}
+            to={bc.path}
+            underline="hover"
+            color="inherit"
+          >
+            {bc.label}
+          </Link>
+        ) : (
+          <Typography key={index} variant="body2" sx={{ color: 'text.secondary' }}>
+            {bc.label}
+          </Typography>
+        ),
+      )}
+    </Breadcrumbs>
+  );
 };

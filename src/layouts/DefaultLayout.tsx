@@ -5,20 +5,19 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { PageHeader } from './PageHeader';
 import { useRouterPageTitle } from '@/hooks/useRouterPageTitle';
-import { HEADER_HEIGHT } from '@/constants/layout';
-import { getPageKeyFromPath, PAGE_METADATA, getPageInfo } from '@/constants/app-config';
+import { HEADER_HEIGHT, findRouteByUrl } from '@/config';
+import { useColorMode } from '@/contexts/ColorModeContext';
 
 export const DefaultLayout = () => {
     useRouterPageTitle();
 
     const location = useLocation();
-    const pageKey = getPageKeyFromPath(location.pathname)!;
-    const pageMetadata = PAGE_METADATA[pageKey];
-    const pageInfo = getPageInfo(pageKey);
+    const currentRoute = findRouteByUrl(location.pathname);
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+    const { toggleTheme } = useColorMode();
 
     return (
         <Box
@@ -30,7 +29,7 @@ export const DefaultLayout = () => {
                 pt: `${HEADER_HEIGHT}px`,
             }}
         >
-            <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+            <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} onToggleTheme={toggleTheme} />
 
             <Box
                 sx={{
@@ -53,8 +52,8 @@ export const DefaultLayout = () => {
                     }}
                 >
                     {/* 페이지 헤더 */}
-                    {pageInfo && 'showPageHeader' in pageInfo && pageInfo.showPageHeader && (
-                        <PageHeader title={pageMetadata.title} />
+                    {currentRoute && currentRoute.showPageHeader && (
+                        <PageHeader title={currentRoute.title} />
                     )}
 
                     {/* 페이지 콘텐츠 */}
