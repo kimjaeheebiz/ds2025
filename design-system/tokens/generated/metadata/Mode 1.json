@@ -1,0 +1,10 @@
+{
+  "version": {
+    "$type": "text",
+    "$value": "6.1.0"
+  },
+  "brandName": {
+    "$type": "text",
+    "$value": "Agent Platform"
+  }
+}
