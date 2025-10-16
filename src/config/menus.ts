@@ -4,7 +4,7 @@
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
  * 
- * 생성 일시: 2025-10-16T09:19:18.110Z
+ * 생성 일시: 2025-10-16T11:01:01.004Z
  */
 
 import { findPageById } from './pages';
@@ -78,14 +78,14 @@ export const MENUS: MenuItem[] = [
         children: [
             {
                 id: 'project1',
-                title: 'Project 11',
+                title: 'Project test 1',
                 type: 'item',
                 url: '/project/project1',
                 pageId: 'project.project1',
             },
             {
                 id: 'project2',
-                title: 'Project 22',
+                title: 'Project test 2',
                 type: 'item',
                 url: '/project/project2',
                 pageId: 'project.project2',
@@ -102,7 +102,7 @@ export const MENUS: MenuItem[] = [
     },
     {
         id: 'components',
-        title: 'Components',
+        title: 'UI Components',
         type: 'item',
         url: '/components',
         icon: 'WidgetsOutlined',
