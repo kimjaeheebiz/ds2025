@@ -295,33 +295,33 @@
           "$value": "#000000"
         }
       }
+    },
+    "test": {
+      "blue": {
+        "400": {
+          "$type": "color",
+          "$value": "#4b65ff"
+        }
+      }
     }
   },
   "sizes": {
     "logo": {
       "small": {
         "$type": "number",
-        "$value": 20
+        "$value": "20"
       },
       "medium": {
         "$type": "number",
-        "$value": 24
+        "$value": "24"
       },
       "large": {
         "$type": "number",
-        "$value": 28
+        "$value": "28"
       },
       "extraLarge": {
         "$type": "number",
-        "$value": 50
-      }
-    }
-  },
-  "test": {
-    "blue": {
-      "400": {
-        "$type": "color",
-        "$value": "#4b65ff"
+        "$value": "50"
       }
     }
   }
