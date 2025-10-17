@@ -1,0 +1,108 @@
+{
+  "mainmenu": {
+    "id": {
+      "home": {
+        "value": "home",
+        "type": "text"
+      },
+      "project": {
+        "value": "project",
+        "type": "text"
+      },
+      "project1": {
+        "value": "project1",
+        "type": "text"
+      },
+      "project2": {
+        "value": "project2",
+        "type": "text"
+      },
+      "users": {
+        "value": "users",
+        "type": "text"
+      },
+      "components": {
+        "value": "components",
+        "type": "text"
+      }
+    },
+    "label": {
+      "home": {
+        "value": "Home",
+        "type": "text"
+      },
+      "project": {
+        "value": "Project",
+        "type": "text"
+      },
+      "project1": {
+        "value": "Project 1",
+        "type": "text"
+      },
+      "project2": {
+        "value": "Project 2",
+        "type": "text"
+      },
+      "users": {
+        "value": "Users",
+        "type": "text"
+      },
+      "components": {
+        "value": "Components",
+        "type": "text"
+      }
+    },
+    "path": {
+      "home": {
+        "value": "/",
+        "type": "text"
+      },
+      "project": {
+        "value": " ",
+        "type": "text"
+      },
+      "project1": {
+        "value": "/project/project1",
+        "type": "text"
+      },
+      "project2": {
+        "value": "/project/project2",
+        "type": "text"
+      },
+      "users": {
+        "value": "/users",
+        "type": "text"
+      },
+      "components": {
+        "value": "/components",
+        "type": "text"
+      }
+    },
+    "type": {
+      "home": {
+        "value": "item",
+        "type": "text"
+      },
+      "project": {
+        "value": "group",
+        "type": "text"
+      },
+      "project1": {
+        "value": "item",
+        "type": "text"
+      },
+      "project2": {
+        "value": "item",
+        "type": "text"
+      },
+      "users": {
+        "value": "item",
+        "type": "text"
+      },
+      "components": {
+        "value": "item",
+        "type": "text"
+      }
+    }
+  }
+}
