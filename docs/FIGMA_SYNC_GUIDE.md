@@ -1,8 +1,8 @@
-# Figma 동기화 가이드
+# Figma 메인 메뉴 생성 가이드
 
 ## 📋 개요
 
-Tokens Studio를 사용하여 Figma의 네비게이션 디자인을 자동으로 코드에 동기화합니다.
+Tokens Studio를 사용하여 Figma의 메인 메뉴 디자인을 자동으로 코드에 생성합니다.
 
 ---
 
@@ -57,20 +57,20 @@ Figma에서 Tokens Studio for Figma 플러그인 설치
 내보낸 JSON을 다음 위치에 저장:
 
 ```
-design-system/tokens/views/menu/menu.json
+design-system/tokens/pages/navigation/Mode 1.json
 ```
 
 ### 3단계: 동기화 스크립트 실행
 
 ```bash
-npm run sync:figma
+npm run build:menu
 ```
 
 ### 4단계: 결과 확인
 
 ```
 ✅ 자동 생성된 파일:
-- src/config/menus.ts (기존 파일은 menus.backup.ts로 백업)
+- src/config/mainmenu.ts (기존 파일은 mainmenu.backup.ts로 백업)
 
 📝 확인 사항:
 1. pageId 매핑이 올바른지 검토
@@ -205,7 +205,7 @@ export const PAGES: PageConfig[] = [
 ### 아이콘 매핑 수정
 
 ```typescript
-// design-system/sync/figma-menu-sync.ts
+// design-system/generators/figma-menu-sync.ts
 const ICON_MAP: Record<string, string> = {
     home: 'HomeOutlined',
     project: 'FolderOutlined',
@@ -219,7 +219,7 @@ const ICON_MAP: Record<string, string> = {
 ### pageId 생성 규칙 수정
 
 ```typescript
-// design-system/sync/figma-menu-sync.ts
+// design-system/generators/figma-menu-sync.ts
 function generatePageId(id: string, parentId?: string): string {
     if (parentId) {
         return `${parentId}.${id}`;
@@ -246,12 +246,12 @@ function generatePageId(id: string, parentId?: string): string {
 
 3. **토큰 파일 저장**
    ```bash
-   design-system/tokens/generated/menu/menu.json
+   design-system/tokens/foundation/menu/menu.json
    ```
 
 4. **동기화 실행**
    ```bash
-   npm run sync:figma
+   npm run build:menu
    ```
 
 5. **pages.ts 업데이트**
@@ -277,7 +277,7 @@ function generatePageId(id: string, parentId?: string): string {
 
 ## 🚨 주의사항
 
-1. **동기화 전 백업**: 기존 `menus.ts`는 자동으로 `menus.backup.ts`로 백업됩니다
+1. **동기화 전 백업**: 기존 `mainmenu.ts`는 자동으로 `mainmenu.backup.ts`로 백업됩니다
 
 2. **수동 수정 보존**: 동기화 후 수동으로 추가한 내용(액션 버튼 등)은 다시 추가해야 합니다
 

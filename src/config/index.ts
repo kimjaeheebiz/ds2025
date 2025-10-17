@@ -34,7 +34,7 @@ export type {
 } from './app';
 
 // Navigation
-export { NAVIGATION_MENU, MENUS, getPageMetadataFromMenu, getMenuTitle } from './navigation';
+export { NAVIGATION_MENU, MAIN_MENUS, getMainPageMetadataFromMenu, getMainMenuTitle } from './navigation';
 
 // Pages
 export { PAGES, HIDDEN_PAGES } from './navigation';

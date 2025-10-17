@@ -4,7 +4,7 @@
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
  * 
- * 생성 일시: 2025-10-16T11:01:01.004Z
+ * 생성 일시: 2025-10-17T07:52:46.642Z
  */
 
 import { findPageById } from './pages';
@@ -38,7 +38,7 @@ interface BaseMenuItem {
     id: string;
     title?: string;
     type: MenuType;
-    url?: string;
+    path?: string;
     icon?: string;
     pageId?: string;
 }
@@ -51,7 +51,7 @@ export interface MenuGroup extends BaseMenuItem {
 
 export interface MenuItemLeaf extends BaseMenuItem {
     type: 'item';
-    url: string;
+    path: string;
     pageId: string;
 }
 
@@ -61,12 +61,12 @@ export type MenuItem = MenuGroup | MenuItemLeaf;
 // 메뉴 데이터 (Figma에서 동기화)
 // =========================================================================
 
-export const MENUS: MenuItem[] = [
+export const MAIN_MENUS: MenuItem[] = [
     {
         id: 'home',
         title: 'Home',
         type: 'item',
-        url: '/',
+        path: '/',
         icon: 'HomeOutlined',
         pageId: 'home',
     },
@@ -78,16 +78,16 @@ export const MENUS: MenuItem[] = [
         children: [
             {
                 id: 'project1',
-                title: 'Project test 1',
+                title: 'Project 1(2 depth test)',
                 type: 'item',
-                url: '/project/project1',
+                path: '/project/project1',
                 pageId: 'project.project1',
             },
             {
                 id: 'project2',
-                title: 'Project test 2',
+                title: 'Project 2',
                 type: 'item',
-                url: '/project/project2',
+                path: '/project/project2',
                 pageId: 'project.project2',
             }
         ],
@@ -96,15 +96,15 @@ export const MENUS: MenuItem[] = [
         id: 'users',
         title: 'Users',
         type: 'item',
-        url: '/users',
+        path: '/users',
         icon: 'PeopleOutlineOutlined',
         pageId: 'users',
     },
     {
         id: 'components',
-        title: 'UI Components',
+        title: 'Components',
         type: 'item',
-        url: '/components',
+        path: '/components',
         icon: 'WidgetsOutlined',
         pageId: 'components',
     }
@@ -117,7 +117,7 @@ export const MENUS: MenuItem[] = [
 /**
  * 메뉴 제목 가져오기 (title이 없으면 pages.ts에서 로드)
  */
-export const getMenuTitle = (menu: MenuItem): string => {
+export const getMainMenuTitle = (menu: MenuItem): string => {
     if (menu.title) {
         return menu.title;
     }
@@ -133,7 +133,7 @@ export const getMenuTitle = (menu: MenuItem): string => {
 /**
  * 페이지 메타데이터 가져오기
  */
-export const getPageMetadataFromMenu = (menu: MenuItem) => {
+export const getMainPageMetadataFromMenu = (menu: MenuItem) => {
     if (menu.type === 'item' && menu.pageId) {
         return findPageById(menu.pageId);
     }

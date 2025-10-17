@@ -1,5 +1,5 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
-import { BrandTokens } from '../../design-system/adapters/types';
+import { BrandTokens } from '../../design-system/generators/types';
 import lightThemeOptions from './generated/theme.light.json';
 import darkThemeOptions from './generated/theme.dark.json';
 

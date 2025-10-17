@@ -5,7 +5,7 @@
 ```
 Figma (Variables + Styles)
   ↓ Tokens Studio
-design-system/tokens/generated/
+design-system/tokens/foundation/
   ├── core.json                      # 핵심 UI 스타일 (typography, elevation, components 등)
   ├── brand/Mode 1.json              # 브랜드 색상/사이즈 (colors/sizes 구조)
   ├── palette/Light.json             # 라이트 모드 테마
@@ -15,7 +15,7 @@ design-system/tokens/generated/
   ├── spacing/Mode 1.json            # 간격
   ├── breakpoints/Mode 1.json        # 반응형 브레이크포인트 (xs, sm, md, lg, xl)
   └── shape/Mode 1.json              # 모서리, 테두리 (borderRadius, borderWidth 등)
-  ↓ 어댑터 (design-system/adapters/to-mui-theme.ts)
+  ↓ 어댑터 (design-system/generators/to-mui-theme.ts)
 src/theme/generated/
   ├── theme.light.json               # MUI ThemeOptions (Light)
   └── theme.dark.json                # MUI ThemeOptions (Dark)

@@ -1,7 +1,7 @@
 /*
   Adapter: Tokens Studio → MUI ThemeOptions (px → rem 변환 포함)
   실행: tsx design-system/adapters/to-mui-theme.ts
-  - design-system/tokens/generated/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
+  - design-system/tokens/foundation/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
 
   아키텍처:
   1. Core 선반영 (core.json 기반) - 디자인 핵심 UI
@@ -40,7 +40,7 @@ import {
 } from './types';
 
 const REPO_ROOT = process.cwd();
-const TOKENS_ROOT = path.join(REPO_ROOT, 'design-system', 'tokens', 'generated');
+const TOKENS_ROOT = path.join(REPO_ROOT, 'design-system', 'tokens', 'foundation');
 const OUTPUT_ROOT = path.join(REPO_ROOT, 'src', 'theme', 'generated');
 
 const PX_BASE = 16; // px → rem 기준

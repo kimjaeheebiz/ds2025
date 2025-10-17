@@ -94,5 +94,5 @@ export {
 
 export type { RouteInfo } from './navigation';
 export type { PageConfig, HiddenPageConfig } from './pages';
-export type { MenuItem, MenuGroup, MenuItemLeaf, ActionButton, SortOption, SortDirection } from './menus';
+export type { MenuItem, MenuGroup, MenuItemLeaf, ActionButton, SortOption, SortDirection } from './mainmenu';
 export type { NavigationMenuItem, NavigationMenuChild, NavigationMenuGrandChild } from './navigation';

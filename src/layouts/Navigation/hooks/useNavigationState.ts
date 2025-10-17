@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MENUS, MenuItem, MenuGroup, getMenuTitle } from '@/config';
+import { MAIN_MENUS, MenuItem, MenuGroup, getMainMenuTitle } from '@/config';
 import { SortDirection } from '@/config/navigation';
 
 /**
@@ -29,8 +29,8 @@ function getFoldersToExpand(currentPath: string): Set<string> {
                 // 자식 메뉴 확인
                 for (const child of groupMenu.children) {
                     // Item 타입이고 현재 경로와 매칭되면 부모 폴더 열기
-                    if (child.type === 'item' && isPathActive(currentPath, child.url)) {
-                        folders.add(getMenuTitle(menu));  // ✅ getMenuTitle 사용
+                    if (child.type === 'item' && isPathActive(currentPath, child.path)) {
+                        folders.add(getMainMenuTitle(menu));  // ✅ getMainMenuTitle 사용
                         return;
                     }
                     
@@ -38,12 +38,12 @@ function getFoldersToExpand(currentPath: string): Set<string> {
                     if (child.type === 'group') {
                         const childGroup = child as MenuGroup;
                         const hasMatchingGrandChild = childGroup.children.some((grandChild) => {
-                            return grandChild.type === 'item' && isPathActive(currentPath, grandChild.url);
+                            return grandChild.type === 'item' && isPathActive(currentPath, grandChild.path);
                         });
                         
                         if (hasMatchingGrandChild) {
-                            folders.add(getMenuTitle(menu));   // ✅ getMenuTitle 사용
-                            folders.add(getMenuTitle(child));  // ✅ getMenuTitle 사용
+                            folders.add(getMainMenuTitle(menu));   // ✅ getMainMenuTitle 사용
+                            folders.add(getMainMenuTitle(child));  // ✅ getMainMenuTitle 사용
                             return;
                         }
                     }
@@ -52,7 +52,7 @@ function getFoldersToExpand(currentPath: string): Set<string> {
         }
     };
 
-    searchMenus(MENUS);
+    searchMenus(MAIN_MENUS);
     return folders;
 }
 

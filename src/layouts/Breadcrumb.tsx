@@ -29,11 +29,11 @@ export const Breadcrumb = () => {
       
       breadcrumbPath.forEach((item, index) => {
         const isLast = index === breadcrumbPath.length - 1;
-        const isClickable = !!item.url && !isLast;
+        const isClickable = !!item.path && !isLast;
         
         list.push({
           label: item.title,
-          path: item.url,
+          path: item.path,
           isLast,
           isClickable,
         });

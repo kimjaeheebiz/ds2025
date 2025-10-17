@@ -9,7 +9,7 @@
 
 import React from 'react';
 import * as MuiIcons from '@mui/icons-material';
-import { MENUS, MenuItem, MenuGroup, MenuItemLeaf, ActionButton, getPageMetadataFromMenu, getMenuTitle } from './menus';
+import { MAIN_MENUS, MenuItem, MenuGroup, MenuItemLeaf, ActionButton, getMainPageMetadataFromMenu, getMainMenuTitle } from './mainmenu';
 import { PAGES, HIDDEN_PAGES, PageConfig, HiddenPageConfig, findPageById } from './pages';
 
 // =========================================================================
@@ -72,7 +72,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
         // 1-depth: NavigationMenuItem 생성
         if (depth === 1) {
             const baseItem: NavigationMenuItem = {
-                label: getMenuTitle(menu),  // ✅ getMenuTitle 사용
+                label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
                 icon: menu.icon || 'HomeOutlined',
                 showInSidebar: true,
             };
@@ -80,7 +80,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
             if (menu.type === 'item') {
                 return {
                     ...baseItem,
-                    path: menu.url,
+                    path: menu.path,
                 };
             }
 
@@ -94,7 +94,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
 
                 return {
                     ...baseItem,
-                    path: menu.url,
+                    path: menu.path,
                     children: children.length > 0 ? children : undefined,
                     actions: groupMenu.actions,
                 };
@@ -105,8 +105,8 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
         if (depth === 2) {
             if (menu.type === 'item') {
                 return {
-                    label: getMenuTitle(menu),  // ✅ getMenuTitle 사용
-                    path: menu.url,
+                    label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
+                    path: menu.path,
                     parent: getParentId(menu.id),
                 };
             }
@@ -118,8 +118,8 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
                         if (grandChild.type !== 'item') return null;
                         
                         return {
-                            label: getMenuTitle(grandChild),  // ✅ getMenuTitle 사용
-                            path: grandChild.url,
+                            label: getMainMenuTitle(grandChild),  // ✅ getMainMenuTitle 사용
+                            path: grandChild.path,
                             parent: getParentId(grandChild.id),
                         };
                     })
@@ -127,7 +127,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
 
                 return grandChildren.length > 0
                     ? {
-                        label: getMenuTitle(menu),  // ✅ getMenuTitle 사용
+                        label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
                         parent: getParentId(menu.id),
                         children: grandChildren,
                     }
@@ -138,7 +138,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
         return null;
     };
 
-    return MENUS
+    return MAIN_MENUS
         .map(menu => buildNavigationItem(menu, 1))
         .filter((item): item is NavigationMenuItem => item !== null);
 })();
@@ -157,8 +157,8 @@ function extractRoutesFromMenu(menu: MenuItem): RouteInfo[] {
         const pageMetadata = menu.pageId ? findPageById(menu.pageId) : null;
         
         routes.push({
-            url: menu.url,
-            title: getMenuTitle(menu),  // ✅ getMenuTitle 사용
+            url: menu.path,
+            title: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
             id: menu.pageId || menu.id,  // pageId 우선 사용
             pageId: menu.pageId,
             showPageHeader: pageMetadata?.showPageHeader ?? true,
@@ -180,7 +180,7 @@ function extractRoutesFromMenu(menu: MenuItem): RouteInfo[] {
  */
 export const ALL_ROUTES: RouteInfo[] = [
     // 메뉴 페이지
-    ...MENUS.flatMap(extractRoutesFromMenu),
+    ...MAIN_MENUS.flatMap(extractRoutesFromMenu),
     // 숨김 페이지
     ...HIDDEN_PAGES.map(page => ({
         url: page.url,
@@ -206,9 +206,9 @@ export const getIconComponent = (iconName: string) => {
 /**
  * URL로 메뉴 아이템 찾기 (재귀)
  */
-export const findMenuByUrl = (url: string, menus: MenuItem[] = MENUS): MenuItem | null => {
+export const findMenuByUrl = (url: string, menus: MenuItem[] = MAIN_MENUS): MenuItem | null => {
     for (const menu of menus) {
-        if (menu.url === url) return menu;
+        if (menu.path === url) return menu;
         
         if (menu.type === 'group' && menu.children) {
             const found = findMenuByUrl(url, menu.children);
@@ -228,7 +228,7 @@ export const findRouteByUrl = (url: string): RouteInfo | null => {
 /**
  * ID로 메뉴 아이템 찾기 (재귀)
  */
-export const findMenuById = (id: string, menus: MenuItem[] = MENUS): MenuItem | null => {
+export const findMenuById = (id: string, menus: MenuItem[] = MAIN_MENUS): MenuItem | null => {
     for (const menu of menus) {
         if (menu.id === id) return menu;
         
@@ -243,17 +243,17 @@ export const findMenuById = (id: string, menus: MenuItem[] = MENUS): MenuItem | 
 /**
  * URL로 Breadcrumb 경로 생성 (메뉴 구조 기반)
  */
-export const getBreadcrumbPath = (url: string): Array<{ title: string; url?: string }> => {
-    const breadcrumbs: Array<{ title: string; url?: string }> = [];
+export const getBreadcrumbPath = (url: string): Array<{ title: string; path?: string }> => {
+    const breadcrumbs: Array<{ title: string; path?: string }> = [];
     
     const findPath = (targetUrl: string, menus: MenuItem[], ancestors: MenuItem[] = []): boolean => {
         for (const menu of menus) {
             const currentAncestors = [...ancestors, menu];
             
-            if (menu.url === targetUrl) {
+            if (menu.path === targetUrl) {
                 breadcrumbs.push(...currentAncestors.map(m => ({ 
-                    title: getMenuTitle(m),  // ✅ getMenuTitle 사용
-                    url: m.url 
+                    title: getMainMenuTitle(m),  // ✅ getMainMenuTitle 사용
+                    path: m.path 
                 })));
                 return true;
             }
@@ -267,7 +267,7 @@ export const getBreadcrumbPath = (url: string): Array<{ title: string; url?: str
         return false;
     };
     
-    findPath(url, MENUS);
+    findPath(url, MAIN_MENUS);
     return breadcrumbs;
 };
 
@@ -284,7 +284,7 @@ export const getAllRoutes = (): RouteInfo[] => {
 export const getMenuActions = (menuTitle: string): ActionButton[] | undefined => {
     const search = (menus: MenuItem[]): ActionButton[] | undefined => {
         for (const menu of menus) {
-            if (getMenuTitle(menu) === menuTitle && menu.type === 'group' && menu.actions) {  // ✅ getMenuTitle 사용
+            if (getMainMenuTitle(menu) === menuTitle && menu.type === 'group' && menu.actions) {  // ✅ getMainMenuTitle 사용
                 return menu.actions;
             }
             if (menu.type === 'group' && menu.children) {
@@ -295,7 +295,7 @@ export const getMenuActions = (menuTitle: string): ActionButton[] | undefined =>
         return undefined;
     };
     
-    return search(MENUS);
+    return search(MAIN_MENUS);
 };
 
 /**
@@ -317,7 +317,7 @@ export type {
     MenuItem, 
     MenuGroup, 
     MenuItemLeaf 
-} from './menus';
+} from './mainmenu';
 
 export type { 
     PageConfig, 
@@ -325,10 +325,10 @@ export type {
 } from './pages';
 
 export { 
-    MENUS,
-    getPageMetadataFromMenu,
-    getMenuTitle,  // ✅ export 추가
-} from './menus';
+    MAIN_MENUS,
+    getMainPageMetadataFromMenu,
+    getMainMenuTitle,  // ✅ export 추가
+} from './mainmenu';
 
 export { 
     PAGES,

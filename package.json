@@ -5,13 +5,13 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "predev": "npm run tokens:build-theme",
-        "prebuild": "npm run tokens:build-theme",
+        "predev": "npm run build:theme",
+        "prebuild": "npm run build:theme",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview",
-        "tokens:build-theme": "npx --yes tsx design-system/adapters/to-mui-theme.ts",
-        "sync:figma": "npx tsx design-system/sync/figma-menu-sync.ts",
+        "build:theme": "npx --yes tsx design-system/generators/to-mui-theme.ts",
+        "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts",
         "validate:navigation": "npx tsx design-system/validators/navigation-validator.ts"
     },
     "dependencies": {

@@ -4,7 +4,7 @@
  * 사용법:
  * 1. Tokens Studio에서 JSON 내보내기
  * 2. design-system/tokens/pages/navigation/Mode 1.json에 저장
- * 3. npx tsx design-system/generators/figma-menu-sync.ts
+ * 3. npx tsx design-system/sync/figma-menu-sync.ts
  */
 
 import fs from 'fs';
