@@ -350,7 +350,7 @@ function main() {
         
         console.log('\n✅ 동기화 완료!\n');
         console.log('⚠️  다음 단계:');
-        console.log('1. src/config/menus.ts 파일 확인');
+        console.log('1. src/config/mainmenu.ts 파일 확인');
         console.log('2. pageId 매핑 검토 (필요시 수정)');
         console.log('3. 액션 버튼 수동 추가 (필요시)');
         console.log('4. npm run dev로 확인\n');

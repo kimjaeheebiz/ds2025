@@ -13,7 +13,6 @@ import {
     getParentId,
     getAllRoutes,
     findPageById,
-    RouteInfo,
 } from './navigation';
 
 // =========================================================================

@@ -2,7 +2,7 @@
 
 ## 📋 개요
 
-설정은 `pages.ts`, `menus.ts`, `navigation.ts`, `app.ts`로 분리되어 있습니다.
+설정은 `pages.ts`, `mainmenu.ts`, `navigation.ts`, `app.ts`로 분리되어 있습니다.
 
 ---
 
@@ -28,12 +28,12 @@ export const PAGES: PageConfig[] = [
 ```
 
 **특징**:
-- URL은 포함하지 않음 (menus.ts에서 관리)
+- URL은 포함하지 않음 (mainmenu.ts에서 관리)
 - 페이지 표시 설정만 관리
 
 ---
 
-## 📂 menus.ts
+## 📂 mainmenu.ts
 
 **역할**: 메뉴 구조 + URL 관리
 
@@ -43,7 +43,7 @@ export type MenuType = 'group' | 'item';
 export interface MenuItemLeaf {
     id: string;
     type: 'item';
-    url: string;             // URL 경로
+    path: string;             // URL 경로
     icon?: string;           // MUI 아이콘 (1-depth만)
     pageId: string;          // pages.ts 참조
     title?: string;          // 선택적 (생략 시 pages.ts에서 로드)
@@ -58,11 +58,11 @@ export interface MenuGroup {
     title?: string;
 }
 
-export const MENUS: MenuItem[] = [
+export const MAIN_MENUS: MenuItem[] = [
     {
         id: 'home',
         type: 'item',
-        url: '/',
+        path: '/',
         icon: 'HomeOutlined',
         pageId: 'home',
     },
@@ -79,7 +79,7 @@ export const MENUS: MenuItem[] = [
 
 ## 🔗 navigation.ts
 
-**역할**: pages.ts + menus.ts 결합 및 헬퍼 함수 제공
+**역할**: pages.ts + mainmenu.ts 결합 및 헬퍼 함수 제공
 
 자동으로 생성되는 항목:
 - `NAVIGATION_MENU`: 렌더링용 메뉴 구조
@@ -119,7 +119,7 @@ export { findRouteByUrl, getBreadcrumbPath, /* ... */ } from './navigation';
 | 파일 | 관리 항목 | Figma 동기화 |
 |------|-----------|--------------|
 | `pages.ts` | 페이지 메타데이터 (ID, 제목, 레이아웃) | ❌ |
-| `menus.ts` | 메뉴 구조, URL, 아이콘, 액션 | ✅ |
+| `mainmenu.ts` | 메뉴 구조, path, 아이콘, 액션 | ✅ |
 | `navigation.ts` | 자동 빌더 (수정 불필요) | ❌ |
 | `app.ts` | 앱 설정, 재내보내기 | ❌ |
 
@@ -137,11 +137,11 @@ export { findRouteByUrl, getBreadcrumbPath, /* ... */ } from './navigation';
     showPageHeader: true,
 }
 
-// menus.ts - 메뉴 + URL
+// mainmenu.ts - 메뉴 + path
 {
     id: 'users',
     type: 'item',
-    url: '/users',
+    path: '/users',
     icon: 'PeopleOutlined',
     pageId: 'users',
 }
@@ -150,13 +150,13 @@ export { findRouteByUrl, getBreadcrumbPath, /* ... */ } from './navigation';
 ### ❌ 잘못된 예시
 
 ```typescript
-// ❌ pages.ts에 URL 포함 금지
+// ❌ pages.ts에 path 포함 금지
 {
     id: 'users',
-    url: '/users',  // menus.ts에서 관리!
+    path: '/users',  // mainmenu.ts에서 관리!
 }
 
-// ❌ menus.ts에 페이지 설정 포함 금지
+// ❌ mainmenu.ts에 페이지 설정 포함 금지
 {
     id: 'users',
     showPageHeader: true,  // pages.ts에서 관리!
@@ -168,7 +168,7 @@ export { findRouteByUrl, getBreadcrumbPath, /* ... */ } from './navigation';
 ## 🔄 데이터 흐름
 
 ```
-pages.ts (메타데이터) + menus.ts (메뉴+URL)
+pages.ts (메타데이터) + mainmenu.ts (메뉴+path)
                 ↓
         navigation.ts (빌더)
                 ↓

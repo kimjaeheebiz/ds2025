@@ -11,8 +11,7 @@
         "lint": "eslint .",
         "preview": "vite preview",
         "build:theme": "npx --yes tsx design-system/generators/to-mui-theme.ts",
-        "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts",
-        "validate:navigation": "npx tsx design-system/validators/navigation-validator.ts"
+        "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts"
     },
     "dependencies": {
         "@emotion/react": "11.14.0",

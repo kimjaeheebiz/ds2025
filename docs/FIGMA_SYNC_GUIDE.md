@@ -296,5 +296,5 @@ function generatePageId(id: string, parentId?: string): string {
 
 - [메뉴 구조 가이드](MENU_STRUCTURE.md)
 - [설정 파일 가이드](CONFIG_STRUCTURE.md)
-- [Figma 통합 상세](../design-system/schemas/navigation/FIGMA_INTEGRATION.md)
+- [Figma 통합 상세](FIGMA_SYNC_GUIDE.md)
 

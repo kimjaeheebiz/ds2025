@@ -1,7 +1,7 @@
 /**
  * 라우트 자동 생성 (Mantis 스타일)
  * 
- * menus.ts의 메뉴 구조에서 React Router 라우트를 자동 생성합니다.
+ * mainmenu.ts의 메뉴 구조에서 React Router 라우트를 자동 생성합니다.
  */
 
 import React from 'react';
@@ -18,14 +18,14 @@ type PageModulesMap = Record<string, PageModuleLoader>;
 const PAGE_MODULES = import.meta.glob('/src/pages/**/*.{tsx,jsx}') as PageModulesMap;
 
 // camelCase를 kebab-case로 변환하는 함수
-const camelToKebab = (str: string): string => {
-    return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-};
+// const camelToKebab = (str: string): string => {
+//     return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+// };
 
 // ID를 파일 경로로 변환 (project.project1 → project/project1)
-const idToPath = (id: string): string => {
-    return id.split('.').map(camelToKebab).join('/');
-};
+// const idToPath = (id: string): string => {
+//     return id.split('.').map(camelToKebab).join('/');
+// };
 
 // 페이지 ID에서 컴포넌트 로더 생성
 const generateComponentLoader = (id: string): PageModuleLoader => {

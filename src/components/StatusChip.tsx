@@ -2,7 +2,7 @@ import React from 'react';
 import { Chip, ChipProps } from '@mui/material';
 
 // ===== 타입 정의 =====
-export type WorkflowStatus = 'active' | 'inactive' | 'stop';
+export type Status = 'active' | 'inactive' | 'stop' | 'expired';
 
 type Props = {
     status?: string;
@@ -10,35 +10,37 @@ type Props = {
 
 // ===== 내부 유틸리티 =====
 
-// 타입 가드: status가 유효한 WorkflowStatus인지 확인
-function isWorkflowStatus(status: unknown): status is WorkflowStatus {
+// 타입 가드: status가 유효한 Status인지 확인
+function isStatus(status: unknown): status is Status {
     return (
         typeof status === 'string' &&
         (status === 'active' || status === 'inactive' || status === 'stop')
     );
 }
 
-const STATUS_LABEL: Record<WorkflowStatus, string> = {
+const STATUS_LABEL: Record<Status, string> = {
     active: '활성',
     inactive: '비활성',
     stop: '중지',
+    expired: '만료',
 };
 
-const STATUS_COLOR: Record<WorkflowStatus, ChipProps['color']> = {
+const STATUS_COLOR: Record<Status, ChipProps['color']> = {
     active: 'success',
     inactive: 'default',
     stop: 'error',
+    expired: 'warning',
 };
 
 const getStatusLabel = (status?: string): string => {
-    if (isWorkflowStatus(status)) {
+    if (isStatus(status)) {
         return STATUS_LABEL[status];
     }
     return status ?? STATUS_LABEL.inactive;
 };
 
 const getStatusColor = (status?: string): ChipProps['color'] => {
-    if (isWorkflowStatus(status)) {
+    if (isStatus(status)) {
         return STATUS_COLOR[status];
     }
     return 'default';

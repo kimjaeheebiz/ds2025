@@ -61,7 +61,7 @@ export function validatePath(path: string): boolean {
     }
     
     // 허용되지 않는 문자 체크
-    const invalidChars = /[^a-z0-9\-\/]/;
+    const invalidChars = /[^a-z0-9\-/]/;
     if (invalidChars.test(path)) {
         console.warn(`Path contains invalid characters: ${path}`);
         return false;

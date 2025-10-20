@@ -3,7 +3,7 @@
  * 
  * 애플리케이션의 모든 페이지를 정의합니다.
  * - 페이지 ID, 제목, 메타데이터
- * - 라우팅 경로는 menus.ts에서 정의
+ * - 라우팅 경로는 mainmenu.ts에서 정의
  * - 메뉴에 없는 숨김 페이지 포함
  */
 
@@ -29,7 +29,7 @@ export interface HiddenPageConfig extends PageConfig {
 
 /**
  * 일반 페이지 정의
- * - url은 menus.ts에서 정의 (메뉴 구조와 함께)
+ * - path는 mainmenu.ts에서 정의 (메뉴 구조와 함께)
  * - 여기서는 페이지 메타데이터만 관리
  */
 export const PAGES: PageConfig[] = [
@@ -67,7 +67,7 @@ export const PAGES: PageConfig[] = [
 /**
  * 메뉴에 표시되지 않는 페이지들
  * - 로그인/회원가입: 인증 페이지
- * - url 필수 (menus.ts에 없으므로)
+ * - path 필수 (mainmenu.ts에 없으므로)
  * 
  * ⚠️ 에러 페이지(404, 500)는 ErrorLayout에서 직접 처리
  */

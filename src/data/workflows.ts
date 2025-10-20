@@ -1,4 +1,15 @@
-import type { Workflow } from '@/contexts';
+// Workflow 타입 정의
+export interface Workflow {
+    id: string;
+    name: string;
+    user_name: string;
+    updated_at: string;
+    description?: string;
+    seq?: number;
+    status?: 'active' | 'inactive' | 'stop';
+    created_at?: string;
+    isFavorite?: boolean;
+}
 
 // 샘플 프로젝트 워크플로우 데이터
 export const sampleWorkflows: Workflow[] = [

@@ -9,8 +9,8 @@
 
 import React from 'react';
 import * as MuiIcons from '@mui/icons-material';
-import { MAIN_MENUS, MenuItem, MenuGroup, MenuItemLeaf, ActionButton, getMainPageMetadataFromMenu, getMainMenuTitle } from './mainmenu';
-import { PAGES, HIDDEN_PAGES, PageConfig, HiddenPageConfig, findPageById } from './pages';
+import { MAIN_MENUS, MenuItem, MenuGroup, ActionButton, getMainMenuTitle } from './mainmenu';
+import { HIDDEN_PAGES, findPageById } from './pages';
 
 // =========================================================================
 // 네비게이션 메뉴 아이템 타입 (렌더링용)

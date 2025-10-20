@@ -1,6 +1,6 @@
 /*
   Adapter: Tokens Studio → MUI ThemeOptions (px → rem 변환 포함)
-  실행: tsx design-system/adapters/to-mui-theme.ts
+  실행: tsx design-system/generators/to-mui-theme.ts
   - design-system/tokens/foundation/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
 
   아키텍처:

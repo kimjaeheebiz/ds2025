@@ -1,16 +1,5 @@
 import React, { createContext, useState, ReactNode } from 'react';
-
-export interface Workflow {
-    id: string;
-    name: string;
-    user_name: string;
-    updated_at: string;
-    description?: string;
-    seq?: number;
-    status?: 'active' | 'inactive' | 'stop';
-    created_at?: string;
-    isFavorite?: boolean;
-}
+import type { Workflow } from '@/data';
 
 interface ProjectContextType {
     // 프로젝트 공통
@@ -52,11 +41,11 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
 
     const filteredWorkflows = workflows.filter((w) => {
         if (searchKeyword) {
-            const q = searchKeyword.toLowerCase();
             const matches =
-                w.name.toLowerCase().includes(q) ||
-                w.id.toLowerCase().includes(q) ||
-                (w.description?.toLowerCase().includes(q) ?? false);
+                w.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                w.id.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                w.user_name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                (w.description?.toLowerCase().includes(searchKeyword.toLowerCase()) ?? false);
             if (!matches) return false;
         }
         if (selectedFilter === 'mine') return w.user_name === userName;

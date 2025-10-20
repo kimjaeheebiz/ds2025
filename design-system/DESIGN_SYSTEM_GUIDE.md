@@ -50,11 +50,11 @@ App (브랜드 색상을 palette에 추가하여 sx prop 지원)
 
 ### 토큰 빌드
 ```bash
-# 권장: npm 스크립트
-npm run tokens:build-theme
+# 테마 토큰 빌드
+npm run build:theme
 
 # 직접 실행 (디버깅용)
-npx tsx design-system/adapters/to-mui-theme.ts
+npx tsx design-system/generators/to-mui-theme.ts
 ```
 
 ### 개발 및 빌드
@@ -136,7 +136,7 @@ Component: Brand
 1. Figma Variables 수정
 2. Tokens Studio → Push to GitHub (`design-tokens` 브랜치)
 3. Pull Request → `master` 머지
-4. `npm run tokens:build-theme` 실행 → 자동 반영
+4. `npm run build:theme` 실행 → 자동 반영
 **React 컴포넌트 코드 수정 불필요!**
 
 ### 컴포넌트 추가
@@ -157,7 +157,7 @@ Component: Brand
 1. `core.json`에 새 컴포넌트 토큰 정의
 2. `to-mui-theme.ts`의 `buildComponentsOverrides` 함수에 매핑 추가
 3. 필요시 `theme.d.ts`에 타입 확장
-4. `npm run tokens:build-theme` 실행
+4. `npm run build:theme` 실행
 
 ## 장점
 - **단일 진실 소스**: Figma Variables = 유일한 디자인 원천
@@ -171,7 +171,7 @@ Component: Brand
 - **Core → Palette 순서**: Core 먼저 반영 후 Palette 덮어쓰기
 - **Props vs Tokens**: Props는 동작 제어, Tokens는 시각적 스타일
 - **토큰 네이밍**: `component/property/variant/state` (예: `button/size/large`)
-- **빌드 타이밍**: 자동(`npm run dev/build`), 수동(`npm run tokens:build-theme`)
+- **빌드 타이밍**: 자동(`npm run dev/build`), 수동(`npm run build:theme`)
 
 ## 참고 자료
 - [MUI Theming](https://mui.com/material-ui/customization/theming/)

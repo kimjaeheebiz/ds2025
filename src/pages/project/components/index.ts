@@ -1,3 +1,2 @@
 // Project reusable components
-export { StatusChip } from './StatusChip';
-export type { WorkflowStatus } from './StatusChip';
+// StatusChip은 이제 src/components에서 공통으로 사용

@@ -97,14 +97,11 @@ docs/
 Tokens Studio로 Figma 디자인과 자동 동기화:
 
 ```bash
-# Figma 토큰 → menus.ts 동기화
-npm run sync:figma
+# Figma 토큰 → mainmenu.ts 동기화
+npm run build:menu
 
 # 테마 토큰 빌드
-npm run tokens:build-theme
-
-# 네비게이션 검증
-npm run validate:navigation
+npm run build:theme
 ```
 
 자세한 내용은 [Figma 동기화 가이드](docs/FIGMA_SYNC_GUIDE.md) 참조

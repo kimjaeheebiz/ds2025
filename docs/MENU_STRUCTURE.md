@@ -14,7 +14,7 @@
 {
     id: 'home',
     type: 'item',
-    url: '/',
+    path: '/',
     icon: 'HomeOutlined',  // 1-depth만 아이콘 표시
     pageId: 'home',
 }
@@ -31,7 +31,7 @@
         {
             id: 'project1',
             type: 'item',
-            url: '/project/project1',
+            path: '/project/project1',
             pageId: 'project.project1',
         },
     ],
@@ -121,7 +121,7 @@ Group 메뉴에 액션 버튼 추가 가능:
 {
     id: 'project1',
     type: 'item',
-    url: '/project/project1',
+    path: '/project/project1',
     pageId: 'project.project1',  // ← pages.ts에서 title 자동 로드
 }
 ```
@@ -133,7 +133,7 @@ Group 메뉴에 액션 버튼 추가 가능:
     id: 'project1',
     title: 'Custom Title',  // ← 명시하면 이 값 사용
     type: 'item',
-    url: '/project/project1',
+    path: '/project/project1',
     pageId: 'project.project1',
 }
 ```
@@ -149,14 +149,14 @@ export const MENUS: MenuItem[] = [
     {
         id: 'home',
         type: 'item',
-        url: '/',
+        path: '/',
         icon: 'HomeOutlined',
         pageId: 'home',
     },
     {
         id: 'users',
         type: 'item',
-        url: '/users',
+        path: '/users',
         icon: 'PeopleOutlined',
         pageId: 'users',
     },
@@ -184,7 +184,7 @@ export const MENUS: MenuItem[] = [
             {
                 id: 'project1',
                 type: 'item',
-                url: '/project/project1',
+                path: '/project/project1',
                 pageId: 'project.project1',
             },
             // 2-depth group
@@ -196,7 +196,7 @@ export const MENUS: MenuItem[] = [
                     {
                         id: 'members',
                         type: 'item',
-                        url: '/project/team/members',
+                        path: '/project/team/members',
                         pageId: 'project.team.members',
                     },
                 ],
@@ -211,4 +211,4 @@ export const MENUS: MenuItem[] = [
 ## 🔗 관련 문서
 
 - [설정 파일 가이드](CONFIG_STRUCTURE.md)
-- [Figma 통합 가이드](../design-system/schemas/navigation/FIGMA_INTEGRATION.md)
+- [Figma 통합 가이드](FIGMA_SYNC_GUIDE.md)
