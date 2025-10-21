@@ -106,7 +106,7 @@ Group 메뉴에 액션 버튼 추가 가능:
 
 ## 📝 Title 로딩 규칙
 
-`menus.ts`의 `title` 필드는 선택적입니다.
+`mainmenu.ts`의 `title` 필드는 선택적입니다.
 
 ### 자동 로딩 (권장)
 
@@ -117,7 +117,7 @@ Group 메뉴에 액션 버튼 추가 가능:
     title: 'Project Name 1',
 }
 
-// menus.ts - title 생략
+// mainmenu.ts - title 생략
 {
     id: 'project1',
     type: 'item',
@@ -145,7 +145,7 @@ Group 메뉴에 액션 버튼 추가 가능:
 ### 단순 구조
 
 ```typescript
-export const MENUS: MenuItem[] = [
+export const MAIN_MENUS: MenuItem[] = [
     {
         id: 'home',
         type: 'item',
@@ -166,7 +166,7 @@ export const MENUS: MenuItem[] = [
 ### 복잡한 구조 (3-depth)
 
 ```typescript
-export const MENUS: MenuItem[] = [
+export const MAIN_MENUS: MenuItem[] = [
     {
         id: 'projects',
         type: 'group',
@@ -211,4 +211,4 @@ export const MENUS: MenuItem[] = [
 ## 🔗 관련 문서
 
 - [설정 파일 가이드](CONFIG_STRUCTURE.md)
-- [Figma 통합 가이드](FIGMA_SYNC_GUIDE.md)
+- [Figma 통합 가이드](FIGMA_INTEGRATION.md)

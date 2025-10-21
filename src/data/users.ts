@@ -1,36 +1,28 @@
-// User 타입 정의
-export interface User {
-    seq: number;
-    name: string;
-    email: string;
-    permission: string;
-    status: 'active' | 'stop';
-    department: string;
-    registrationDate: string;
-    lastLogin: string;
-}
-
 // 사용자 데이터
+import { User } from '@/types';
+
 export const sampleUsers: User[] = [
     {
         seq: 2,
-        email: 'hectodata@hecto.co.kr',
+        id: 'hectodata@hecto.co.kr',  // 이메일 아이디
         name: '이순신',
-        permission: 'generalUser',
-        status: 'stop',
         department: '(주)헥토데이터',
-        registrationDate: '2025.01.01',
-        lastLogin: '2025.01.01',
+        permission: 'user',
+        status: 'stop',
+        regdate: '2025.01.01',
+        moddate: '2025.01.01',
+        last_login: '2025.01.01',
     },
     {
         seq: 1,
-        email: 'hectodata@hecto.co.kr',
+        id: 'admin@hecto.co.kr',  // 이메일 아이디
         name: '홍길동',
-        status: 'active',
         department: '(주)헥토',
-        permission: 'systemAdmin',
-        registrationDate: '2025.01.01',
-        lastLogin: '2025.01.02',
+        permission: 'admin',
+        status: 'active',
+        regdate: '2025.01.01',
+        moddate: '2025.01.02',
+        last_login: '2025.01.02',
     },
 ];
 

@@ -19,13 +19,13 @@ import { StatusChip, FilterToggleGroup } from '@/components';
 import { sampleUsers } from '@/data';
 
 export const Users = () => {
-    const [selectedFilter, setSelectedFilter] = React.useState<'all' | 'generalUser' | 'systemAdmin'>('all');
+    const [selectedFilter, setSelectedFilter] = React.useState<'all' | 'admin' | 'user'>('all');
     const [searchKeyword, setSearchKeyword] = React.useState('');
 
     // 권한 라벨 매핑
     const permissionLabels = React.useMemo(() => ({
-        generalUser: '일반사용자',
-        systemAdmin: '시스템관리자',
+        admin: '시스템관리자',
+        user: '일반사용자',
     } as const), []);
 
     // 필터링된 사용자 목록
@@ -41,8 +41,8 @@ export const Users = () => {
         if (searchKeyword.trim()) {
             filtered = filtered.filter(user => 
                 user.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-                user.department.toLowerCase().includes(searchKeyword.toLowerCase())
+                user.id.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                (user.department && user.department.toLowerCase().includes(searchKeyword.toLowerCase()))
             );
         }
 
@@ -52,16 +52,16 @@ export const Users = () => {
     // 필터별 카운트 계산
     const filterStats = React.useMemo(() => {
         const total = sampleUsers.length;
-        const generalUserCount = sampleUsers.filter(user => user.permission === 'generalUser').length;
-        const systemAdminCount = sampleUsers.filter(user => user.permission === 'systemAdmin').length;
-        return { total, generalUserCount, systemAdminCount };
+        const adminCount = sampleUsers.filter(user => user.permission === 'admin').length;
+        const userCount = sampleUsers.filter(user => user.permission === 'user').length;
+        return { total, adminCount, userCount };
     }, []);
 
     // 필터 옵션 정의
     const filterOptions = React.useMemo(() => [
         { value: 'all', label: 'All', count: filterStats.total },
-        { value: 'generalUser', label: permissionLabels.generalUser, count: filterStats.generalUserCount },
-        { value: 'systemAdmin', label: permissionLabels.systemAdmin, count: filterStats.systemAdminCount },
+        { value: 'admin', label: permissionLabels.admin, count: filterStats.adminCount },
+        { value: 'user', label: permissionLabels.user, count: filterStats.userCount },
     ], [filterStats, permissionLabels]);
 
     return (
@@ -71,13 +71,13 @@ export const Users = () => {
                 <FilterToggleGroup
                     options={filterOptions}
                     value={selectedFilter}
-                    onChange={(value) => setSelectedFilter(value as 'all' | 'generalUser' | 'systemAdmin')}
+                    onChange={(value) => setSelectedFilter(value as 'all' | 'admin' | 'user')}
                 />
 
                 {/* 검색, 등록 버튼 */}
                 <Stack direction="row" spacing={1}>
                     <TextField
-                        placeholder="이름, 이메일, 소속 검색"
+                        placeholder="이름, 이메일 아이디, 소속 검색"
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
                         size="small"
@@ -113,10 +113,10 @@ export const Users = () => {
                                 번호
                             </TableCell>
                             <TableCell>
-                                이름
+                                이메일 아이디
                             </TableCell>
                             <TableCell>
-                                이메일
+                                이름
                             </TableCell>
                             <TableCell>
                                 소속
@@ -128,7 +128,7 @@ export const Users = () => {
                                 상태
                             </TableCell>
                             <TableCell>
-                                등록일
+                                가입일
                             </TableCell>
                             <TableCell>
                                 최근 로그인
@@ -145,12 +145,12 @@ export const Users = () => {
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">
-                                        {user.name}
+                                        {user.id}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">
-                                        {user.email}
+                                        {user.name}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
@@ -164,16 +164,16 @@ export const Users = () => {
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <StatusChip status={user.status} />
+                                    <StatusChip status={user.status === 'active' ? 'active' : 'stop'} />
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">
-                                        {user.registrationDate}
+                                        {user.regdate}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">
-                                        {user.lastLogin}
+                                        {user.last_login || '-'}
                                     </Typography>
                                 </TableCell>
                             </TableRow>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode } from 'react';
-import type { Workflow } from '@/data';
+import type { Workflow } from '@/types';
 
 interface ProjectContextType {
     // 프로젝트 공통
@@ -27,7 +27,7 @@ interface ProjectProviderProps {
 
 export const ProjectProvider = ({ children }: ProjectProviderProps) => {
     // 공통
-    const [userName, setUserName] = useState('김재희');
+    const [userName, setUserName] = useState('홍길동');
 
     // AgentContent 전용 상태
     const [searchKeyword, setSearchKeyword] = useState('');

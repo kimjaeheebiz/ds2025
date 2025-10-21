@@ -5,7 +5,7 @@ import { ProjectSubMenu } from './layout';
 import { Agent, Credential, KnowledgeBase, ApiKey, Member, Settings } from './sections';
 import { DEFAULT_PROJECT_TABS } from '@/config';
 import type { ProjectSubMenuTab } from '@/config';
-import type { Workflow } from '@/data';
+import type { Workflow } from '@/types';
 
 interface ProjectPageProps {
     tabs?: ProjectSubMenuTab[];

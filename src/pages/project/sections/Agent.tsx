@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { Star, StarBorder, Key, Build, SmartToy, MoreVert, Search, Add } from '@mui/icons-material';
 import { formatDate } from '@/utils';
-import type { Workflow } from '@/data';
+import type { Workflow } from '@/types';
 import { StatusChip } from '@/components';
 import { useProject } from '@/hooks';
 
@@ -148,7 +148,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                         <TableRow>
                             <TableCell>
                                 <Button variant="text" color="inherit" onClick={() => handleSort('name')} sx={{ minWidth: 'auto', p: 0 }}>
-                                    이름 / ID
+                                    이름 / 아이디
                                     {sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>

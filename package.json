@@ -11,7 +11,18 @@
         "lint": "eslint .",
         "preview": "vite preview",
         "build:theme": "npx --yes tsx design-system/generators/to-mui-theme.ts",
-        "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts"
+        "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts",
+        "figma:sync": "npx tsx scripts/figma-sync.ts",
+        "figma:library": "npx tsx scripts/figma-sync.ts -- --library",
+        "figma:setup": "npx tsx scripts/figma-sync-cli.ts setup",
+        "figma:content": "npx tsx scripts/figma-sync-cli.ts generate-content",
+        "figma:page": "npx tsx scripts/figma-sync-cli.ts generate-page",
+        "figma:pages": "npx tsx scripts/figma-sync-cli.ts generate-page --all",
+        "figma:extract": "npx tsx scripts/figma-sync-cli.ts extract-library",
+        "figma:sync-types": "npx tsx scripts/figma-sync-cli.ts sync-types",
+        "figma:validate": "npx tsx scripts/figma-sync-cli.ts validate",
+        "figma:status": "npx tsx scripts/figma-sync-cli.ts status",
+        "figma:clean": "npx tsx scripts/figma-sync-cli.ts clean"
     },
     "dependencies": {
         "@emotion/react": "11.14.0",
@@ -20,6 +31,7 @@
         "@mui/material": "5.15.21",
         "@tanstack/react-query": "5.66.0",
         "@tanstack/react-query-devtools": "5.66.0",
+        "commander": "^14.0.1",
         "react": "18.3",
         "react-dom": "18.3",
         "react-router-dom": "7.1.5",

@@ -12,7 +12,7 @@
 
 ```typescript
 export interface PageConfig {
-    id: string;              // 페이지 ID (예: 'home', 'project.project1')
+    id: string;              // 페이지 ID
     title: string;           // 페이지 제목
     showPageHeader?: boolean; // 페이지 헤더 표시 (기본: true)
     layout?: 'default' | 'auth' | 'error'; // 레이아웃 타입
