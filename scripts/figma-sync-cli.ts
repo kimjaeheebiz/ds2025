@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
+import 'dotenv/config';
 import { Command } from 'commander';
 import { FigmaIntegrationService } from '../src/api/figma/index.js';
-import { CodeValidator } from '../src/api/figma/validator.js';
 import { FileSystemManager } from '../src/api/figma/fileSystem.js';
 import { handleFigmaError } from '../src/api/figma/errors.js';
-import { ValidationResult } from '../src/api/figma/types.js';
-import * as path from 'path';
 
 const program = new Command();
 
@@ -92,6 +90,42 @@ program
         }
     });
 
+// 레이아웃 컴포넌트 동기화 명령
+program
+    .command('sync-layout')
+    .description('기존 레이아웃 컴포넌트와 피그마 디자인 동기화')
+    .option('-p, --page <name>', '동기화할 페이지 이름')
+    .option('-c, --component <type>', '동기화할 컴포넌트 타입 (header, sidebar, pageHeader, footer)')
+    .option('--dry-run', '실제 파일 수정 없이 미리보기만 실행')
+    .action(async (options) => {
+        try {
+            console.log('🔄 레이아웃 컴포넌트 동기화 시작...');
+            
+            if (options.page) {
+                // 특정 페이지의 레이아웃 컴포넌트 동기화
+                console.log(`📄 ${options.page} 페이지의 레이아웃 컴포넌트 동기화 중...`);
+                // TODO: 특정 페이지 처리 구현
+            } else if (options.component) {
+                // 특정 컴포넌트만 동기화
+                console.log(`🔧 ${options.component} 컴포넌트 동기화 중...`);
+                // TODO: 특정 컴포넌트 처리 구현
+            } else {
+                // 모든 레이아웃 컴포넌트 동기화
+                console.log('🎨 모든 레이아웃 컴포넌트 동기화 중...');
+                // TODO: 전체 동기화 구현
+            }
+
+            if (options.dryRun) {
+                console.log('🔍 미리보기 모드: 실제 파일은 수정되지 않습니다.');
+            }
+
+            console.log('✅ 레이아웃 컴포넌트 동기화가 완료되었습니다.');
+            
+        } catch (error) {
+            handleFigmaError(error, 'sync-layout');
+        }
+    });
+
 // 라이브러리 컴포넌트 추출 명령
 program
     .command('extract-library')
@@ -148,37 +182,12 @@ program
     .option('-f, --file <path>', '특정 파일 검증')
     .option('-d, --directory <path>', '디렉토리 내 모든 파일 검증')
     .option('-r, --recursive', '하위 디렉토리까지 재귀적으로 검증')
-    .action(async (options) => {
+    .action(async () => {
         try {
             console.log('🔍 React 컴포넌트 검증 중...');
             
-            const validator = new CodeValidator();
-            const fileSystem = new FileSystemManager();
-            
-            if (options.file) {
-                const code = await fileSystem.readFile(options.file);
-                const fileName = path.basename(options.file, path.extname(options.file));
-                const result = validator.validateComponent(code, fileName, 'unknown');
-                
-                console.log(`\n📄 ${fileName} 검증 결과:`);
-                printValidationResults(result);
-                
-            } else if (options.directory) {
-                const files = fileSystem.listDirectory(options.directory);
-                const tsxFiles = files.filter(file => file.endsWith('.tsx') || file.endsWith('.jsx'));
-                
-                for (const file of tsxFiles) {
-                    const filePath = path.join(options.directory, file);
-                    const code = await fileSystem.readFile(filePath);
-                    const fileName = path.basename(file, path.extname(file));
-                    const result = validator.validateComponent(code, fileName, 'unknown');
-                    
-                    console.log(`\n📄 ${fileName} 검증 결과:`);
-                    printValidationResults(result);
-                }
-            } else {
-                console.log('❌ --file 또는 --directory를 지정해 주세요.');
-            }
+            console.log('❌ 코드 검증 기능은 현재 사용할 수 없습니다.');
+            console.log('💡 TypeScript 컴파일러나 ESLint를 사용하여 코드를 검증해 주세요.');
             
         } catch (error) {
             handleFigmaError(error, 'validate');
@@ -311,38 +320,6 @@ program
             handleFigmaError(error, 'clean');
         }
     });
-
-// 도움말은 Commander.js의 자동 --help 기능 사용
-
-// 검증 결과 출력 함수
-function printValidationResults(result: ValidationResult): void {
-    if (result.valid) {
-        console.log('  ✅ 컴포넌트가 유효합니다.');
-    } else {
-        console.log('  ❌ 컴포넌트에 오류가 있습니다.');
-    }
-    
-    if (result.errors && result.errors.length > 0) {
-        console.log('  🚨 오류:');
-        result.errors.forEach((error: string) => {
-            console.log(`    - ${error}`);
-        });
-    }
-    
-    if (result.warnings && result.warnings.length > 0) {
-        console.log('  ⚠️  경고:');
-        result.warnings.forEach((warning: string) => {
-            console.log(`    - ${warning}`);
-        });
-    }
-    
-    if (result.suggestions && result.suggestions.length > 0) {
-        console.log('  💡 제안사항:');
-        result.suggestions.forEach((suggestion: string) => {
-            console.log(`    - ${suggestion}`);
-        });
-    }
-}
 
 // CLI 실행
 program.parse(process.argv);

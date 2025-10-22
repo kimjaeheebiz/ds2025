@@ -1,4 +1,5 @@
 import { FigmaAPIClient } from './client';
+import { FIGMA_CONFIG } from './config';
 import { 
     FigmaNode, 
     PageDesignConfig, 
@@ -48,25 +49,194 @@ export class FigmaDesignExtractor {
      * @returns 페이지 디자인 설정
      */
     private parsePageNode(node: FigmaNode): PageDesignConfig {
+        // "Main Content" 프레임 찾기
+        const mainContentFrame = this.findMainContentFrame(node);
+        
+        const components = mainContentFrame ? this.extractComponentsFromFrame(mainContentFrame) : [];
+        
         const pageDesign: PageDesignConfig = {
             pageId: node.id,
             pageName: node.name,
-            components: [],
+            components,
             layout: this.extractLayoutConfig(node),
             theme: this.extractThemeConfig(node)
         };
 
-        // 페이지 내 컴포넌트들 추출
-        if (node.children) {
-            node.children.forEach(child => {
-                const component = this.parseComponentNode(child);
-                if (component) {
-                    pageDesign.components.push(component);
-                }
-            });
+        return pageDesign;
+    }
+
+    /**
+     * "Main Content" 프레임 찾기
+     * @param node 페이지 노드
+     * @returns Main Content 프레임 또는 null
+     */
+    private findMainContentFrame(node: FigmaNode): FigmaNode | null {
+        // 직접적인 이름 매칭
+        if (this.isMainContentFrame(node)) {
+            return node;
         }
 
-        return pageDesign;
+        // 자식 노드에서 재귀적으로 찾기
+        if (node.children) {
+            for (const child of node.children) {
+                const found = this.findMainContentFrame(child);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Main Content 프레임인지 확인
+     * @param node 노드
+     * @returns Main Content 프레임 여부
+     */
+    private isMainContentFrame(node: FigmaNode): boolean {
+        // 새로운 설정 구조 사용
+        const mainContentNames = FIGMA_CONFIG.figmaMapping.layout.mainContent as readonly string[];
+        return mainContentNames.includes(node.name);
+    }
+
+    /**
+     * 프레임에서 컴포넌트들 추출
+     * @param frame 프레임 노드
+     * @returns 컴포넌트 배열
+     */
+    private extractComponentsFromFrame(frame: FigmaNode): ComponentDesignConfig[] {
+        const components: ComponentDesignConfig[] = [];
+
+        if (frame.children) {
+            for (const child of frame.children) {
+                const component = this.extractComponentDesign(child);
+                if (component) {
+                    components.push(component);
+                }
+            }
+        }
+
+        return components;
+    }
+
+    /**
+     * MainContent 프레임에서 실제 UI 컴포넌트들 추출 (병합용)
+     * @param mainContentFrame MainContent 프레임
+     * @returns 추출된 컴포넌트 정보
+     */
+    public extractMainContentComponents(mainContentFrame: FigmaNode): {
+        table?: ComponentDesignConfig;
+        buttons?: ComponentDesignConfig[];
+        inputs?: ComponentDesignConfig[];
+        filters?: ComponentDesignConfig[];
+        layout?: {
+            spacing: number;
+            padding: number;
+            direction: 'row' | 'column';
+        };
+    } {
+        const result: ReturnType<typeof this.extractMainContentComponents> = {
+            buttons: [],
+            inputs: [],
+            filters: []
+        };
+
+        if (!mainContentFrame.children) {
+            return result;
+        }
+
+        // 레이아웃 정보 추출
+        if (mainContentFrame.layoutMode) {
+            result.layout = {
+                spacing: mainContentFrame.itemSpacing || 24,
+                padding: mainContentFrame.paddingTop || 24,
+                direction: mainContentFrame.layoutMode === 'HORIZONTAL' ? 'row' : 'column'
+            };
+        }
+
+        // 각 자식 컴포넌트 분석
+        for (const child of mainContentFrame.children) {
+            const componentType = this.determineComponentType(child);
+            
+            if (componentType === 'table') {
+                const tableComponent = this.extractComponentDesign(child);
+                if (tableComponent) {
+                    result.table = tableComponent;
+                }
+            } else if (componentType === 'button') {
+                const buttonComponent = this.extractComponentDesign(child);
+                if (buttonComponent) {
+                    result.buttons?.push(buttonComponent);
+                }
+            } else if (componentType === 'input') {
+                const inputComponent = this.extractComponentDesign(child);
+                if (inputComponent) {
+                    result.inputs?.push(inputComponent);
+                }
+            } else if (child.name.toLowerCase().includes('filter') || child.name.toLowerCase().includes('toggle')) {
+                const filterComponent = this.extractComponentDesign(child);
+                if (filterComponent) {
+                    result.filters?.push(filterComponent);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 레이아웃 컴포넌트 추출 (기존 컴포넌트와 연동용)
+     * @param node 페이지 노드
+     * @returns 레이아웃 컴포넌트 설정
+     */
+    public extractLayoutComponents(node: FigmaNode): Record<string, ComponentDesignConfig | null> {
+        const layoutComponents: Record<string, ComponentDesignConfig | null> = {
+            header: null,
+            sidebar: null,
+            pageHeader: null,
+            footer: null
+        };
+
+        // 각 레이아웃 프레임 찾기
+        const layoutTypes = ['header', 'sidebar', 'pageHeader', 'footer'] as const;
+        
+        layoutTypes.forEach(frameType => {
+            const frameNames = FIGMA_CONFIG.figmaMapping.layout[frameType as keyof typeof FIGMA_CONFIG.figmaMapping.layout];
+            if (frameNames && frameNames.length > 0) {
+                const frame = this.findFrameByName(node, frameNames[0]);
+                if (frame) {
+                    layoutComponents[frameType] = this.extractComponentDesign(frame);
+                }
+            }
+        });
+
+        return layoutComponents;
+    }
+
+    /**
+     * 특정 이름의 프레임 찾기
+     * @param node 부모 노드
+     * @param frameName 찾을 프레임 이름
+     * @returns 찾은 프레임 또는 null
+     */
+    private findFrameByName(node: FigmaNode, frameName: string): FigmaNode | null {
+        // 직접적인 이름 매칭
+        if (node.name.toLowerCase() === frameName.toLowerCase()) {
+            return node;
+        }
+
+        // 자식 노드에서 재귀적으로 찾기
+        if (node.children) {
+            for (const child of node.children) {
+                const found = this.findFrameByName(child, frameName);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -74,7 +244,7 @@ export class FigmaDesignExtractor {
      * @param node 피그마 노드
      * @returns 컴포넌트 디자인 설정
      */
-    private parseComponentNode(node: FigmaNode): ComponentDesignConfig | null {
+    private extractComponentDesign(node: FigmaNode): ComponentDesignConfig | null {
         // 컴포넌트 타입 결정
         const componentType = this.determineComponentType(node);
         if (!componentType) return null;
@@ -91,19 +261,29 @@ export class FigmaDesignExtractor {
     }
 
     /**
-     * 컴포넌트 타입 결정
+     * 컴포넌트 타입 결정 (설정 파일 기반)
      * @param node 피그마 노드
      * @returns 컴포넌트 타입
      */
     private determineComponentType(node: FigmaNode): ComponentDesignConfig['componentType'] | null {
-        const name = node.name.toLowerCase();
+        const name = node.name;
         
-        if (name.includes('button')) return 'button';
-        if (name.includes('input') || name.includes('textfield')) return 'input';
-        if (name.includes('table')) return 'table';
-        if (name.includes('card')) return 'card';
-        if (name.includes('nav') || name.includes('menu')) return 'navigation';
-        if (name.includes('layout') || name.includes('container')) return 'layout';
+        // 새로운 설정 구조 사용
+        // 컴포넌트 인스턴스 매칭
+        const components = FIGMA_CONFIG.figmaMapping.components as Record<string, readonly string[]>;
+        for (const [componentType, typeNames] of Object.entries(components)) {
+            if (typeNames.includes(name)) {
+                return componentType as ComponentDesignConfig['componentType'];
+            }
+        }
+        
+        // MUI 컴포넌트 매칭
+        const muiComponents = FIGMA_CONFIG.figmaMapping.muiComponents as Record<string, readonly string[]>;
+        for (const [componentType, typeNames] of Object.entries(muiComponents)) {
+            if (typeNames.includes(name)) {
+                return componentType as ComponentDesignConfig['componentType'];
+            }
+        }
         
         return null;
     }

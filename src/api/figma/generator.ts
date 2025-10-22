@@ -64,16 +64,16 @@ export const ${componentName}: React.FC = () => {
         const { colors, spacing, typography } = contentStyles;
         
         const colorStyles = Object.entries(colors)
-            .map(([key, value]) => `    ${key}: '${value}',`)
+            .map(([key, value]) => `    ${this.sanitizePropertyName(key)}: '${value}',`)
             .join('\n');
 
         const spacingStyles = Object.entries(spacing)
-            .map(([key, value]) => `    ${key}: '${value}',`)
+            .map(([key, value]) => `    ${this.sanitizePropertyName(key)}: '${value}',`)
             .join('\n');
 
         const typographyStyles = Object.entries(typography)
             .map(([key, config]) => {
-                return `    ${key}: {
+                return `    ${this.sanitizePropertyName(key)}: {
         fontFamily: '${config.fontFamily || 'inherit'}',
         fontSize: ${config.fontSize || 16},
         fontWeight: ${config.fontWeight || 400},
@@ -250,14 +250,14 @@ ${typographyStyles}
     private generateSXProps(properties: ComponentProperties): string {
         const sxProps: string[] = [];
 
-        if (properties.width) sxProps.push(`width: ${properties.width}px`);
-        if (properties.height) sxProps.push(`height: ${properties.height}px`);
+        if (properties.width) sxProps.push(`width: '${properties.width}px'`);
+        if (properties.height) sxProps.push(`height: '${properties.height}px'`);
         if (properties.backgroundColor) sxProps.push(`backgroundColor: '${properties.backgroundColor}'`);
         if (properties.borderColor) sxProps.push(`borderColor: '${properties.borderColor}'`);
-        if (properties.borderWidth) sxProps.push(`borderWidth: ${properties.borderWidth}px`);
-        if (properties.borderRadius) sxProps.push(`borderRadius: ${properties.borderRadius}px`);
+        if (properties.borderWidth) sxProps.push(`borderWidth: '${properties.borderWidth}px'`);
+        if (properties.borderRadius) sxProps.push(`borderRadius: '${properties.borderRadius}px'`);
         if (properties.opacity) sxProps.push(`opacity: ${properties.opacity}`);
-        if (properties.gap) sxProps.push(`gap: ${properties.gap}px`);
+        if (properties.gap) sxProps.push(`gap: '${properties.gap}px'`);
         if (properties.justifyContent) sxProps.push(`justifyContent: '${properties.justifyContent}'`);
         if (properties.alignItems) sxProps.push(`alignItems: '${properties.alignItems}'`);
 
@@ -274,81 +274,53 @@ ${typographyStyles}
      */
     private generateComponentProps(componentType: string, properties: ComponentProperties): string {
         const props: string[] = [];
-        const enhancedMapping = FIGMA_CONFIG.enhancedMuiMapping[componentType];
+        const muiProps = FIGMA_CONFIG.muiProps[componentType];
 
-        if (enhancedMapping) {
-            // 기본 props 추가
-            if (enhancedMapping.props) {
-                Object.entries(enhancedMapping.props).forEach(([key, value]) => {
-                    if (typeof value === 'object' && value !== null) {
-                        // 객체 형태의 props 처리
-                        const propString = Object.entries(value)
-                            .map(([k, v]) => `${k}: '${v}'`)
-                            .join(', ');
-                        props.push(`${key}={${propString}}`);
-                    } else {
-                        props.push(`${key}="${value}"`);
-                    }
-                });
-            }
-
-            // 컴포넌트별 특수 처리
-            switch (componentType) {
-                case 'button':
-                    if (properties.text) props.push(`children="${properties.text}"`);
-                    if (properties.color) {
-                        const color = this.mapColorToMUI(properties.color);
-                        if (color) props.push(`color="${color}"`);
-                    }
-                    break;
-                case 'input':
-                    if (properties.text) props.push(`placeholder="${properties.text}"`);
-                    if (properties.type) props.push(`type="${properties.type}"`);
-                    break;
-                case 'card':
-                    if (properties.elevation !== undefined) {
-                        props.push(`elevation={${properties.elevation}}`);
-                    }
-                    break;
-                case 'chip':
-                    if (properties.label) props.push(`label="${properties.label}"`);
-                    if (properties.color) {
-                        const color = this.mapColorToMUI(properties.color);
-                        if (color) props.push(`color="${color}"`);
-                    }
-                    break;
-                case 'alert':
-                    if (properties.severity) props.push(`severity="${properties.severity}"`);
-                    break;
-                case 'avatar':
-                    if (properties.src) props.push(`src="${properties.src}"`);
-                    if (properties.alt) props.push(`alt="${properties.alt}"`);
-                    break;
-                case 'badge':
-                    if (properties.badgeContent) props.push(`badgeContent={${properties.badgeContent}}`);
-                    break;
-            }
-        } else {
-            // 기본 매핑 사용 (하위 호환성)
-            switch (componentType) {
-                case 'button':
-                    props.push('variant="contained"');
-                    if (properties.text) props.push(`children="${properties.text}"`);
-                    break;
-                case 'input':
-                    props.push('variant="outlined"');
-                    if (properties.text) props.push(`placeholder="${properties.text}"`);
-                    break;
-                case 'table':
-                    props.push('size="small"');
-                    break;
-                case 'card':
-                    props.push('elevation={1}');
-                    break;
-            }
+        // 컴포넌트별 특수 처리 (기존 소스 기반)
+        switch (componentType) {
+            case 'button':
+                if (properties.text) props.push(`children="${properties.text}"`);
+                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
+                    props.push(`variant="${properties.variant}"`);
+                }
+                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
+                    props.push(`size="${properties.size}"`);
+                }
+                break;
+            case 'textField':
+                if (properties.text) props.push(`placeholder="${properties.text}"`);
+                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
+                    props.push(`variant="${properties.variant}"`);
+                }
+                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
+                    props.push(`size="${properties.size}"`);
+                }
+                break;
+            case 'table':
+                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
+                    props.push(`size="${properties.size}"`);
+                }
+                break;
+            case 'card':
+                if (properties.elevation !== undefined && muiProps?.elevations?.includes(properties.elevation)) {
+                    props.push(`elevation={${properties.elevation}}`);
+                }
+                break;
+            case 'chip':
+                if (properties.label) props.push(`label="${properties.label}"`);
+                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
+                    props.push(`variant="${properties.variant}"`);
+                }
+                if (properties.color && muiProps?.colors?.includes(properties.color)) {
+                    props.push(`color="${properties.color}"`);
+                }
+                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
+                    props.push(`size="${properties.size}"`);
+                }
+                break;
         }
 
-        return props.join('\n            ');
+        return props.length > 0 ? ` ${props.join(' ')}` : '';
     }
 
     /**
@@ -393,52 +365,39 @@ ${typographyStyles}
      * @returns Import 문 문자열
      */
     private generateImports(components: ComponentDesignConfig[]): string {
-        const muiComponents = new Set<string>();
-        const subComponents = new Set<string>();
+        const imports = new Set<string>();
         
+        // 기본 MUI 컴포넌트들
+        imports.add('Box');
+        
+        // 컴포넌트별 필요한 임포트 추가
         components.forEach(component => {
-            const enhancedMapping = FIGMA_CONFIG.enhancedMuiMapping[component.componentType];
-            
-            if (enhancedMapping) {
-                // 메인 컴포넌트 추가
-                muiComponents.add(enhancedMapping.component);
+            const muiComponent = FIGMA_CONFIG.muiMapping[component.componentType];
+            if (muiComponent) {
+                imports.add(muiComponent);
                 
-                // 서브 컴포넌트 추가
-                if ('subComponents' in enhancedMapping && enhancedMapping.subComponents) {
-                    enhancedMapping.subComponents.forEach(subComp => {
-                        subComponents.add(subComp);
-                    });
+                // 테이블 컴포넌트의 경우 하위 컴포넌트들도 추가
+                if (component.componentType === 'table') {
+                    const tableProps = FIGMA_CONFIG.muiProps.table;
+                    if (tableProps?.subComponents) {
+                        tableProps.subComponents.forEach(subComp => imports.add(subComp));
+                    }
+                    imports.add('Paper');
                 }
-            } else {
-                // 기본 매핑 사용
-                const muiComponent = FIGMA_CONFIG.muiMapping[component.componentType];
-                if (muiComponent) {
-                    muiComponents.add(muiComponent);
+                
+                // 카드 컴포넌트의 경우 하위 컴포넌트들도 추가
+                if (component.componentType === 'card') {
+                    const cardProps = FIGMA_CONFIG.muiProps.card;
+                    if (cardProps?.subComponents) {
+                        cardProps.subComponents.forEach(subComp => imports.add(subComp));
+                    }
                 }
             }
         });
-
-        // Box는 항상 포함
-        muiComponents.add('Box');
         
-        // 테이블 컴포넌트가 있으면 테이블 관련 컴포넌트 추가
-        const hasTable = components.some(comp => comp.componentType === 'table');
-        if (hasTable) {
-            muiComponents.add('Table');
-            muiComponents.add('TableBody');
-            muiComponents.add('TableCell');
-            muiComponents.add('TableContainer');
-            muiComponents.add('TableHead');
-            muiComponents.add('TableRow');
-            muiComponents.add('Paper');
-        }
-
-        // 모든 컴포넌트 합치기
-        const allComponents = Array.from(muiComponents).concat(Array.from(subComponents));
-        const imports = allComponents.join(', ');
-        
+        const importsList = Array.from(imports).join(', ');
         return `import React from 'react';
-import { ${imports} } from '@mui/material';`;
+import { ${importsList} } from '@mui/material';`;
     }
 
     /**
@@ -451,6 +410,25 @@ import { ${imports} } from '@mui/material';`;
             .split(/[\s\-_]+/)
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join('');
+    }
+
+    /**
+     * 피그마 이름을 유효한 JavaScript 식별자로 변환
+     * @param name 피그마에서 추출된 이름
+     * @returns 유효한 JavaScript 식별자
+     */
+    private sanitizePropertyName(name: string): string {
+        return name
+            // < > 제거
+            .replace(/[<>]/g, '')
+            // 하이픈을 camelCase로 변환
+            .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+            // 숫자로 시작하는 경우 앞에 문자 추가
+            .replace(/^(\d)/, 'item$1')
+            // 특수문자 제거
+            .replace(/[^a-zA-Z0-9_]/g, '')
+            // 빈 문자열인 경우 기본값
+            || 'item';
     }
 
     /**
@@ -528,7 +506,7 @@ import { User } from '@/types';
 
 // Page-specific types for Users
 export interface UsersPageState {
-    selectedFilter: 'all' | 'generalUser' | 'systemAdmin';
+    selectedFilter: 'all' | 'user' | 'admin';
     searchKeyword: string;
     isLoading: boolean;
     error: string | null;
@@ -542,8 +520,8 @@ export interface UsersTableProps {
 }
 
 export interface UsersFilterProps {
-    selectedFilter: 'all' | 'generalUser' | 'systemAdmin';
-    onFilterChange: (filter: 'all' | 'generalUser' | 'systemAdmin') => void;
+    selectedFilter: 'all' | 'user' | 'admin';
+    onFilterChange: (filter: 'all' | 'user' | 'admin') => void;
 }
 
 export interface UsersSearchProps {
@@ -561,9 +539,9 @@ export interface UsersApiResponse {
 
 export interface CreateUserRequest {
     name: string;
-    email: string;
+    id: string;
     department: string;
-    permission: 'generalUser' | 'systemAdmin';
+    permission: 'user' | 'admin';
 }`;
             
             case 'project':
@@ -646,31 +624,29 @@ export interface ${this.toPascalCase(pageName)}PageState {
      * @returns 컬럼 배열
      */
     private extractTableColumns(component: ComponentDesignConfig): Array<{key: string, label: string, type: string}> {
-        // Figma에서 테이블 헤더 정보 추출
+        // 피그마 구조에 맞게 테이블 컬럼 정보 추출
         const { properties } = component;
         
-        // 기본 컬럼 설정 (실제로는 Figma에서 추출)
-        const defaultColumns = [
-            { key: 'index', label: '번호', type: 'index' }, // 테이블 순번
+        // 피그마에서 추출된 컬럼 정보가 있다면 사용
+        if (properties.columns && Array.isArray(properties.columns)) {
+            return properties.columns.map((col: {key?: string, label?: string, type?: string}) => ({
+                key: col.key || '',
+                label: col.label || '',
+                type: col.type || 'text'
+            }));
+        }
+        
+        // 기본 컬럼 설정 (피그마 구조 반영)
+        return [
+            { key: 'index', label: '번호', type: 'index' },
             { key: 'id', label: '이메일', type: 'email' },
             { key: 'name', label: '이름', type: 'text' },
             { key: 'department', label: '소속', type: 'text' },
             { key: 'permission', label: '권한', type: 'permission' },
             { key: 'status', label: '상태', type: 'status' },
             { key: 'regdate', label: '가입일', type: 'date' },
-            { key: 'last_login', label: '최근 로그인', type: 'date' },
+            { key: 'last_login', label: '최근 로그인', type: 'date' }
         ];
-
-        // properties에서 컬럼 정보가 있다면 사용
-        if (properties.columns && Array.isArray(properties.columns)) {
-            return properties.columns.map((col: {key?: string, label?: string, type?: string, name?: string}) => ({
-                key: col.key || col.name?.toLowerCase() || '',
-                label: col.label || col.name || '',
-                type: col.type || 'text'
-            }));
-        }
-
-        return defaultColumns;
     }
 
     /**
@@ -748,5 +724,118 @@ export interface ${this.toPascalCase(pageName)}PageState {
             default:
                 return `{value}`;
         }
+    }
+
+    /**
+     * 기존 코드와 피그마 디자인 병합 (하이브리드 접근법)
+     * @param existingCode 기존 컴포넌트 코드
+     * @param figmaComponents 피그마에서 추출된 컴포넌트 정보
+     * @returns 병합된 컴포넌트 코드
+     */
+    public mergeWithExistingCode(existingCode: string, figmaComponents: {
+        table?: ComponentDesignConfig;
+        buttons?: ComponentDesignConfig[];
+        inputs?: ComponentDesignConfig[];
+        filters?: ComponentDesignConfig[];
+        layout?: {
+            spacing: number;
+            padding: number;
+            direction: 'row' | 'column';
+        };
+    }): string {
+        // 기존 코드에서 주요 부분 추출
+        const existingImports = this.extractImports(existingCode);
+        const existingLogic = this.extractLogic(existingCode);
+        const existingJSX = this.extractJSX(existingCode);
+        
+        // 피그마 스타일 적용
+        const mergedJSX = this.applyFigmaStyles(existingJSX, figmaComponents);
+        
+        // 병합된 코드 생성
+        return `${existingImports}
+
+${existingLogic}
+
+export const Users = () => {
+    ${this.extractStateAndLogic(existingCode)}
+    
+    return (
+        ${mergedJSX}
+    );
+};
+`;
+    }
+
+    /**
+     * 기존 코드에서 임포트 추출
+     */
+    private extractImports(code: string): string {
+        const importRegex = /import.*?from.*?;[\s\n]*/g;
+        const imports = code.match(importRegex) || [];
+        return imports.join('\n');
+    }
+
+    /**
+     * 기존 코드에서 로직 추출
+     */
+    private extractLogic(code: string): string {
+        // useState, useMemo 등의 로직 추출
+        const logicRegex = /(const \[.*?\] = React\.useState.*?;[\s\n]*|const .*? = React\.useMemo.*?;[\s\n]*)/g;
+        const logic = code.match(logicRegex) || [];
+        return logic.join('\n');
+    }
+
+    /**
+     * 기존 코드에서 JSX 추출
+     */
+    private extractJSX(code: string): string {
+        const jsxMatch = code.match(/return\s*\(\s*([\s\S]*?)\s*\)\s*;?\s*}\s*;?\s*$/);
+        return jsxMatch ? jsxMatch[1].trim() : '';
+    }
+
+    /**
+     * 기존 코드에서 상태와 로직 추출
+     */
+    private extractStateAndLogic(code: string): string {
+        const functionMatch = code.match(/export const Users = \(\) => \{([\s\S]*?)return/);
+        if (functionMatch) {
+            return functionMatch[1].trim();
+        }
+        return '';
+    }
+
+    /**
+     * 피그마 스타일을 기존 JSX에 적용
+     */
+    private applyFigmaStyles(existingJSX: string, figmaComponents: {
+        table?: ComponentDesignConfig;
+        buttons?: ComponentDesignConfig[];
+        inputs?: ComponentDesignConfig[];
+        filters?: ComponentDesignConfig[];
+        layout?: {
+            spacing: number;
+            padding: number;
+            direction: 'row' | 'column';
+        };
+    }): string {
+        let mergedJSX = existingJSX;
+        
+        // 레이아웃 스타일 적용
+        if (figmaComponents.layout) {
+            const layoutStyle = `sx={{ 
+                p: ${figmaComponents.layout.padding}, 
+                display: 'flex', 
+                flexDirection: '${figmaComponents.layout.direction}', 
+                gap: ${figmaComponents.layout.spacing} 
+            }}`;
+            
+            // 기존 Box에 스타일 적용
+            mergedJSX = mergedJSX.replace(
+                /<Box[^>]*>/,
+                `<Box ${layoutStyle}>`
+            );
+        }
+        
+        return mergedJSX;
     }
 }

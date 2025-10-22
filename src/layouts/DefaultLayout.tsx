@@ -29,8 +29,10 @@ export const DefaultLayout = () => {
                 pt: `${HEADER_HEIGHT}px`,
             }}
         >
+            {/* <Header> */}
             <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} onToggleTheme={toggleTheme} />
 
+            {/* MainArea */}
             <Box
                 sx={{
                     display: 'flex',
@@ -38,10 +40,10 @@ export const DefaultLayout = () => {
                     overflow: 'hidden',
                 }}
             >
-                {/* 사이드바 */}
+                {/* <Sidebar> */}
                 <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-                {/* 메인 영역 */}
+                {/* Main */}
                 <Box
                     component="main"
                     sx={{
@@ -51,13 +53,14 @@ export const DefaultLayout = () => {
                         overflow: 'auto',
                     }}
                 >
-                    {/* 페이지 헤더 */}
+                    {/* <PageHeader> */}
                     {currentRoute && currentRoute.showPageHeader && (
                         <PageHeader title={currentRoute.title} />
                     )}
 
                     {/* 페이지 콘텐츠 */}
                     <Box sx={{ flex: 1 }}>
+                        {/* MainContent - 페이지 메인 콘텐츠 프레임 자동 추출 */}
                         <Outlet />
                     </Box>
                 </Box>

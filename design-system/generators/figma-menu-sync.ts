@@ -48,6 +48,7 @@ const ICON_MAP: Record<string, string> = {
     project: 'FolderOutlined',
     users: 'PeopleOutlineOutlined',
     components: 'WidgetsOutlined',
+    test: 'StarBorder',
 };
 
 // =========================================================================

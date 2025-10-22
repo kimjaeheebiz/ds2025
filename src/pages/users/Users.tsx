@@ -77,7 +77,7 @@ export const Users = () => {
                 {/* 검색, 등록 버튼 */}
                 <Stack direction="row" spacing={1}>
                     <TextField
-                        placeholder="이름, 이메일 아이디, 소속 검색"
+                        placeholder="이름, 이메일, 소속 검색"
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
                         size="small"
@@ -113,7 +113,7 @@ export const Users = () => {
                                 번호
                             </TableCell>
                             <TableCell>
-                                이메일 아이디
+                                이메일
                             </TableCell>
                             <TableCell>
                                 이름
@@ -155,7 +155,7 @@ export const Users = () => {
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">
-                                        {user.department}
+                                        {user.department || '-'}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>

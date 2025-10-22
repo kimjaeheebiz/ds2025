@@ -1,6 +1,7 @@
 // 모든 타입을 한 곳에서 export
 export * from './user';
 export * from './workflow';
+export * from './project';
 
 // 공통 타입 정의
 export interface ApiResponse<T> {

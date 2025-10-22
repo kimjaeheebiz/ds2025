@@ -296,6 +296,8 @@ export interface ComponentProperties {
     overflow?: 'visible' | 'hidden' | 'scroll' | 'auto';
     cursor?: 'default' | 'pointer' | 'text' | 'move' | 'not-allowed';
     transition?: string;
+    variant?: string;
+    size?: string;
     transform?: string;
     boxShadow?: string;
     textAlign?: 'left' | 'center' | 'right' | 'justify';

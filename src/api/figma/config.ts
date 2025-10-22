@@ -10,389 +10,120 @@ export const FIGMA_CONFIG = {
     
     // 페이지별 노드 ID 매핑
     pageNodes: {
-        // 브랜딩 레이아웃 (HT_Agent_Platform_v1.0_202509)
-        branding: '0-1',
-        // Project 페이지 (HT_Agent_Platform_v1.0_202509)
-        project: '166-6455',
-        // Users 페이지 (HT_Agent_Platform_v1.0_202509)
-        users: '598-3722',
-        // 컴포넌트 모음 (HT_Agent_Platform_v1.0_202509)
-        components: '286-6314',
-        // 라이브러리 컴포넌트 (HT_Library_v1.0_202509)
-        libraryComponents: '13761-1677'
+        // Layout Templates (참조용 프레임)
+        layoutTemplates: {
+            default: '469:7679',
+            // auth: '0:3',
+            // error: '0:4',
+        },
+
+        // Layout Instances (페이지 실제 사용)
+        layoutInstances: {
+            default: '469:3583',
+            // auth: '0:5',
+            // error: '0:6',
+        },
+
+        // Pages (Frame)
+        pages: {
+            project: '166:6455',
+            users: '598:3722',
+            // components: '286:6314',
+            test: '860:6675',
+        },
+
+        // Library Components
+        libraryComponents: '13761:1677'
     },
 
-    // 컴포넌트 타입별 매핑
-    componentTypes: {
-        button: ['button', 'btn', 'Button'],
-        input: ['input', 'textfield', 'TextField', 'Input'],
-        table: ['table', 'Table', 'DataGrid'],
-        card: ['card', 'Card', 'Paper'],
-        navigation: ['nav', 'menu', 'Navigation', 'Menu'],
-        layout: ['layout', 'container', 'Layout', 'Container'],
-        chip: ['chip', 'Chip', 'Badge'],
-        dialog: ['dialog', 'modal', 'Dialog', 'Modal'],
-        form: ['form', 'Form'],
-        list: ['list', 'List'],
-        tabs: ['tabs', 'Tabs', 'Tab']
+    // 피그마 프레임/컴포넌트 매핑 (기존 소스 구조 기반)
+    figmaMapping: {
+        // 레이아웃 영역
+        layout: {
+            mainContent: ['MainContent'],
+            mainArea: ['MainArea'],
+            main: ['Main']
+        },
+        
+        // 컴포넌트 인스턴스
+        components: {
+            header: ['<Header>'],
+            sidebar: ['<Sidebar>'],
+            pageHeader: ['<PageHeader>'],
+            drawer: ['<Drawer>'],
+            submenu: ['<Submenu>', 'Submenu'],
+            content: ['Content'],
+            controlArea: ['ControlArea']
+        },
+        
+        // MUI 컴포넌트 (기존 소스에서 사용하는 것들)
+        muiComponents: {
+            button: ['<Button>'],
+            textField: ['<TextField>', '<Input>'],
+            table: ['<Table>', '<DataGrid>'],
+            card: ['<Card>', '<Paper>'],
+            chip: ['<Chip>', '<Badge>'],
+            typography: ['<Typography>']
+        }
     },
 
-    // MUI 컴포넌트 매핑
+    // MUI 컴포넌트 매핑 (기존 소스 기반)
     muiMapping: {
+        // 레이아웃
+        layout: 'Box',
+        submenu: 'Box',
+        content: 'Box',
+        controlArea: 'Box',
+        
+        // 폼 컴포넌트
         button: 'Button',
-        input: 'TextField',
+        textField: 'TextField',
+        
+        // 데이터 표시
         table: 'Table',
         card: 'Card',
-        navigation: 'Navigation',
-        layout: 'Box',
         chip: 'Chip',
-        dialog: 'Dialog',
-        form: 'FormControl',
-        list: 'List',
-        tabs: 'Tabs'
+        typography: 'Typography'
     },
 
-    // 강화된 MUI 컴포넌트 매핑
-    enhancedMuiMapping: {
+    // MUI 컴포넌트 속성 매핑 (기존 소스 기반)
+    muiProps: {
         button: {
-            component: 'Button',
             variants: ['contained', 'outlined', 'text'],
-            sizes: ['small', 'medium', 'large'],
-            props: {
-                contained: { variant: 'contained' },
-                outlined: { variant: 'outlined' },
-                text: { variant: 'text' },
-                small: { size: 'small' },
-                medium: { size: 'medium' },
-                large: { size: 'large' }
-            }
+            sizes: ['small', 'medium', 'large']
         },
-        input: {
-            component: 'TextField',
+        textField: {
             variants: ['outlined', 'filled', 'standard'],
-            types: ['text', 'password', 'email', 'number', 'tel', 'url'],
-            props: {
-                outlined: { variant: 'outlined' },
-                filled: { variant: 'filled' },
-                standard: { variant: 'standard' },
-                text: { type: 'text' },
-                password: { type: 'password' },
-                email: { type: 'email' },
-                number: { type: 'number' },
-                tel: { type: 'tel' },
-                url: { type: 'url' }
-            }
+            sizes: ['small', 'medium']
         },
         table: {
-            component: 'Table',
-            subComponents: ['TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableContainer'],
-            props: {
-                size: ['small', 'medium'],
-                stickyHeader: true
-            }
+            sizes: ['small', 'medium'],
+            subComponents: ['TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableContainer']
         },
         card: {
-            component: 'Card',
-            subComponents: ['CardContent', 'CardActions', 'CardHeader', 'CardMedia'],
-            props: {
-                elevation: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-            }
-        },
-        navigation: {
-            component: 'AppBar',
-            subComponents: ['Toolbar', 'Typography', 'IconButton', 'Menu', 'MenuItem'],
-            variants: ['elevation', 'outlined'],
-            props: {
-                elevation: [0, 1, 2, 3, 4],
-                position: ['fixed', 'absolute', 'sticky', 'static', 'relative']
-            }
-        },
-        layout: {
-            component: 'Box',
-            displayTypes: ['flex', 'block', 'inline', 'inline-block', 'grid'],
-            props: {
-                flex: { display: 'flex' },
-                block: { display: 'block' },
-                inline: { display: 'inline' },
-                'inline-block': { display: 'inline-block' },
-                grid: { display: 'grid' }
-            }
+            elevations: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+            subComponents: ['CardContent', 'CardActions', 'CardHeader', 'CardMedia']
         },
         chip: {
-            component: 'Chip',
             variants: ['filled', 'outlined'],
             colors: ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'],
-            sizes: ['small', 'medium'],
-            props: {
-                filled: { variant: 'filled' },
-                outlined: { variant: 'outlined' },
-                small: { size: 'small' },
-                medium: { size: 'medium' }
-            }
-        },
-        dialog: {
-            component: 'Dialog',
-            subComponents: ['DialogTitle', 'DialogContent', 'DialogActions'],
-            props: {
-                maxWidth: ['xs', 'sm', 'md', 'lg', 'xl', false],
-                fullWidth: true,
-                fullScreen: true
-            }
-        },
-        form: {
-            component: 'FormControl',
-            subComponents: ['FormLabel', 'FormHelperText', 'FormGroup'],
-            variants: ['standard', 'outlined', 'filled'],
-            props: {
-                standard: { variant: 'standard' },
-                outlined: { variant: 'outlined' },
-                filled: { variant: 'filled' }
-            }
-        },
-        list: {
-            component: 'List',
-            subComponents: ['ListItem', 'ListItemText', 'ListItemIcon', 'ListItemButton'],
-            props: {
-                dense: true,
-                disablePadding: true
-            }
-        },
-        tabs: {
-            component: 'Tabs',
-            subComponents: ['Tab', 'TabPanel'],
-            variants: ['standard', 'scrollable', 'fullWidth'],
-            orientations: ['horizontal', 'vertical'],
-            props: {
-                standard: { variant: 'standard' },
-                scrollable: { variant: 'scrollable' },
-                fullWidth: { variant: 'fullWidth' },
-                horizontal: { orientation: 'horizontal' },
-                vertical: { orientation: 'vertical' }
-            }
-        },
-        // 추가 컴포넌트들
-        avatar: {
-            component: 'Avatar',
-            variants: ['circular', 'rounded', 'square'],
-            sizes: ['small', 'medium', 'large'],
-            props: {
-                circular: { variant: 'circular' },
-                rounded: { variant: 'rounded' },
-                square: { variant: 'square' }
-            }
-        },
-        badge: {
-            component: 'Badge',
-            colors: ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'],
-            variants: ['standard', 'dot'],
-            props: {
-                standard: { variant: 'standard' },
-                dot: { variant: 'dot' }
-            }
-        },
-        checkbox: {
-            component: 'Checkbox',
-            colors: ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'],
-            sizes: ['small', 'medium'],
-            props: {
-                small: { size: 'small' },
-                medium: { size: 'medium' }
-            }
-        },
-        radio: {
-            component: 'Radio',
-            colors: ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'],
-            sizes: ['small', 'medium'],
-            props: {
-                small: { size: 'small' },
-                medium: { size: 'medium' }
-            }
-        },
-        switch: {
-            component: 'Switch',
-            colors: ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'],
-            sizes: ['small', 'medium'],
-            props: {
-                small: { size: 'small' },
-                medium: { size: 'medium' }
-            }
-        },
-        slider: {
-            component: 'Slider',
-            orientations: ['horizontal', 'vertical'],
-            colors: ['primary', 'secondary'],
-            props: {
-                horizontal: { orientation: 'horizontal' },
-                vertical: { orientation: 'vertical' }
-            }
-        },
-        select: {
-            component: 'Select',
-            variants: ['standard', 'outlined', 'filled'],
-            props: {
-                standard: { variant: 'standard' },
-                outlined: { variant: 'outlined' },
-                filled: { variant: 'filled' }
-            }
-        },
-        menu: {
-            component: 'Menu',
-            props: {
-                anchorOrigin: {
-                    vertical: 'bottom',
-                    horizontal: 'left'
-                },
-                transformOrigin: {
-                    vertical: 'top',
-                    horizontal: 'left'
-                }
-            }
-        },
-        snackbar: {
-            component: 'Snackbar',
-            positions: ['top', 'bottom'],
-            props: {
-                top: { anchorOrigin: { vertical: 'top', horizontal: 'center' } },
-                bottom: { anchorOrigin: { vertical: 'bottom', horizontal: 'center' } }
-            }
-        },
-        alert: {
-            component: 'Alert',
-            variants: ['filled', 'outlined', 'standard'],
-            severities: ['error', 'warning', 'info', 'success'],
-            props: {
-                filled: { variant: 'filled' },
-                outlined: { variant: 'outlined' },
-                standard: { variant: 'standard' }
-            }
-        },
-        progress: {
-            component: 'LinearProgress',
-            variants: ['determinate', 'indeterminate', 'buffer', 'query'],
-            colors: ['primary', 'secondary'],
-            props: {
-                determinate: { variant: 'determinate' },
-                indeterminate: { variant: 'indeterminate' },
-                buffer: { variant: 'buffer' },
-                query: { variant: 'query' }
-            }
-        },
-        stepper: {
-            component: 'Stepper',
-            orientations: ['horizontal', 'vertical'],
-            props: {
-                horizontal: { orientation: 'horizontal' },
-                vertical: { orientation: 'vertical' }
-            }
-        },
-        accordion: {
-            component: 'Accordion',
-            variants: ['elevation', 'outlined'],
-            props: {
-                elevation: { variant: 'elevation' },
-                outlined: { variant: 'outlined' }
-            }
-        },
-        breadcrumbs: {
-            component: 'Breadcrumbs',
-            separators: ['/', '>', '-', '•'],
-            props: {
-                '/': { separator: '/' },
-                '>': { separator: '>' },
-                '-': { separator: '-' },
-                '•': { separator: '•' }
-            }
-        },
-        pagination: {
-            component: 'Pagination',
-            variants: ['outlined', 'text'],
-            colors: ['primary', 'secondary'],
-            props: {
-                outlined: { variant: 'outlined' },
-                text: { variant: 'text' }
-            }
-        },
-        rating: {
-            component: 'Rating',
-            sizes: ['small', 'medium', 'large'],
-            props: {
-                small: { size: 'small' },
-                medium: { size: 'medium' },
-                large: { size: 'large' }
-            }
-        },
-        skeleton: {
-            component: 'Skeleton',
-            variants: ['text', 'rectangular', 'circular'],
-            animations: ['pulse', 'wave', false],
-            props: {
-                text: { variant: 'text' },
-                rectangular: { variant: 'rectangular' },
-                circular: { variant: 'circular' }
-            }
-        },
-        tooltip: {
-            component: 'Tooltip',
-            placements: ['bottom-end', 'bottom-start', 'bottom', 'left-end', 'left-start', 'left', 'right-end', 'right-start', 'right', 'top-end', 'top-start', 'top'],
-            props: {
-                'bottom-end': { placement: 'bottom-end' },
-                'bottom-start': { placement: 'bottom-start' },
-                'bottom': { placement: 'bottom' },
-                'left-end': { placement: 'left-end' },
-                'left-start': { placement: 'left-start' },
-                'left': { placement: 'left' },
-                'right-end': { placement: 'right-end' },
-                'right-start': { placement: 'right-start' },
-                'right': { placement: 'right' },
-                'top-end': { placement: 'top-end' },
-                'top-start': { placement: 'top-start' },
-                'top': { placement: 'top' }
-            }
+            sizes: ['small', 'medium']
         }
     },
 
-    // 디자인 토큰 매핑
-    designTokens: {
-        colors: {
-            primary: 'primary',
-            secondary: 'secondary',
-            success: 'success',
-            error: 'error',
-            warning: 'warning',
-            info: 'info',
-            background: 'background',
-            surface: 'surface',
-            text: 'text'
-        },
-        typography: {
-            h1: 'h1',
-            h2: 'h2',
-            h3: 'h3',
-            h4: 'h4',
-            h5: 'h5',
-            h6: 'h6',
-            body1: 'body1',
-            body2: 'body2',
-            caption: 'caption',
-            button: 'button',
-            overline: 'overline'
-        },
-        spacing: {
-            xs: 4,
-            sm: 8,
-            md: 16,
-            lg: 24,
-            xl: 32,
-            xxl: 48
-        },
-        borderRadius: {
-            none: 0,
-            sm: 4,
-            md: 8,
-            lg: 12,
-            xl: 16,
-            round: '50%'
-        }
+    // 스타일 매핑 (기존 소스 기반)
+    styleMapping: {
+        // 색상 (기존 소스에서 사용하는 것들)
+        colors: ['primary', 'secondary', 'error', 'warning', 'info', 'success'],
+        
+        // 타이포그래피 (기존 소스에서 사용하는 것들)
+        typography: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'body1', 'body2', 'caption'],
+        
+        // 간격 (기존 소스에서 사용하는 것들)
+        spacing: [1, 2, 3, 4, 8, 16, 24, 32],
+        
+        // 테두리 반경 (기존 소스에서 사용하는 것들)
+        borderRadius: [0, 4, 8, 12, 16]
     },
 
     // API 설정

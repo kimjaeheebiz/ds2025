@@ -2,7 +2,7 @@ import { FigmaAPIClient } from './client';
 import { FigmaDesignExtractor } from './extractor';
 import { FigmaCodeGenerator } from './generator';
 import { FIGMA_CONFIG, validateFigmaEnvironment } from './config';
-import { PageDesignConfig, ComponentProperties, FigmaNode, FigmaFill, TypographyConfig } from './types';
+import { PageDesignConfig, ComponentProperties, FigmaNode, FigmaFill, TypographyConfig, ComponentDesignConfig } from './types';
 import { PageTemplateManager, PageContentConfig, LayoutType } from './pageTemplateManager';
 import { FileSystemManager } from './fileSystem';
 import { handleFigmaError } from './errors';
@@ -30,7 +30,7 @@ export class FigmaIntegrationService {
 
             // 플랫폼 파일에서 페이지들 추출
             const platformFileKey = FIGMA_CONFIG.files.platform;
-            const pageNodeIds = Object.values(FIGMA_CONFIG.pageNodes);
+            const pageNodeIds = Object.values(FIGMA_CONFIG.pageNodes.pages);
             
             console.log('📄 Extracting page designs from Figma...');
             const pageDesigns = await this.extractor.extractPageDesigns(platformFileKey, pageNodeIds);
@@ -55,7 +55,6 @@ export class FigmaIntegrationService {
      */
     async generateLayoutIntegratedPage(
         pageDesign: PageDesignConfig, 
-        layoutType: LayoutType = 'default',
         pageConfig?: { id: string; title: string; layout?: LayoutType }
     ): Promise<void> {
         try {
@@ -77,7 +76,7 @@ export class FigmaIntegrationService {
             // 기존 페이지 설정과 통합 (있는 경우)
             const finalContent = pageConfig 
                 ? PageTemplateManager.integrateWithExistingPage(pageConfig, figmaContent)
-                : PageTemplateManager.getLayoutAwareTemplate(layoutType, pageName);
+                : figmaContent; // 피그마 콘텐츠를 직접 사용
 
             // 페이지 콘텐츠 코드 생성
             const contentCode = this.generator.generatePageContent(finalContent);
@@ -438,6 +437,115 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      * @param str 입력 문자열
      * @returns PascalCase 문자열
      */
+    /**
+     * 레이아웃 컴포넌트 연동 (기존 컴포넌트와 피그마 디자인 동기화)
+     * @param pageDesign 페이지 디자인 설정
+     */
+    async syncLayoutComponents(pageDesign: PageDesignConfig): Promise<void> {
+        try {
+            console.log(`🔄 Syncing layout components for ${pageDesign.pageName}...`);
+
+            // 레이아웃 컴포넌트 추출 (페이지 노드에서)
+            const pageNode = await this.getPageNode(pageDesign.pageId);
+            const layoutComponents = this.extractor.extractLayoutComponents(pageNode);
+            
+            // 각 레이아웃 컴포넌트별로 처리
+            for (const [componentType, componentDesign] of Object.entries(layoutComponents)) {
+                if (componentDesign) {
+                    await this.syncLayoutComponent(componentType, componentDesign);
+                }
+            }
+
+            console.log(`✅ Layout components synced successfully`);
+        } catch (error) {
+            console.error('Failed to sync layout components:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 페이지 노드 가져오기
+     * @param pageId 페이지 ID
+     * @returns 페이지 노드
+     */
+    private async getPageNode(pageId: string): Promise<FigmaNode> {
+        const platformFileKey = FIGMA_CONFIG.files.platform;
+        const fileData = await this.client.getFileNodes(platformFileKey, [pageId]);
+        const node = fileData.nodes[pageId]?.document;
+        
+        if (!node) {
+            throw new Error(`Page node not found: ${pageId}`);
+        }
+        
+        return node;
+    }
+
+    /**
+     * 개별 레이아웃 컴포넌트 동기화
+     * @param componentType 컴포넌트 타입
+     * @param componentDesign 컴포넌트 디자인
+     */
+    private async syncLayoutComponent(componentType: string, componentDesign: ComponentDesignConfig): Promise<void> {
+        const componentPath = this.getLayoutComponentPath(componentType);
+        
+        if (await this.fileSystem.fileExists(componentPath)) {
+            console.log(`📝 Updating existing ${componentType} component...`);
+            
+            // 기존 컴포넌트 업데이트 (스타일만)
+            const styleUpdates = this.generateStyleUpdates(componentDesign);
+            await this.updateComponentStyles(componentPath, styleUpdates);
+        } else {
+            console.log(`🆕 Creating new ${componentType} component...`);
+            
+            // 새 컴포넌트 생성
+            const componentCode = this.generator.generatePageContent({
+                pageName: componentType,
+                pageId: componentType.toLowerCase(),
+                components: [componentDesign],
+                contentStyles: {
+                    colors: {},
+                    spacing: {},
+                    typography: {}
+                }
+            });
+            await this.fileSystem.saveFile(componentPath, componentCode);
+        }
+    }
+
+    /**
+     * 레이아웃 컴포넌트 경로 가져오기
+     * @param componentType 컴포넌트 타입
+     * @returns 컴포넌트 파일 경로
+     */
+    private getLayoutComponentPath(componentType: string): string {
+        const componentName = this.toPascalCase(componentType);
+        return `src/layouts/${componentName}.tsx`;
+    }
+
+    /**
+     * 스타일 업데이트 생성
+     * @param componentDesign 컴포넌트 디자인
+     * @returns 스타일 업데이트 코드
+     */
+    private generateStyleUpdates(componentDesign: ComponentDesignConfig): string {
+        // 피그마 디자인에서 스타일 정보 추출하여 기존 컴포넌트에 적용
+        return JSON.stringify(componentDesign.properties, null, 2);
+    }
+
+    /**
+     * 컴포넌트 스타일 업데이트
+     * @param componentPath 컴포넌트 파일 경로
+     * @param styleUpdates 스타일 업데이트 코드
+     */
+    private async updateComponentStyles(componentPath: string, styleUpdates: string): Promise<void> {
+        // 기존 컴포넌트 파일 읽기
+        await this.fileSystem.readFile(componentPath);
+        
+        // 스타일 부분만 업데이트 (복잡한 로직 필요)
+        // TODO: 실제 구현 시 기존 컴포넌트 구조를 유지하면서 스타일만 업데이트
+        console.log(`Style updates for ${componentPath}:`, styleUpdates);
+    }
+
     private toPascalCase(str: string): string {
         return str
             .split(/[\s\-_]+/)

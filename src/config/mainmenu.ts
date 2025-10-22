@@ -4,7 +4,7 @@
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
  * 
- * 생성 일시: 2025-10-21T00:24:20.647Z
+ * 생성 일시: 2025-10-22T06:53:15.856Z
  */
 
 import { findPageById } from './pages';
@@ -78,7 +78,7 @@ export const MAIN_MENUS: MenuItem[] = [
         children: [
             {
                 id: 'project1',
-                title: 'Project 1(2 depth test)',
+                title: 'Project 1',
                 type: 'item',
                 path: '/project/project1',
                 pageId: 'project.project1',
@@ -107,6 +107,14 @@ export const MAIN_MENUS: MenuItem[] = [
         path: '/components',
         icon: 'WidgetsOutlined',
         pageId: 'components',
+    },
+    {
+        id: 'test',
+        title: 'Test',
+        type: 'item',
+        path: '/test',
+        icon: 'StarBorder',
+        pageId: 'test',
     }
 ];
 

@@ -95,6 +95,8 @@ npm run figma:extract
 npm run figma:validate
 ```
 
+**노드 ID 추출**: Figma URL에서 `?node-id=[NODE_ID]` 부분을 추출하여 설정 파일에 추가
+
 자세한 내용은 [디자인 시스템 가이드](design-system/DESIGN_SYSTEM_GUIDE.md)와 [Figma 통합 가이드](docs/FIGMA_INTEGRATION.md) 참조
 
 ---
