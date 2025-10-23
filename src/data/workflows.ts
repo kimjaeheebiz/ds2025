@@ -39,5 +39,3 @@ export const sampleWorkflows: Workflow[] = [
         updated_at: '2024-01-19T10:30:00Z',
     },
 ];
-
-

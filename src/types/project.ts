@@ -28,7 +28,7 @@ export const PROJECT_TABLE_COLUMNS: ProjectTableColumn[] = [
     { key: 'status', label: '상태', sortable: true, filterable: true, type: 'status' },
     { key: 'ownerName', label: '소유자', sortable: true, filterable: true, type: 'text' },
     { key: 'createdAt', label: '생성일', sortable: true, filterable: true, type: 'date' },
-    { key: 'updatedAt', label: '수정일', sortable: true, filterable: true, type: 'date' }
+    { key: 'updatedAt', label: '수정일', sortable: true, filterable: true, type: 'date' },
 ];
 
 // API 요청/응답 타입

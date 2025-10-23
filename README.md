@@ -5,6 +5,7 @@ React + TypeScript + Vite 기반 관리 시스템
 ## 🚀 시작하기
 
 ### 필수 설치
+
 ```bash
 # 프로젝트 의존성 설치
 npm install
@@ -17,6 +18,7 @@ npm run build
 ```
 
 ### Figma API 통합 (선택사항)
+
 ```bash
 # Figma API 환경 설정
 npm run figma:setup
@@ -30,12 +32,15 @@ npm run figma:status
 ## ✨ 새 페이지 추가
 
 ### 1. 페이지 메타데이터 정의
+
 `src/config/pages.ts`에서 페이지 설정 추가
 
 ### 2. 메뉴에 추가
+
 `src/config/mainmenu.ts`에서 메뉴 항목 추가
 
 ### 3. 페이지 컴포넌트 생성
+
 `src/pages/` 폴더에 페이지 컴포넌트 생성
 
 자세한 내용은 [설정 구조 가이드](docs/CONFIG_STRUCTURE.md)와 [메뉴 구조 가이드](docs/MENU_STRUCTURE.md) 참조
@@ -68,6 +73,7 @@ scripts/                 # 빌드 및 유틸리티 스크립트
 ## 🎨 디자인 시스템
 
 ### 기존 토큰 시스템
+
 - **Tokens Studio**: Figma 디자인 토큰 자동 동기화
 - **MUI 테마**: 디자인 토큰을 MUI 테마로 변환
 
@@ -80,6 +86,7 @@ npm run build:theme
 ```
 
 ### Figma API 통합
+
 - **페이지 콘텐츠 생성**: 기존 레이아웃과 통합된 페이지 콘텐츠
 - **컴포넌트 추출**: Figma 라이브러리 컴포넌트 추출
 - **코드 검증**: 생성된 코드 품질 검증

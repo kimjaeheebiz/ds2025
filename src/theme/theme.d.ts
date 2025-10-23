@@ -24,4 +24,3 @@ declare module '@mui/material/styles' {
         [colorGroupName: string]: Partial<BrandColorGroup> | unknown;
     }
 }
-

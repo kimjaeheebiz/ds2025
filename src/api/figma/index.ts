@@ -2,7 +2,14 @@ import { FigmaAPIClient } from './client';
 import { FigmaDesignExtractor } from './extractor';
 import { FigmaCodeGenerator } from './generator';
 import { FIGMA_CONFIG, validateFigmaEnvironment } from './config';
-import { PageDesignConfig, ComponentProperties, FigmaNode, FigmaFill, TypographyConfig, ComponentDesignConfig } from './types';
+import {
+    PageDesignConfig,
+    ComponentProperties,
+    FigmaNode,
+    FigmaFill,
+    TypographyConfig,
+    ComponentDesignConfig,
+} from './types';
 import { PageTemplateManager, PageContentConfig, LayoutType } from './pageTemplateManager';
 import { FileSystemManager } from './fileSystem';
 import { handleFigmaError } from './errors';
@@ -22,6 +29,39 @@ export class FigmaIntegrationService {
     }
 
     /**
+     * 특정 페이지 디자인 추출 및 코드 생성
+     * @param pageName 페이지 이름
+     */
+    async generateSinglePage(pageName: string): Promise<void> {
+        try {
+            console.log(`🚀 Starting Figma integration for ${pageName}...`);
+
+            // 플랫폼 파일에서 특정 페이지만 추출
+            const platformFileKey = FIGMA_CONFIG.files.platform;
+            const pageNodeId = FIGMA_CONFIG.pageNodes.pages[pageName.toLowerCase()];
+
+            if (!pageNodeId) {
+                throw new Error(`Page node not found for: ${pageName}`);
+            }
+
+            console.log(`📄 Extracting page design from Figma for ${pageName}...`);
+            const pageDesigns = await this.extractor.extractPageDesigns(platformFileKey, [pageNodeId]);
+
+            if (pageDesigns.length === 0) {
+                throw new Error(`No page design found for: ${pageName}`);
+            }
+
+            // 해당 페이지만 코드 생성
+            await this.generateLayoutIntegratedPage(pageDesigns[0]);
+
+            console.log(`✅ Figma integration completed successfully for ${pageName}!`);
+        } catch (error) {
+            console.error(`❌ Figma integration failed for ${pageName}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * 모든 페이지 디자인 추출 및 코드 생성
      */
     async generateAllPages(): Promise<void> {
@@ -31,7 +71,7 @@ export class FigmaIntegrationService {
             // 플랫폼 파일에서 페이지들 추출
             const platformFileKey = FIGMA_CONFIG.files.platform;
             const pageNodeIds = Object.values(FIGMA_CONFIG.pageNodes.pages);
-            
+
             console.log('📄 Extracting page designs from Figma...');
             const pageDesigns = await this.extractor.extractPageDesigns(platformFileKey, pageNodeIds);
 
@@ -54,8 +94,8 @@ export class FigmaIntegrationService {
      * @param pageConfig 기존 페이지 설정 (선택사항)
      */
     async generateLayoutIntegratedPage(
-        pageDesign: PageDesignConfig, 
-        pageConfig?: { id: string; title: string; layout?: LayoutType }
+        pageDesign: PageDesignConfig,
+        pageConfig?: { id: string; title: string; layout?: LayoutType },
     ): Promise<void> {
         try {
             const { pageName } = pageDesign;
@@ -66,23 +106,18 @@ export class FigmaIntegrationService {
                 pageName: pageDesign.pageName,
                 pageId: pageDesign.pageName.toLowerCase(),
                 components: pageDesign.components,
-                contentStyles: {
-                    colors: this.extractContentColors(pageDesign),
-                    spacing: this.extractContentSpacing(pageDesign),
-                    typography: this.extractContentTypography(pageDesign)
-                }
             };
 
             // 기존 페이지 설정과 통합 (있는 경우)
-            const finalContent = pageConfig 
+            const finalContent = pageConfig
                 ? PageTemplateManager.integrateWithExistingPage(pageConfig, figmaContent)
                 : figmaContent; // 피그마 콘텐츠를 직접 사용
 
             // 페이지 콘텐츠 코드 생성
-            const contentCode = this.generator.generatePageContent(finalContent);
-            
+            const contentCode = await this.generator.generatePageContent(finalContent);
+
             // TypeScript 타입 정의 생성
-            const typeDefinitions = this.generator.generateTypeDefinitions(pageDesign);
+            const typeDefinitions = await this.generator.generateTypeDefinitions(pageDesign);
 
             // 파일 저장 경로 결정 (기존 구조에 맞게)
             const fileName = this.toKebabCase(pageName);
@@ -98,7 +133,6 @@ export class FigmaIntegrationService {
             throw error;
         }
     }
-
 
     /**
      * 라이브러리 컴포넌트 추출
@@ -116,10 +150,10 @@ export class FigmaIntegrationService {
 
             if (libraryNode && libraryNode.children) {
                 console.log(`Found ${libraryNode.children.length} library components`);
-                
+
                 // 각 컴포넌트별로 처리
                 for (const componentNode of libraryNode.children) {
-                    await this.processLibraryComponent(componentNode as FigmaNode & {name: string, id: string});
+                    await this.processLibraryComponent(componentNode as FigmaNode & { name: string; id: string });
                 }
             }
 
@@ -134,7 +168,7 @@ export class FigmaIntegrationService {
      * 라이브러리 컴포넌트 처리
      * @param componentNode 컴포넌트 노드
      */
-    private async processLibraryComponent(componentNode: FigmaNode & {name: string, id: string}): Promise<void> {
+    private async processLibraryComponent(componentNode: FigmaNode & { name: string; id: string }): Promise<void> {
         try {
             const componentName = componentNode.name;
             console.log(`🔧 Processing library component: ${componentName}`);
@@ -170,13 +204,13 @@ export class FigmaIntegrationService {
      */
     private determineComponentType(componentName: string): string | null {
         const name = componentName.toLowerCase();
-        
-        for (const [type, keywords] of Object.entries(FIGMA_CONFIG.componentTypes)) {
-            if (keywords.some(keyword => name.includes(keyword.toLowerCase()))) {
+
+        for (const [type, keywords] of Object.entries(FIGMA_CONFIG.figmaMapping.components)) {
+            if ((keywords as readonly string[]).some((keyword) => name.includes(keyword.toLowerCase()))) {
                 return type;
             }
         }
-        
+
         return null;
     }
 
@@ -213,9 +247,9 @@ export class FigmaIntegrationService {
      * @returns 컴포넌트 코드
      */
     private generateLibraryComponentCode(
-        componentName: string, 
-        componentType: string, 
-        properties: ComponentProperties
+        componentName: string,
+        componentType: string,
+        properties: ComponentProperties,
     ): string {
         const pascalName = this.toPascalCase(componentName);
         const muiComponent = FIGMA_CONFIG.muiMapping[componentType] || 'Box';
@@ -230,7 +264,7 @@ export class FigmaIntegrationService {
             .join(',\n            ');
 
         return `import React from 'react';
-import { ${muiComponent } } from '@mui/material';
+import { ${muiComponent} } from '@mui/material';
 
 export interface ${pascalName}Props {
     // Add component-specific props here
@@ -261,14 +295,14 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
             const red = Math.round(r * 255);
             const green = Math.round(g * 255);
             const blue = Math.round(b * 255);
-            
+
             if (a < 1) {
                 return `rgba(${red}, ${green}, ${blue}, ${a})`;
             }
-            
+
             return `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}`;
         }
-        
+
         return '#000000';
     }
 
@@ -280,16 +314,16 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      * @param typeDefinitions 타입 정의
      */
     private async saveGeneratedFiles(
-        componentPath: string, 
-        componentCode: string, 
-        typesPath: string, 
-        typeDefinitions: string
+        componentPath: string,
+        componentCode: string,
+        typesPath: string,
+        typeDefinitions: string,
     ): Promise<void> {
         try {
             // 디렉토리 생성
             const componentDir = this.fileSystem.getDirectoryPath(componentPath);
             const typesDir = this.fileSystem.getDirectoryPath(typesPath);
-            
+
             await this.fileSystem.createDirectory(componentDir);
             await this.fileSystem.createDirectory(typesDir);
 
@@ -334,7 +368,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
     private toKebabCase(str: string): string {
         return str
             .split(/[\s\-_]+/)
-            .map(word => word.toLowerCase())
+            .map((word) => word.toLowerCase())
             .join('-');
     }
 
@@ -345,19 +379,19 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      */
     private extractContentColors(pageDesign: PageDesignConfig): Record<string, string> {
         const colors: Record<string, string> = {};
-        
+
         // 테마에서 색상 추출
         if (pageDesign.theme?.colors) {
             Object.entries(pageDesign.theme.colors).forEach(([key, value]) => {
                 colors[key] = value;
             });
         }
-        
+
         // 기본 색상 설정
         if (!colors.contentBackground) colors.contentBackground = 'transparent';
         if (!colors.contentText) colors.contentText = 'inherit';
         if (!colors.accentColor) colors.accentColor = 'primary.main';
-        
+
         return colors;
     }
 
@@ -368,24 +402,24 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      */
     private extractContentSpacing(pageDesign: PageDesignConfig): Record<string, string> {
         const spacing: Record<string, string> = {};
-        
+
         // 레이아웃에서 간격 추출
         if (pageDesign.layout?.spacing !== undefined) {
             spacing.componentGap = `${pageDesign.layout.spacing}px`;
         }
-        
+
         // 테마에서 간격 추출
         if (pageDesign.theme?.spacing) {
             Object.entries(pageDesign.theme.spacing).forEach(([key, value]) => {
                 spacing[key] = `${value}px`;
             });
         }
-        
+
         // 기본 간격 설정
         if (!spacing.contentPadding) spacing.contentPadding = '24px';
         if (!spacing.sectionGap) spacing.sectionGap = '32px';
         if (!spacing.componentGap) spacing.componentGap = '16px';
-        
+
         return spacing;
     }
 
@@ -396,7 +430,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      */
     private extractContentTypography(pageDesign: PageDesignConfig): Record<string, TypographyConfig> {
         const typography: Record<string, TypographyConfig> = {};
-        
+
         // 테마에서 타이포그래피 추출
         if (pageDesign.theme?.typography) {
             Object.entries(pageDesign.theme.typography).forEach(([key, config]) => {
@@ -405,30 +439,30 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
                     fontSize: config.fontSize || 16,
                     fontWeight: config.fontWeight || 400,
                     lineHeight: config.lineHeight || 1.5,
-                    letterSpacing: config.letterSpacing || 0
+                    letterSpacing: config.letterSpacing || 0,
                 };
             });
         }
-        
+
         // 기본 타이포그래피 설정
         if (!typography.pageTitle) {
             typography.pageTitle = {
                 fontFamily: 'inherit',
                 fontSize: 24,
                 fontWeight: 600,
-                lineHeight: 1.2
+                lineHeight: 1.2,
             };
         }
-        
+
         if (!typography.bodyText) {
             typography.bodyText = {
                 fontFamily: 'inherit',
                 fontSize: 14,
                 fontWeight: 400,
-                lineHeight: 1.5
+                lineHeight: 1.5,
             };
         }
-        
+
         return typography;
     }
 
@@ -448,7 +482,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
             // 레이아웃 컴포넌트 추출 (페이지 노드에서)
             const pageNode = await this.getPageNode(pageDesign.pageId);
             const layoutComponents = this.extractor.extractLayoutComponents(pageNode);
-            
+
             // 각 레이아웃 컴포넌트별로 처리
             for (const [componentType, componentDesign] of Object.entries(layoutComponents)) {
                 if (componentDesign) {
@@ -472,11 +506,11 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
         const platformFileKey = FIGMA_CONFIG.files.platform;
         const fileData = await this.client.getFileNodes(platformFileKey, [pageId]);
         const node = fileData.nodes[pageId]?.document;
-        
+
         if (!node) {
             throw new Error(`Page node not found: ${pageId}`);
         }
-        
+
         return node;
     }
 
@@ -487,26 +521,21 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      */
     private async syncLayoutComponent(componentType: string, componentDesign: ComponentDesignConfig): Promise<void> {
         const componentPath = this.getLayoutComponentPath(componentType);
-        
+
         if (await this.fileSystem.fileExists(componentPath)) {
             console.log(`📝 Updating existing ${componentType} component...`);
-            
+
             // 기존 컴포넌트 업데이트 (스타일만)
             const styleUpdates = this.generateStyleUpdates(componentDesign);
             await this.updateComponentStyles(componentPath, styleUpdates);
         } else {
             console.log(`🆕 Creating new ${componentType} component...`);
-            
+
             // 새 컴포넌트 생성
-            const componentCode = this.generator.generatePageContent({
+            const componentCode = await this.generator.generatePageContent({
                 pageName: componentType,
                 pageId: componentType.toLowerCase(),
                 components: [componentDesign],
-                contentStyles: {
-                    colors: {},
-                    spacing: {},
-                    typography: {}
-                }
             });
             await this.fileSystem.saveFile(componentPath, componentCode);
         }
@@ -540,7 +569,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
     private async updateComponentStyles(componentPath: string, styleUpdates: string): Promise<void> {
         // 기존 컴포넌트 파일 읽기
         await this.fileSystem.readFile(componentPath);
-        
+
         // 스타일 부분만 업데이트 (복잡한 로직 필요)
         // TODO: 실제 구현 시 기존 컴포넌트 구조를 유지하면서 스타일만 업데이트
         console.log(`Style updates for ${componentPath}:`, styleUpdates);
@@ -549,7 +578,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
     private toPascalCase(str: string): string {
         return str
             .split(/[\s\-_]+/)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join('');
     }
 }

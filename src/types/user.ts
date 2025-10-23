@@ -1,19 +1,19 @@
 // User 관련 전역 타입 정의 (실제 프로젝트 구조 반영)
 export interface User {
     seq: number;
-    id: string;  // 이메일 아이디 (예: user@company.com)
+    id: string; // 이메일 아이디 (예: user@company.com)
     name: string;
-    department: string | null;  // 소속
+    department: string | null; // 소속
     permission: 'admin' | 'user';
     status: 'active' | 'stop';
-    regdate: string;  // 가입일
-    moddate: string;  // 수정일
-    last_login: string | null;  // 최근 로그인
+    regdate: string; // 가입일
+    moddate: string; // 수정일
+    last_login: string | null; // 최근 로그인
 }
 
 // User 테이블 컬럼 정의
 export interface UserTableColumn {
-    key: keyof User | 'index';  // index는 테이블 순번용
+    key: keyof User | 'index'; // index는 테이블 순번용
     label: string;
     sortable?: boolean;
     filterable?: boolean;

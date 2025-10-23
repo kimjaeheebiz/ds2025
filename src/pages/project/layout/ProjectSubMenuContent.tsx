@@ -6,9 +6,5 @@ interface ProjectSubMenuContentProps {
 }
 
 export const ProjectSubMenuContent: React.FC<ProjectSubMenuContentProps> = ({ children }) => {
-    return (
-        <Box>
-            {children}
-        </Box>
-    );
+    return <Box>{children}</Box>;
 };

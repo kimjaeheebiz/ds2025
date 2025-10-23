@@ -35,11 +35,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({ tabs, content, agentWo
                 onTabChange={(tab) => setSearchParams({ tab })}
             />
 
-            {activeTab === 'agent' ? (
-                <Agent workflowData={agentWorkflowData} />
-            ) : (
-                effectiveContent[activeTab] ?? null
-            )}
+            {activeTab === 'agent' ? <Agent workflowData={agentWorkflowData} /> : (effectiveContent[activeTab] ?? null)}
         </Box>
     );
 };

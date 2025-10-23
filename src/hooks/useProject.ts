@@ -6,4 +6,3 @@ export const useProject = () => {
     if (!ctx) throw new Error('useProject must be used within a ProjectProvider');
     return ctx;
 };
-

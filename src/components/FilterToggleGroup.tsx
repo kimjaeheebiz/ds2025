@@ -20,7 +20,7 @@ export const FilterToggleGroup: React.FC<FilterToggleGroupProps> = ({
     value,
     onChange,
     size = 'small',
-    ariaLabel = '테이블 필터'
+    ariaLabel = '테이블 필터',
 }) => {
     const handleChange = (event: React.MouseEvent<HTMLElement>, newValue: string | null) => {
         if (newValue !== null) {
@@ -29,19 +29,9 @@ export const FilterToggleGroup: React.FC<FilterToggleGroupProps> = ({
     };
 
     return (
-        <ToggleButtonGroup
-            exclusive
-            value={value}
-            onChange={handleChange}
-            aria-label={ariaLabel}
-            size={size}
-        >
+        <ToggleButtonGroup exclusive value={value} onChange={handleChange} aria-label={ariaLabel} size={size}>
             {options.map((option) => (
-                <ToggleButton 
-                    key={option.value} 
-                    value={option.value} 
-                    sx={{ gap: 1 }}
-                >
+                <ToggleButton key={option.value} value={option.value} sx={{ gap: 1 }}>
                     {option.label}
                     <Chip label={option.count} size="small" />
                 </ToggleButton>

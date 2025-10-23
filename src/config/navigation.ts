@@ -1,6 +1,6 @@
 /**
  * 네비게이션 빌더 및 헬퍼 함수
- * 
+ *
  * menus.ts와 pages.ts를 결합하여:
  * - 네비게이션 메뉴 생성
  * - 라우팅 정보 제공
@@ -68,11 +68,14 @@ export const getParentId = (id: string): string | undefined => {
  * 메뉴를 렌더링용 네비게이션 구조로 변환
  */
 export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
-    const buildNavigationItem = (menu: MenuItem, depth: number = 1): NavigationMenuItem | NavigationMenuChild | null => {
+    const buildNavigationItem = (
+        menu: MenuItem,
+        depth: number = 1,
+    ): NavigationMenuItem | NavigationMenuChild | null => {
         // 1-depth: NavigationMenuItem 생성
         if (depth === 1) {
             const baseItem: NavigationMenuItem = {
-                label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
+                label: getMainMenuTitle(menu), // ✅ getMainMenuTitle 사용
                 icon: menu.icon || 'HomeOutlined',
                 showInSidebar: true,
             };
@@ -105,7 +108,7 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
         if (depth === 2) {
             if (menu.type === 'item') {
                 return {
-                    label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
+                    label: getMainMenuTitle(menu), // ✅ getMainMenuTitle 사용
                     path: menu.path,
                     parent: getParentId(menu.id),
                 };
@@ -116,9 +119,9 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
                 const grandChildren = groupMenu.children
                     .map((grandChild): NavigationMenuGrandChild | null => {
                         if (grandChild.type !== 'item') return null;
-                        
+
                         return {
-                            label: getMainMenuTitle(grandChild),  // ✅ getMainMenuTitle 사용
+                            label: getMainMenuTitle(grandChild), // ✅ getMainMenuTitle 사용
                             path: grandChild.path,
                             parent: getParentId(grandChild.id),
                         };
@@ -127,10 +130,10 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
 
                 return grandChildren.length > 0
                     ? {
-                        label: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
-                        parent: getParentId(menu.id),
-                        children: grandChildren,
-                    }
+                          label: getMainMenuTitle(menu), // ✅ getMainMenuTitle 사용
+                          parent: getParentId(menu.id),
+                          children: grandChildren,
+                      }
                     : null;
             }
         }
@@ -138,9 +141,9 @@ export const NAVIGATION_MENU: NavigationMenuItem[] = (() => {
         return null;
     };
 
-    return MAIN_MENUS
-        .map(menu => buildNavigationItem(menu, 1))
-        .filter((item): item is NavigationMenuItem => item !== null);
+    return MAIN_MENUS.map((menu) => buildNavigationItem(menu, 1)).filter(
+        (item): item is NavigationMenuItem => item !== null,
+    );
 })();
 
 // =========================================================================
@@ -155,11 +158,11 @@ function extractRoutesFromMenu(menu: MenuItem): RouteInfo[] {
 
     if (menu.type === 'item') {
         const pageMetadata = menu.pageId ? findPageById(menu.pageId) : null;
-        
+
         routes.push({
             url: menu.path,
-            title: getMainMenuTitle(menu),  // ✅ getMainMenuTitle 사용
-            id: menu.pageId || menu.id,  // pageId 우선 사용
+            title: getMainMenuTitle(menu), // ✅ getMainMenuTitle 사용
+            id: menu.pageId || menu.id, // pageId 우선 사용
             pageId: menu.pageId,
             showPageHeader: pageMetadata?.showPageHeader ?? true,
             layout: pageMetadata?.layout || 'default',
@@ -167,7 +170,7 @@ function extractRoutesFromMenu(menu: MenuItem): RouteInfo[] {
     }
 
     if (menu.type === 'group' && menu.children) {
-        menu.children.forEach(child => {
+        menu.children.forEach((child) => {
             routes.push(...extractRoutesFromMenu(child));
         });
     }
@@ -182,7 +185,7 @@ export const ALL_ROUTES: RouteInfo[] = [
     // 메뉴 페이지
     ...MAIN_MENUS.flatMap(extractRoutesFromMenu),
     // 숨김 페이지
-    ...HIDDEN_PAGES.map(page => ({
+    ...HIDDEN_PAGES.map((page) => ({
         url: page.url,
         title: page.title,
         id: page.id,
@@ -209,7 +212,7 @@ export const getIconComponent = (iconName: string) => {
 export const findMenuByUrl = (url: string, menus: MenuItem[] = MAIN_MENUS): MenuItem | null => {
     for (const menu of menus) {
         if (menu.path === url) return menu;
-        
+
         if (menu.type === 'group' && menu.children) {
             const found = findMenuByUrl(url, menu.children);
             if (found) return found;
@@ -222,7 +225,7 @@ export const findMenuByUrl = (url: string, menus: MenuItem[] = MAIN_MENUS): Menu
  * URL로 라우트 정보 찾기
  */
 export const findRouteByUrl = (url: string): RouteInfo | null => {
-    return ALL_ROUTES.find(route => route.url === url) || null;
+    return ALL_ROUTES.find((route) => route.url === url) || null;
 };
 
 /**
@@ -231,7 +234,7 @@ export const findRouteByUrl = (url: string): RouteInfo | null => {
 export const findMenuById = (id: string, menus: MenuItem[] = MAIN_MENUS): MenuItem | null => {
     for (const menu of menus) {
         if (menu.id === id) return menu;
-        
+
         if (menu.type === 'group' && menu.children) {
             const found = findMenuById(id, menu.children);
             if (found) return found;
@@ -245,19 +248,21 @@ export const findMenuById = (id: string, menus: MenuItem[] = MAIN_MENUS): MenuIt
  */
 export const getBreadcrumbPath = (url: string): Array<{ title: string; path?: string }> => {
     const breadcrumbs: Array<{ title: string; path?: string }> = [];
-    
+
     const findPath = (targetUrl: string, menus: MenuItem[], ancestors: MenuItem[] = []): boolean => {
         for (const menu of menus) {
             const currentAncestors = [...ancestors, menu];
-            
+
             if (menu.path === targetUrl) {
-                breadcrumbs.push(...currentAncestors.map(m => ({ 
-                    title: getMainMenuTitle(m),  // ✅ getMainMenuTitle 사용
-                    path: m.path 
-                })));
+                breadcrumbs.push(
+                    ...currentAncestors.map((m) => ({
+                        title: getMainMenuTitle(m), // ✅ getMainMenuTitle 사용
+                        path: m.path,
+                    })),
+                );
                 return true;
             }
-            
+
             if (menu.type === 'group' && menu.children) {
                 if (findPath(targetUrl, menu.children, currentAncestors)) {
                     return true;
@@ -266,7 +271,7 @@ export const getBreadcrumbPath = (url: string): Array<{ title: string; path?: st
         }
         return false;
     };
-    
+
     findPath(url, MAIN_MENUS);
     return breadcrumbs;
 };
@@ -284,7 +289,8 @@ export const getAllRoutes = (): RouteInfo[] => {
 export const getMenuActions = (menuTitle: string): ActionButton[] | undefined => {
     const search = (menus: MenuItem[]): ActionButton[] | undefined => {
         for (const menu of menus) {
-            if (getMainMenuTitle(menu) === menuTitle && menu.type === 'group' && menu.actions) {  // ✅ getMainMenuTitle 사용
+            if (getMainMenuTitle(menu) === menuTitle && menu.type === 'group' && menu.actions) {
+                // ✅ getMainMenuTitle 사용
                 return menu.actions;
             }
             if (menu.type === 'group' && menu.children) {
@@ -294,7 +300,7 @@ export const getMenuActions = (menuTitle: string): ActionButton[] | undefined =>
         }
         return undefined;
     };
-    
+
     return search(MAIN_MENUS);
 };
 
@@ -310,28 +316,14 @@ export const findActionButton = (menuTitle: string, actionKey: string): ActionBu
 // 내보내기
 // =========================================================================
 
-export type { 
-    ActionButton, 
-    SortOption, 
-    SortDirection, 
-    MenuItem, 
-    MenuGroup, 
-    MenuItemLeaf 
-} from './mainmenu';
+export type { ActionButton, SortOption, SortDirection, MenuItem, MenuGroup, MenuItemLeaf } from './mainmenu';
 
-export type { 
-    PageConfig, 
-    HiddenPageConfig 
-} from './pages';
+export type { PageConfig, HiddenPageConfig } from './pages';
 
-export { 
+export {
     MAIN_MENUS,
     getMainPageMetadataFromMenu,
-    getMainMenuTitle,  // ✅ export 추가
+    getMainMenuTitle, // ✅ export 추가
 } from './mainmenu';
 
-export { 
-    PAGES,
-    HIDDEN_PAGES,
-    findPageById,
-} from './pages';
+export { PAGES, HIDDEN_PAGES, findPageById } from './pages';

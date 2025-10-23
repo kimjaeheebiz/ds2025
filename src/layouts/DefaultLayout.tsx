@@ -54,9 +54,7 @@ export const DefaultLayout = () => {
                     }}
                 >
                     {/* <PageHeader> */}
-                    {currentRoute && currentRoute.showPageHeader && (
-                        <PageHeader title={currentRoute.title} />
-                    )}
+                    {currentRoute && currentRoute.showPageHeader && <PageHeader title={currentRoute.title} />}
 
                     {/* 페이지 콘텐츠 */}
                     <Box sx={{ flex: 1 }}>

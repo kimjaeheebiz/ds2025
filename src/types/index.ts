@@ -23,12 +23,23 @@ export interface PaginationParams {
 }
 
 export interface TableColumn<T = unknown> {
-    key: keyof T | 'index';  // index는 테이블 순번용
+    key: keyof T | 'index'; // index는 테이블 순번용
     label: string;
     width?: number;
     sortable?: boolean;
     filterable?: boolean;
-    type: 'text' | 'email' | 'date' | 'status' | 'action' | 'boolean' | 'number' | 'index' | 'phone' | 'permission' | 'project';
+    type:
+        | 'text'
+        | 'email'
+        | 'date'
+        | 'status'
+        | 'action'
+        | 'boolean'
+        | 'number'
+        | 'index'
+        | 'phone'
+        | 'permission'
+        | 'project';
     render?: (value: unknown, record: T, index: number) => React.ReactNode;
 }
 

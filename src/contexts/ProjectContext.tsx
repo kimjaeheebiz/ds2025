@@ -72,4 +72,3 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
 };
 
 export { ProjectContext };
-

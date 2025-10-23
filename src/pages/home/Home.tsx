@@ -15,7 +15,11 @@ const HomeContent = () => {
                                 Project
                             </Typography>
                             <Typography sx={{ mb: 2 }}>프로젝트별 워크플로우 관리 및 실행</Typography>
-                            <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate('/project/project1')}>
+                            <Button
+                                variant="contained"
+                                endIcon={<ArrowForward />}
+                                onClick={() => navigate('/project/project1')}
+                            >
                                 Project 1
                             </Button>
                         </CardContent>
@@ -28,11 +32,7 @@ const HomeContent = () => {
                                 Users
                             </Typography>
                             <Typography sx={{ mb: 2 }}>사용자 관리</Typography>
-                            <Button
-                                variant="contained"
-                                endIcon={<ArrowForward />}
-                                onClick={() => navigate('/users')}
-                            >
+                            <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate('/users')}>
                                 Users
                             </Button>
                         </CardContent>

@@ -12,10 +12,7 @@ type Props = {
 
 // 타입 가드: status가 유효한 Status인지 확인
 function isStatus(status: unknown): status is Status {
-    return (
-        typeof status === 'string' &&
-        (status === 'active' || status === 'inactive' || status === 'stop')
-    );
+    return typeof status === 'string' && (status === 'active' || status === 'inactive' || status === 'stop');
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -49,12 +46,5 @@ const getStatusColor = (status?: string): ChipProps['color'] => {
 // ===== 컴포넌트 =====
 
 export const StatusChip: React.FC<Props> = ({ status, size = 'small', ...rest }) => {
-    return (
-        <Chip 
-            label={getStatusLabel(status)} 
-            color={getStatusColor(status)} 
-            size={size} 
-            {...rest} 
-        />
-    );
+    return <Chip label={getStatusLabel(status)} color={getStatusColor(status)} size={size} {...rest} />;
 };

@@ -4,7 +4,7 @@ import { User } from '@/types';
 export const sampleUsers: User[] = [
     {
         seq: 2,
-        id: 'hectodata@hecto.co.kr',  // 이메일 아이디
+        id: 'hectodata@hecto.co.kr', // 이메일 아이디
         name: '이순신',
         department: '(주)헥토데이터',
         permission: 'user',
@@ -15,7 +15,7 @@ export const sampleUsers: User[] = [
     },
     {
         seq: 1,
-        id: 'admin@hecto.co.kr',  // 이메일 아이디
+        id: 'admin@hecto.co.kr', // 이메일 아이디
         name: '홍길동',
         department: '(주)헥토',
         permission: 'admin',
@@ -25,4 +25,3 @@ export const sampleUsers: User[] = [
         last_login: '2025.01.02',
     },
 ];
-

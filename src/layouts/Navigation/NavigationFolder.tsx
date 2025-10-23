@@ -35,9 +35,7 @@ export function NavigationFolder({
                     const isChildActive = child.path
                         ? isPathActive(currentPath, child.path)
                         : hasGrandChildren &&
-                          child.children?.some((grandChild) =>
-                              isPathActive(currentPath, grandChild.path)
-                          );
+                          child.children?.some((grandChild) => isPathActive(currentPath, grandChild.path));
 
                     return (
                         <ListItem key={child.path || child.label} disablePadding sx={{ display: 'block' }}>
@@ -57,9 +55,7 @@ export function NavigationFolder({
                                     }}
                                 >
                                     {open && <ListItemText primary={child.label} />}
-                                    {hasGrandChildren && open && (
-                                        isChildExpanded ? <ExpandLess /> : <ExpandMore />
-                                    )}
+                                    {hasGrandChildren && open && (isChildExpanded ? <ExpandLess /> : <ExpandMore />)}
                                 </ListItemButton>
                             </Tooltip>
 
@@ -68,10 +64,7 @@ export function NavigationFolder({
                                 <Collapse in={isChildExpanded && open} timeout="auto" unmountOnExit>
                                     <List component="ul" disablePadding dense>
                                         {child.children?.map((grandChild) => {
-                                            const isGrandChildActive = isPathActive(
-                                                currentPath,
-                                                grandChild.path
-                                            );
+                                            const isGrandChildActive = isPathActive(currentPath, grandChild.path);
                                             return (
                                                 <ListItem
                                                     key={grandChild.path}
@@ -91,9 +84,7 @@ export function NavigationFolder({
                                                                 pr: 2,
                                                             }}
                                                         >
-                                                            {open && (
-                                                                <ListItemText primary={grandChild.label} />
-                                                            )}
+                                                            {open && <ListItemText primary={grandChild.label} />}
                                                         </ListItemButton>
                                                     </Tooltip>
                                                 </ListItem>
@@ -109,4 +100,3 @@ export function NavigationFolder({
         </Collapse>
     );
 }
-

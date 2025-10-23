@@ -1,10 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import {
-    getPageMetadata,
-    getBrowserTitle,
-    findRouteByUrl,
-    APP_INFO,
-} from '@/config';
+import { getPageMetadata, getBrowserTitle, findRouteByUrl, APP_INFO } from '@/config';
 
 export interface UsePageMetadataOptions {
     pageId?: string;

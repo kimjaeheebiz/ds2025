@@ -1,6 +1,6 @@
 /**
  * Figma 토큰 → mainmenu.ts 동기화 스크립트
- * 
+ *
  * 사용법:
  * 1. Tokens Studio에서 JSON 내보내기
  * 2. design-system/tokens/pages/navigation/Mode 1.json에 저장
@@ -59,7 +59,7 @@ function generatePageId(id: string, parentId?: string): string {
     // home → home
     // project1 (parent: project) → project.project1
     // users → users
-    
+
     if (parentId) {
         return `${parentId}.${id}`;
     }
@@ -72,11 +72,11 @@ function generatePageId(id: string, parentId?: string): string {
 
 function loadTokens(): TokenSet {
     const tokenPath = path.join(process.cwd(), 'design-system/tokens/pages/navigation/Mode 1.json');
-    
+
     if (!fs.existsSync(tokenPath)) {
         throw new Error(`토큰 파일을 찾을 수 없습니다: ${tokenPath}`);
     }
-    
+
     const raw = fs.readFileSync(tokenPath, 'utf-8');
     return JSON.parse(raw) as TokenSet;
 }
@@ -88,50 +88,50 @@ function loadTokens(): TokenSet {
 function buildMenuStructure(tokens: TokenSet): MenuItem[] {
     const menus: MenuItem[] = [];
     const childrenMap: Record<string, MenuItem[]> = {};
-    
+
     // 1단계: 모든 메뉴 아이템 수집
     const allItems: MenuItem[] = [];
-    
-    Object.keys(tokens.mainmenu.id).forEach(key => {
+
+    Object.keys(tokens.mainmenu.id).forEach((key) => {
         const id = tokens.mainmenu.id[key].value;
         const label = tokens.mainmenu.label[key]?.value || id;
         const path = tokens.mainmenu.path[key]?.value || '';
         const type = tokens.mainmenu.type[key]?.value || 'item';
-        
+
         const item: MenuItem = {
             id,
             title: label,
             type: type as 'item' | 'group',
         };
-        
+
         if (type === 'item') {
             item.path = path;
         }
-        
+
         // 아이콘 추가 (1-depth만)
         if (ICON_MAP[id]) {
             item.icon = ICON_MAP[id];
         }
-        
+
         allItems.push(item);
     });
-    
+
     // 2단계: 계층 구조 파악 (path 기반)
-    allItems.forEach(item => {
+    allItems.forEach((item) => {
         if (item.path) {
-            const urlParts = item.path.split('/').filter(p => p);
-            
+            const urlParts = item.path.split('/').filter((p) => p);
+
             if (urlParts.length > 1) {
                 // /project/project1 → parent: project
                 const parentId = urlParts[0];
-                
+
                 if (!childrenMap[parentId]) {
                     childrenMap[parentId] = [];
                 }
-                
+
                 // pageId 생성
                 item.pageId = generatePageId(item.id, parentId);
-                
+
                 childrenMap[parentId].push(item);
             } else {
                 // / 또는 /users 같은 1-depth item
@@ -143,14 +143,14 @@ function buildMenuStructure(tokens: TokenSet): MenuItem[] {
             menus.push(item);
         }
     });
-    
+
     // 3단계: children 연결
-    menus.forEach(menu => {
+    menus.forEach((menu) => {
         if (menu.type === 'group' && childrenMap[menu.id]) {
             menu.children = childrenMap[menu.id];
         }
     });
-    
+
     return menus;
 }
 
@@ -160,31 +160,31 @@ function buildMenuStructure(tokens: TokenSet): MenuItem[] {
 
 function generateMainMenusCode(menus: MenuItem[]): string {
     const indent = (level: number) => '    '.repeat(level);
-    
+
     function itemToCode(item: MenuItem, level: number): string {
         const lines: string[] = [];
-        
+
         lines.push(`${indent(level)}{`);
         lines.push(`${indent(level + 1)}id: '${item.id}',`);
-        
+
         if (item.title) {
             lines.push(`${indent(level + 1)}title: '${item.title}',`);
         }
-        
+
         lines.push(`${indent(level + 1)}type: '${item.type}',`);
-        
+
         if (item.path) {
             lines.push(`${indent(level + 1)}path: '${item.path}',`);
         }
-        
+
         if (item.icon) {
             lines.push(`${indent(level + 1)}icon: '${item.icon}',`);
         }
-        
+
         if (item.pageId) {
             lines.push(`${indent(level + 1)}pageId: '${item.pageId}',`);
         }
-        
+
         if (item.children && item.children.length > 0) {
             lines.push(`${indent(level + 1)}children: [`);
             item.children.forEach((child, index) => {
@@ -195,12 +195,12 @@ function generateMainMenusCode(menus: MenuItem[]): string {
             });
             lines.push(`${indent(level + 1)}],`);
         }
-        
+
         lines.push(`${indent(level)}}`);
-        
+
         return lines.join('\n');
     }
-    
+
     const header = `/**
  * 메뉴 설정 (Figma 동기화)
  * 
@@ -266,12 +266,14 @@ export type MenuItem = MenuGroup | MenuItemLeaf;
 
 export const MAIN_MENUS: MenuItem[] = [
 `;
-    
-    const menuItems = menus.map((item, index) => {
-        const code = itemToCode(item, 1);
-        return index < menus.length - 1 ? code + ',' : code;
-    }).join('\n');
-    
+
+    const menuItems = menus
+        .map((item, index) => {
+            const code = itemToCode(item, 1);
+            return index < menus.length - 1 ? code + ',' : code;
+        })
+        .join('\n');
+
     const footer = `
 ];
 
@@ -305,7 +307,7 @@ export const getMainPageMetadataFromMenu = (menu: MenuItem) => {
     return null;
 };
 `;
-    
+
     return header + menuItems + footer;
 }
 
@@ -315,47 +317,46 @@ export const getMainPageMetadataFromMenu = (menu: MenuItem) => {
 
 function main() {
     console.log('🔄 Figma 토큰 동기화 시작...\n');
-    
+
     try {
         // 1. 토큰 로드
         console.log('📥 토큰 로드 중...');
         const tokens = loadTokens();
         console.log(`✅ ${Object.keys(tokens.mainmenu.id).length}개 메뉴 아이템 발견\n`);
-        
+
         // 2. 메뉴 구조 생성
         console.log('🏗️  메뉴 구조 생성 중...');
         const menus = buildMenuStructure(tokens);
         console.log(`✅ ${menus.length}개 1-depth 메뉴 생성\n`);
-        
+
         // 3. TypeScript 코드 생성
         console.log('📝 TypeScript 코드 생성 중...');
         const code = generateMainMenusCode(menus);
-        
+
         // 4. 파일 저장
         const outputPath = path.join(process.cwd(), 'src/config/mainmenu.ts');
-        
+
         // 새 파일 저장
         fs.writeFileSync(outputPath, code, 'utf-8');
         console.log(`✅ 파일 저장 완료: ${outputPath}\n`);
-        
+
         // 5. 요약
         console.log('📊 동기화 요약:');
-        menus.forEach(menu => {
+        menus.forEach((menu) => {
             console.log(`  - ${menu.icon || '📄'} ${menu.title} (${menu.type})`);
             if (menu.children) {
-                menu.children.forEach(child => {
+                menu.children.forEach((child) => {
                     console.log(`    - ${child.title} (${child.path})`);
                 });
             }
         });
-        
+
         console.log('\n✅ 동기화 완료!\n');
         console.log('⚠️  다음 단계:');
         console.log('1. src/config/mainmenu.ts 파일 확인');
         console.log('2. pageId 매핑 검토 (필요시 수정)');
         console.log('3. 액션 버튼 수동 추가 (필요시)');
         console.log('4. npm run dev로 확인\n');
-        
     } catch (error) {
         console.error('❌ 오류 발생:', error);
         process.exit(1);
@@ -363,4 +364,3 @@ function main() {
 }
 
 main();
-

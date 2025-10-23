@@ -1,7 +1,7 @@
 /*
   Adapter: Tokens Studio → MUI ThemeOptions (px → rem 변환 포함)
   실행: tsx design-system/generators/to-mui-theme.ts
-  - design-system/tokens/foundation/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
+  - design-system/tokens/generated/* 를 읽어 src/theme/generated/theme.(light|dark).json 생성
 
   아키텍처:
   1. Core 선반영 (core.json 기반) - 디자인 핵심 UI
@@ -40,7 +40,7 @@ import {
 } from './types';
 
 const REPO_ROOT = process.cwd();
-const TOKENS_ROOT = path.join(REPO_ROOT, 'design-system', 'tokens', 'foundation');
+const TOKENS_ROOT = path.join(REPO_ROOT, 'design-system', 'tokens', 'generated');
 const OUTPUT_ROOT = path.join(REPO_ROOT, 'src', 'theme', 'generated');
 
 const PX_BASE = 16; // px → rem 기준
@@ -56,12 +56,14 @@ function readJson(p: string): Json {
 }
 
 function safeGet(obj: Record<string, unknown>, pathKeys: string[], fallback?: unknown): unknown {
-    return pathKeys.reduce((acc: unknown, k: string) => {
-        if (acc && typeof acc === 'object' && acc !== null && k in acc) {
-            return (acc as Record<string, unknown>)[k];
-        }
-        return undefined;
-    }, obj as unknown) ?? fallback;
+    return (
+        pathKeys.reduce((acc: unknown, k: string) => {
+            if (acc && typeof acc === 'object' && acc !== null && k in acc) {
+                return (acc as Record<string, unknown>)[k];
+            }
+            return undefined;
+        }, obj as unknown) ?? fallback
+    );
 }
 
 function ensureDir(dir: string) {
@@ -73,7 +75,11 @@ function parseFontList(input: string | string[] | undefined): string[] {
     if (Array.isArray(input)) return input.map((s) => String(s).trim()).filter(Boolean);
     const raw = String(input).trim();
     if (!raw) return [];
-    if (raw.includes(',')) return raw.split(',').map((s) => s.trim()).filter(Boolean);
+    if (raw.includes(','))
+        return raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
     return [raw];
 }
 
@@ -83,10 +89,10 @@ function parseFontList(input: string | string[] | undefined): string[] {
  */
 function extractTokenValues(obj: unknown): unknown {
     if (!obj || typeof obj !== 'object') return obj;
-    
+
     // $value가 있으면 반환
     if ('$value' in obj && obj.$value !== undefined) return obj.$value;
-    
+
     // 중첩된 객체 재귀 처리
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -119,7 +125,7 @@ function resolveTokenRef(raw: unknown, ...tokenSources: Json[]): unknown {
     if (typeof raw !== 'string') return raw;
     const m = raw.match(/^\{(.+)\}$/);
     if (!m) return raw;
-    
+
     const keys = m[1].split('.');
     const getValue = (obj: Record<string, unknown>) => {
         const result = keys.reduce((acc: unknown, k: string) => {
@@ -128,7 +134,9 @@ function resolveTokenRef(raw: unknown, ...tokenSources: Json[]): unknown {
             }
             return undefined;
         }, obj as unknown);
-        return result && typeof result === 'object' && '$value' in result ? (result as { $value: unknown }).$value : result;
+        return result && typeof result === 'object' && '$value' in result
+            ? (result as { $value: unknown }).$value
+            : result;
     };
 
     // 우선순위: 첫 번째 소스부터 순차 조회
@@ -176,12 +184,11 @@ function getMaterialColorHex(name: string, shade: string): string | undefined {
     }
 }
 
-
 function createFontWeightParser(tokensTypos: Json) {
     const getNumMulti = (...paths: string[][]): number | undefined => {
         for (const p of paths) {
             const raw = safeGet(tokensTypos, [...p, '$value']);
-            const n = typeof raw === 'string' ? parseInt(raw, 10) : (typeof raw === 'number' ? raw : undefined);
+            const n = typeof raw === 'string' ? parseInt(raw, 10) : typeof raw === 'number' ? raw : undefined;
             if (n !== undefined && isFinite(n)) return n;
         }
         return undefined;
@@ -228,7 +235,7 @@ function createFontWeightParser(tokensTypos: Json) {
 function readTypographyVariant(
     variantKey: string,
     tokensCore: Json,
-    tokensTypos: Json
+    tokensTypos: Json,
 ): Record<string, unknown> | undefined {
     const variant = tokensCore?.typography?.[variantKey];
     if (!variant?.$value) return undefined;
@@ -272,7 +279,7 @@ function buildTypography(tokensCore: Json, tokensTypos: Json) {
     const tokenPrimaryCandidate = safeGet(tokensTypos, ['fontFamily', 'primary', '$value']) || undefined;
     let fontFamilyPrimary: string | string[] | undefined = undefined;
     let fallback: string | string[] | undefined = undefined;
-    
+
     try {
         const fontsCfg = readJson(path.join(TOKENS_ROOT, '..', 'src', 'fonts.json'));
         const cfgPrimary = safeGet(fontsCfg, ['fontFamily', 'primary']);
@@ -285,13 +292,29 @@ function buildTypography(tokensCore: Json, tokensTypos: Json) {
 
     const primarySource = fontFamilyPrimary ?? tokenPrimaryCandidate;
     const primaryList = parseFontList(primarySource as string | string[]);
-    const fallbackList = parseFontList(Array.isArray(fallback) ? fallback.join(', ') : (fallback ? String(fallback) : undefined));
+    const fallbackList = parseFontList(
+        Array.isArray(fallback) ? fallback.join(', ') : fallback ? String(fallback) : undefined,
+    );
     const combinedList = [...primaryList, ...fallbackList];
     const fontFamilyCombined = combinedList.length > 0 ? combinedList.join(', ') : undefined;
 
     // MUI Typography variants: h1~h6, body1, body2, subtitle1, subtitle2, caption, overline, button
     // https://mui.com/material-ui/customization/default-theme/#typography
-    const variants = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'body1', 'body2', 'subtitle1', 'subtitle2', 'caption', 'overline', 'button'];
+    const variants = [
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'body1',
+        'body2',
+        'subtitle1',
+        'subtitle2',
+        'caption',
+        'overline',
+        'button',
+    ];
     const typography: Record<string, unknown> = fontFamilyCombined ? { fontFamily: fontFamilyCombined } : {};
 
     for (const key of variants) {
@@ -309,7 +332,7 @@ function getBrandColorHex(colorName: string, shade: string, groupName?: string):
     try {
         const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
         const brandData = readJson(brandPath);
-        
+
         // 새로운 구조: colors 하위에서 검색
         if (hasProperty(brandData, 'colors') && groupName) {
             const colors = asJsonRecord(brandData.colors);
@@ -326,7 +349,7 @@ function getBrandColorHex(colorName: string, shade: string, groupName?: string):
                 }
             }
         }
-        
+
         // 그룹명이 없으면 모든 색상 그룹에서 검색
         if (!groupName && hasProperty(brandData, 'colors')) {
             const colors = asJsonRecord(brandData.colors);
@@ -342,7 +365,7 @@ function getBrandColorHex(colorName: string, shade: string, groupName?: string):
                 }
             }
         }
-        
+
         return undefined;
     } catch (error) {
         console.error(`Failed to get brand color ${groupName}.${colorName}.${shade}:`, error);
@@ -387,9 +410,11 @@ function resolveColorRef(value: unknown) {
 }
 
 // 헬퍼: 색상 그룹에서 값 추출
-function extractPaletteColor(group: unknown): { light?: unknown; main?: unknown; dark?: unknown; contrastText?: unknown } | undefined {
+function extractPaletteColor(
+    group: unknown,
+): { light?: unknown; main?: unknown; dark?: unknown; contrastText?: unknown } | undefined {
     if (!hasProperty(group, 'main')) return undefined;
-    
+
     const colorGroup = group as PaletteColorGroup;
     return {
         light: colorGroup.light?.$value ? resolveColorRef(colorGroup.light.$value) : undefined,
@@ -411,48 +436,63 @@ function buildPalette(mode: 'light' | 'dark') {
     const info = hasProperty(p, 'info') ? extractPaletteColor(p.info) : undefined;
     const success = hasProperty(p, 'success') ? extractPaletteColor(p.success) : undefined;
 
-    const text = hasProperty(p, 'text') ? (() => {
-        const textGroup = p.text as TextColorGroup;
-        return {
-            primary: textGroup.primary?.$value ? resolveColorRef(textGroup.primary.$value) : undefined,
-            secondary: textGroup.secondary?.$value ? resolveColorRef(textGroup.secondary.$value) : undefined,
-            disabled: textGroup.disabled?.$value ? resolveColorRef(textGroup.disabled.$value) : undefined,
-        };
-    })() : undefined;
-
-    const background = hasProperty(p, 'background') ? (() => {
-        const bgGroup = p.background as BackgroundColorGroup;
-        const defaultBg = bgGroup.default?.$value ? resolveColorRef(bgGroup.default.$value) : undefined;
-        const paperBg = bgGroup['paper-elevation-0']?.$value ? resolveColorRef(bgGroup['paper-elevation-0'].$value) : defaultBg;
-        return {
-            default: defaultBg,
-            paper: paperBg,
-        };
-    })() : undefined;
-
-    const action = hasProperty(p, 'action') ? (() => {
-        const actionGroup = p.action as ActionColorGroup;
-        return {
-            active: actionGroup.active?.$value ? resolveColorRef(actionGroup.active.$value) : undefined,
-            hover: actionGroup.hover?.$value ? resolveColorRef(actionGroup.hover.$value) : undefined,
-            selected: actionGroup.selected?.$value ? resolveColorRef(actionGroup.selected.$value) : undefined,
-            disabled: actionGroup.disabled?.$value ? resolveColorRef(actionGroup.disabled.$value) : undefined,
-            disabledBackground: actionGroup.disabledBackground?.$value ? resolveColorRef(actionGroup.disabledBackground.$value) : undefined,
-            focus: actionGroup.focus?.$value ? resolveColorRef(actionGroup.focus.$value) : undefined,
-        };
-    })() : undefined;
-
-    const common = hasProperty(p, 'common') ? (() => {
-        const commonGroup = p.common as CommonColorGroup;
-        return {
-            white: commonGroup.white_states?.main?.$value ? resolveColorRef(commonGroup.white_states.main.$value) : undefined,
-            black: commonGroup.black_states?.main?.$value ? resolveColorRef(commonGroup.black_states.main.$value) : undefined,
-        };
-    })() : undefined;
-
-    const divider = hasProperty(p, 'divider') && isTokenValue(p.divider) 
-        ? resolveColorRef(p.divider.$value) 
+    const text = hasProperty(p, 'text')
+        ? (() => {
+              const textGroup = p.text as TextColorGroup;
+              return {
+                  primary: textGroup.primary?.$value ? resolveColorRef(textGroup.primary.$value) : undefined,
+                  secondary: textGroup.secondary?.$value ? resolveColorRef(textGroup.secondary.$value) : undefined,
+                  disabled: textGroup.disabled?.$value ? resolveColorRef(textGroup.disabled.$value) : undefined,
+              };
+          })()
         : undefined;
+
+    const background = hasProperty(p, 'background')
+        ? (() => {
+              const bgGroup = p.background as BackgroundColorGroup;
+              const defaultBg = bgGroup.default?.$value ? resolveColorRef(bgGroup.default.$value) : undefined;
+              const paperBg = bgGroup['paper-elevation-0']?.$value
+                  ? resolveColorRef(bgGroup['paper-elevation-0'].$value)
+                  : defaultBg;
+              return {
+                  default: defaultBg,
+                  paper: paperBg,
+              };
+          })()
+        : undefined;
+
+    const action = hasProperty(p, 'action')
+        ? (() => {
+              const actionGroup = p.action as ActionColorGroup;
+              return {
+                  active: actionGroup.active?.$value ? resolveColorRef(actionGroup.active.$value) : undefined,
+                  hover: actionGroup.hover?.$value ? resolveColorRef(actionGroup.hover.$value) : undefined,
+                  selected: actionGroup.selected?.$value ? resolveColorRef(actionGroup.selected.$value) : undefined,
+                  disabled: actionGroup.disabled?.$value ? resolveColorRef(actionGroup.disabled.$value) : undefined,
+                  disabledBackground: actionGroup.disabledBackground?.$value
+                      ? resolveColorRef(actionGroup.disabledBackground.$value)
+                      : undefined,
+                  focus: actionGroup.focus?.$value ? resolveColorRef(actionGroup.focus.$value) : undefined,
+              };
+          })()
+        : undefined;
+
+    const common = hasProperty(p, 'common')
+        ? (() => {
+              const commonGroup = p.common as CommonColorGroup;
+              return {
+                  white: commonGroup.white_states?.main?.$value
+                      ? resolveColorRef(commonGroup.white_states.main.$value)
+                      : undefined,
+                  black: commonGroup.black_states?.main?.$value
+                      ? resolveColorRef(commonGroup.black_states.main.$value)
+                      : undefined,
+              };
+          })()
+        : undefined;
+
+    const divider =
+        hasProperty(p, 'divider') && isTokenValue(p.divider) ? resolveColorRef(p.divider.$value) : undefined;
 
     return {
         mode,
@@ -473,7 +513,7 @@ function buildPalette(mode: 'light' | 'dark') {
 /**
  * core.json 컴포넌트 토큰 → MUI theme.components 매핑
  * 참조: https://mui.com/material-ui/customization/theme-components/
- * 
+ *
  * core.button.*, chip.*, tooltip.*, alert.*, input.* 등을 MUI 컴포넌트 스타일로 변환
  */
 function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): JsonRecord {
@@ -484,9 +524,11 @@ function buildComponentsOverrides(tokensCore: Json, tokensTypos: Json): JsonReco
     const parseTypoToken = (tokenValue: unknown): JsonRecord => {
         if (!tokenValue || typeof tokenValue !== 'object') return {};
         const token = asJsonRecord(tokenValue);
-        
+
         const fontSize = normalizeRem(resolveTokenRef(token.fontSize, tokensCore, tokensTypos) as string | number);
-        const lineHeight = normalizeLineHeight(resolveTokenRef(token.lineHeight, tokensCore, tokensTypos) as string | number);
+        const lineHeight = normalizeLineHeight(
+            resolveTokenRef(token.lineHeight, tokensCore, tokensTypos) as string | number,
+        );
         const fontWeight = parseWeight(resolveTokenRef(token.fontWeight, tokensCore, tokensTypos) as string | number);
         const letterSpacing = normalizeLetterSpacing(resolveTokenRef(token.letterSpacing, tokensCore, tokensTypos));
         const textCaseRaw = resolveTokenRef(token.textCase, tokensCore, tokensTypos);
@@ -593,9 +635,9 @@ function buildBrandExtensions() {
     try {
         const brandPath = path.join(TOKENS_ROOT, 'brand', 'Mode 1.json');
         const brandData = readJson(brandPath);
-        
+
         const brand: JsonRecord = {};
-        
+
         // Colors 처리: colors 하위의 모든 색상 그룹 추출
         if (brandData.colors) {
             const colors: JsonRecord = {};
@@ -604,14 +646,14 @@ function buildBrandExtensions() {
             }
             brand.colors = colors;
         }
-        
+
         // Sizes 처리: sizes 하위의 모든 사이즈 그룹 추출 (문자열 → 숫자 변환)
         if (brandData.sizes) {
             const sizes: JsonRecord = {};
             for (const [sizeGroupName, sizeGroup] of Object.entries(brandData.sizes)) {
                 const extractedSizes = extractTokenValues(sizeGroup) as Record<string, unknown>;
                 const convertedSizes: Record<string, number> = {};
-                
+
                 for (const [sizeName, sizeValue] of Object.entries(extractedSizes)) {
                     // 문자열을 숫자로 변환
                     const numericValue = typeof sizeValue === 'string' ? parseFloat(sizeValue) : Number(sizeValue);
@@ -619,24 +661,23 @@ function buildBrandExtensions() {
                         convertedSizes[sizeName] = numericValue;
                     }
                 }
-                
+
                 sizes[sizeGroupName] = convertedSizes;
             }
             brand.sizes = sizes;
         }
-        
+
         // Logo 처리: 하위 호환성을 위해 유지
         if (brandData.logo) {
             brand.logo = extractTokenValues(brandData.logo);
         }
-        
+
         return { brand };
     } catch (error) {
         console.error('Failed to load brand tokens:', error);
         throw error;
     }
 }
-
 
 /**
  * Core 테마 옵션 빌드 (palette 제외)
@@ -654,7 +695,9 @@ function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
     let spacing: number = 8;
     try {
         const sp = readJson(spacingTokensPath);
-        const base = (sp['1'] as Record<string, unknown>)?.$value ? parseFloat((sp['1'] as Record<string, unknown>).$value as string) : undefined;
+        const base = (sp['1'] as Record<string, unknown>)?.$value
+            ? parseFloat((sp['1'] as Record<string, unknown>).$value as string)
+            : undefined;
         spacing = base && isFinite(base) ? base : 8;
     } catch {
         // spacing 토큰 파일이 없으면 기본값(8) 사용
@@ -713,7 +756,7 @@ function buildCoreThemeOptions(tokensCore: Json, tokensTypos: Json) {
 
     // brand: brand/Mode 1.json → custom theme extensions
     const brandExtensions = buildBrandExtensions();
-    
+
     return {
         typography,
         spacing,
@@ -741,9 +784,9 @@ function buildThemeOptions(mode: 'light' | 'dark') {
 
     // 3. Core + Palette 병합
     const themeOptions = {
-        ...core,        // core.json (figma styles - raw tokens)
-        ...coreTheme,   // 처리된 MUI theme options (typography, brand, shadows, components 등)
-        palette,        // palette/Light.json, palette/Dark.json (figma colors)
+        ...core, // core.json (figma styles - raw tokens)
+        ...coreTheme, // 처리된 MUI theme options (typography, brand, shadows, components 등)
+        palette, // palette/Light.json, palette/Dark.json (figma colors)
     } as const;
 
     return themeOptions;

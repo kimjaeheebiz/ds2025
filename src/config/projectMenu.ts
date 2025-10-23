@@ -13,4 +13,3 @@ export const DEFAULT_PROJECT_TABS: ProjectSubMenuTab[] = [
     { id: 'member', label: '멤버', value: 'member' },
     { id: 'settings', label: '프로젝트 설정', value: 'settings' },
 ];
-

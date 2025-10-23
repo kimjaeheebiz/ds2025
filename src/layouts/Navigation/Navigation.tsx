@@ -1,6 +1,6 @@
 /**
  * Navigation 메인 컴포넌트
- * 
+ *
  * 좌측 사이드바의 네비게이션 메뉴를 렌더링합니다.
  * 설정은 config/navigation.ts에서 관리됩니다.
  */
@@ -16,13 +16,7 @@ import { NavigationProps } from './types';
 
 export const Navigation = ({ open }: NavigationProps) => {
     const navigate = useNavigate();
-    const {
-        expandedFolders,
-        sortStates,
-        handleFolderToggle,
-        handleSortChange,
-        currentPath,
-    } = useNavigationState();
+    const { expandedFolders, sortStates, handleFolderToggle, handleSortChange, currentPath } = useNavigationState();
 
     // 네비게이션 핸들러
     const handleNavigation = (path: string) => path && navigate(path);
@@ -45,8 +39,7 @@ export const Navigation = ({ open }: NavigationProps) => {
                     const isExpanded = expandedFolders.has(item.label);
                     const isActive =
                         item.isActive ||
-                        (hasChildren &&
-                            item.children?.some((child) => isPathActive(currentPath, child.path)));
+                        (hasChildren && item.children?.some((child) => isPathActive(currentPath, child.path)));
 
                     // 액션 버튼 가져오기
                     const actions = getMenuActions(item.label);
@@ -97,4 +90,3 @@ export const Navigation = ({ open }: NavigationProps) => {
         </Box>
     );
 };
-

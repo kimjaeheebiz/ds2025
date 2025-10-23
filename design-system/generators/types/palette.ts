@@ -1,6 +1,6 @@
 /**
  * MUI Palette 타입 정의
- * 
+ *
  * Material-UI 테마의 palette 구조를 위한 타입
  * @see https://mui.com/material-ui/customization/palette/
  */
@@ -53,4 +53,3 @@ export interface CommonColorGroup {
     white_states?: { main?: ColorToken };
     black_states?: { main?: ColorToken };
 }
-

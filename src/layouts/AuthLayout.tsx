@@ -32,7 +32,8 @@ export const AuthLayout = () => {
                             py: 5,
                             border: '1px solid',
                             borderColor: 'divider',
-                        }}>
+                        }}
+                    >
                         <Box sx={{ mb: 3 }}>
                             <Brand size="medium" showText={true} />
                         </Box>

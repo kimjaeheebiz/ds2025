@@ -53,6 +53,9 @@ export interface FigmaNode {
     styleOverrideTable?: Record<number, FigmaTextStyle>;
     lineTypes?: string[];
     lineIndentations?: number[];
+    componentId?: string;
+    variantProperties?: Record<string, unknown>;
+    componentProperties?: Record<string, unknown>;
 }
 
 export interface FigmaComponent {
@@ -249,6 +252,20 @@ export interface FigmaFileStylesResponse {
     };
 }
 
+export interface FigmaFileVariablesResponse {
+    meta: {
+        variables: Record<string, FigmaVariable>;
+    };
+}
+
+export interface FigmaVariable {
+    name: string;
+    key: string;
+    variableCollectionId: string;
+    resolvedType: string;
+    valuesByMode: Record<string, unknown>;
+}
+
 // 페이지별 디자인 설정 타입
 export interface PageDesignConfig {
     pageId: string;
@@ -261,15 +278,28 @@ export interface PageDesignConfig {
 export interface ComponentDesignConfig {
     componentId: string;
     componentName: string;
-    componentType: 'button' | 'input' | 'table' | 'card' | 'navigation' | 'layout' | 'chip' | 'dialog' | 'form' | 'list' | 'tabs';
+    componentType:
+        | 'button'
+        | 'input'
+        | 'table'
+        | 'card'
+        | 'navigation'
+        | 'layout'
+        | 'chip'
+        | 'dialog'
+        | 'form'
+        | 'list'
+        | 'tabs'
+        | 'typography';
     properties: ComponentProperties;
     variants?: ComponentVariant[];
 }
 
 export interface ComponentProperties {
-    width?: number;
-    height?: number;
+    width?: number | string;
+    height?: number | string;
     backgroundColor?: string;
+    colorStyle?: string; // 피그마 스타일 이름
     borderColor?: string;
     borderWidth?: number;
     borderRadius?: number;
@@ -317,7 +347,7 @@ export interface ComponentProperties {
     elevation?: number;
     type?: string;
     // Table-specific properties
-    columns?: Array<{key: string, label: string, type: string}>;
+    columns?: Array<{ key: string; label: string; type: string }>;
 }
 
 export interface ComponentVariant {
@@ -352,12 +382,13 @@ export interface ThemeConfig {
 }
 
 export interface TypographyConfig {
-    fontFamily: string;
-    fontSize: number;
-    fontWeight: number;
-    lineHeight: number;
+    fontFamily?: string;
+    fontSize?: number;
+    fontWeight?: number;
+    lineHeight?: number;
     letterSpacing?: number;
     textAlign?: string;
+    variant?: string;
 }
 
 // Design Token Manager용 TypographyToken 타입

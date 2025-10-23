@@ -7,12 +7,7 @@ export class FigmaAPIError extends Error {
     public readonly statusCode?: number;
     public readonly originalError?: Error;
 
-    constructor(
-        message: string,
-        fileKey?: string,
-        statusCode?: number,
-        originalError?: Error
-    ) {
+    constructor(message: string, fileKey?: string, statusCode?: number, originalError?: Error) {
         super(message);
         this.name = 'FigmaAPIError';
         this.fileKey = fileKey;
@@ -60,11 +55,7 @@ export class FigmaCodeGenerationError extends Error {
     public readonly componentName?: string;
     public readonly componentType?: string;
 
-    constructor(
-        message: string,
-        componentName?: string,
-        componentType?: string
-    ) {
+    constructor(message: string, componentName?: string, componentType?: string) {
         super(message);
         this.name = 'FigmaCodeGenerationError';
         this.componentName = componentName;
@@ -76,11 +67,7 @@ export class FigmaFileSystemError extends Error {
     public readonly filePath?: string;
     public readonly operation?: string;
 
-    constructor(
-        message: string,
-        filePath?: string,
-        operation?: string
-    ) {
+    constructor(message: string, filePath?: string, operation?: string) {
         super(message);
         this.name = 'FigmaFileSystemError';
         this.filePath = filePath;
@@ -146,7 +133,7 @@ export const handleFigmaError = (error: unknown, context?: string): never => {
             message: error.message,
             fileKey: error.fileKey,
             statusCode: error.statusCode,
-            originalError: error.originalError
+            originalError: error.originalError,
         });
         throw error;
     }
@@ -154,7 +141,7 @@ export const handleFigmaError = (error: unknown, context?: string): never => {
     if (isFigmaNetworkError(error)) {
         console.error(`Figma Network Error${context ? ` in ${context}` : ''}:`, {
             message: error.message,
-            originalError: error.originalError
+            originalError: error.originalError,
         });
         throw error;
     }
@@ -163,7 +150,7 @@ export const handleFigmaError = (error: unknown, context?: string): never => {
         console.error(`Figma Code Generation Error${context ? ` in ${context}` : ''}:`, {
             message: error.message,
             componentName: error.componentName,
-            componentType: error.componentType
+            componentType: error.componentType,
         });
         throw error;
     }
@@ -172,7 +159,7 @@ export const handleFigmaError = (error: unknown, context?: string): never => {
         console.error(`Figma File System Error${context ? ` in ${context}` : ''}:`, {
             message: error.message,
             filePath: error.filePath,
-            operation: error.operation
+            operation: error.operation,
         });
         throw error;
     }
@@ -185,7 +172,7 @@ export const handleFigmaError = (error: unknown, context?: string): never => {
 export const retryWithBackoff = async <T>(
     operation: () => Promise<T>,
     maxRetries: number = 3,
-    baseDelay: number = 1000
+    baseDelay: number = 1000,
 ): Promise<T> => {
     let lastError: Error;
 
@@ -194,7 +181,7 @@ export const retryWithBackoff = async <T>(
             return await operation();
         } catch (error) {
             lastError = error as Error;
-            
+
             if (attempt === maxRetries) {
                 break;
             }
@@ -203,11 +190,11 @@ export const retryWithBackoff = async <T>(
             if (isFigmaRateLimitError(error)) {
                 const delay = baseDelay * Math.pow(2, attempt) * 2;
                 console.log(`Rate limit hit, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise((resolve) => setTimeout(resolve, delay));
             } else {
                 const delay = baseDelay * Math.pow(2, attempt);
                 console.log(`Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise((resolve) => setTimeout(resolve, delay));
             }
         }
     }

@@ -25,25 +25,25 @@ function getFoldersToExpand(currentPath: string): Set<string> {
         for (const menu of menus) {
             if (menu.type === 'group') {
                 const groupMenu = menu as MenuGroup;
-                
+
                 // 자식 메뉴 확인
                 for (const child of groupMenu.children) {
                     // Item 타입이고 현재 경로와 매칭되면 부모 폴더 열기
                     if (child.type === 'item' && isPathActive(currentPath, child.path)) {
-                        folders.add(getMainMenuTitle(menu));  // ✅ getMainMenuTitle 사용
+                        folders.add(getMainMenuTitle(menu)); // ✅ getMainMenuTitle 사용
                         return;
                     }
-                    
+
                     // Group 타입이면 손자 노드 확인
                     if (child.type === 'group') {
                         const childGroup = child as MenuGroup;
                         const hasMatchingGrandChild = childGroup.children.some((grandChild) => {
                             return grandChild.type === 'item' && isPathActive(currentPath, grandChild.path);
                         });
-                        
+
                         if (hasMatchingGrandChild) {
-                            folders.add(getMainMenuTitle(menu));   // ✅ getMainMenuTitle 사용
-                            folders.add(getMainMenuTitle(child));  // ✅ getMainMenuTitle 사용
+                            folders.add(getMainMenuTitle(menu)); // ✅ getMainMenuTitle 사용
+                            folders.add(getMainMenuTitle(child)); // ✅ getMainMenuTitle 사용
                             return;
                         }
                     }

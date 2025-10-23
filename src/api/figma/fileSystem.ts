@@ -13,7 +13,7 @@ export class FileSystemManager {
     async createDirectory(dirPath: string): Promise<void> {
         try {
             const normalizedPath = path.normalize(dirPath);
-            
+
             // 디렉토리가 이미 존재하는지 확인
             if (fs.existsSync(normalizedPath)) {
                 const stats = fs.statSync(normalizedPath);
@@ -21,7 +21,7 @@ export class FileSystemManager {
                     throw new FigmaFileSystemError(
                         `Path exists but is not a directory: ${normalizedPath}`,
                         normalizedPath,
-                        'createDirectory'
+                        'createDirectory',
                     );
                 }
                 return;
@@ -40,11 +40,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to create directory: ${error}`,
-                dirPath,
-                'createDirectory'
-            );
+            throw new FigmaFileSystemError(`Failed to create directory: ${error}`, dirPath, 'createDirectory');
         }
     }
 
@@ -57,7 +53,7 @@ export class FileSystemManager {
     async saveFile(filePath: string, content: string, encoding: BufferEncoding = 'utf8'): Promise<void> {
         try {
             const normalizedPath = path.normalize(filePath);
-            
+
             // 디렉토리가 존재하지 않으면 생성
             const dirPath = path.dirname(normalizedPath);
             if (!fs.existsSync(dirPath)) {
@@ -68,11 +64,7 @@ export class FileSystemManager {
             fs.writeFileSync(normalizedPath, content, { encoding });
             console.log(`💾 Saved file: ${normalizedPath}`);
         } catch (error) {
-            throw new FigmaFileSystemError(
-                `Failed to save file: ${error}`,
-                filePath,
-                'saveFile'
-            );
+            throw new FigmaFileSystemError(`Failed to save file: ${error}`, filePath, 'saveFile');
         }
     }
 
@@ -85,13 +77,9 @@ export class FileSystemManager {
     async readFile(filePath: string, encoding: BufferEncoding = 'utf8'): Promise<string> {
         try {
             const normalizedPath = path.normalize(filePath);
-            
+
             if (!fs.existsSync(normalizedPath)) {
-                throw new FigmaFileSystemError(
-                    `File not found: ${normalizedPath}`,
-                    normalizedPath,
-                    'readFile'
-                );
+                throw new FigmaFileSystemError(`File not found: ${normalizedPath}`, normalizedPath, 'readFile');
             }
 
             return fs.readFileSync(normalizedPath, { encoding });
@@ -99,11 +87,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to read file: ${error}`,
-                filePath,
-                'readFile'
-            );
+            throw new FigmaFileSystemError(`Failed to read file: ${error}`, filePath, 'readFile');
         }
     }
 
@@ -142,7 +126,7 @@ export class FileSystemManager {
     async deleteFile(filePath: string): Promise<void> {
         try {
             const normalizedPath = path.normalize(filePath);
-            
+
             if (!fs.existsSync(normalizedPath)) {
                 console.log(`⚠️  File does not exist: ${normalizedPath}`);
                 return;
@@ -151,11 +135,7 @@ export class FileSystemManager {
             fs.unlinkSync(normalizedPath);
             console.log(`🗑️  Deleted file: ${normalizedPath}`);
         } catch (error) {
-            throw new FigmaFileSystemError(
-                `Failed to delete file: ${error}`,
-                filePath,
-                'deleteFile'
-            );
+            throw new FigmaFileSystemError(`Failed to delete file: ${error}`, filePath, 'deleteFile');
         }
     }
 
@@ -166,7 +146,7 @@ export class FileSystemManager {
     async deleteDirectory(dirPath: string): Promise<void> {
         try {
             const normalizedPath = path.normalize(dirPath);
-            
+
             if (!fs.existsSync(normalizedPath)) {
                 console.log(`⚠️  Directory does not exist: ${normalizedPath}`);
                 return;
@@ -177,7 +157,7 @@ export class FileSystemManager {
                 throw new FigmaFileSystemError(
                     `Path is not a directory: ${normalizedPath}`,
                     normalizedPath,
-                    'deleteDirectory'
+                    'deleteDirectory',
                 );
             }
 
@@ -187,11 +167,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to delete directory: ${error}`,
-                dirPath,
-                'deleteDirectory'
-            );
+            throw new FigmaFileSystemError(`Failed to delete directory: ${error}`, dirPath, 'deleteDirectory');
         }
     }
 
@@ -203,12 +179,12 @@ export class FileSystemManager {
     listDirectory(dirPath: string): string[] {
         try {
             const normalizedPath = path.normalize(dirPath);
-            
+
             if (!fs.existsSync(normalizedPath)) {
                 throw new FigmaFileSystemError(
                     `Directory not found: ${normalizedPath}`,
                     normalizedPath,
-                    'listDirectory'
+                    'listDirectory',
                 );
             }
 
@@ -217,11 +193,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to list directory: ${error}`,
-                dirPath,
-                'listDirectory'
-            );
+            throw new FigmaFileSystemError(`Failed to list directory: ${error}`, dirPath, 'listDirectory');
         }
     }
 
@@ -233,13 +205,9 @@ export class FileSystemManager {
     getFileStats(filePath: string): fs.Stats {
         try {
             const normalizedPath = path.normalize(filePath);
-            
+
             if (!fs.existsSync(normalizedPath)) {
-                throw new FigmaFileSystemError(
-                    `File not found: ${normalizedPath}`,
-                    normalizedPath,
-                    'getFileStats'
-                );
+                throw new FigmaFileSystemError(`File not found: ${normalizedPath}`, normalizedPath, 'getFileStats');
             }
 
             return fs.statSync(normalizedPath);
@@ -247,11 +215,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to get file stats: ${error}`,
-                filePath,
-                'getFileStats'
-            );
+            throw new FigmaFileSystemError(`Failed to get file stats: ${error}`, filePath, 'getFileStats');
         }
     }
 
@@ -264,12 +228,12 @@ export class FileSystemManager {
         try {
             const normalizedSourcePath = path.normalize(sourcePath);
             const normalizedDestPath = path.normalize(destPath);
-            
+
             if (!fs.existsSync(normalizedSourcePath)) {
                 throw new FigmaFileSystemError(
                     `Source file not found: ${normalizedSourcePath}`,
                     normalizedSourcePath,
-                    'copyFile'
+                    'copyFile',
                 );
             }
 
@@ -285,11 +249,7 @@ export class FileSystemManager {
             if (error instanceof FigmaFileSystemError) {
                 throw error;
             }
-            throw new FigmaFileSystemError(
-                `Failed to copy file: ${error}`,
-                `${sourcePath} -> ${destPath}`,
-                'copyFile'
-            );
+            throw new FigmaFileSystemError(`Failed to copy file: ${error}`, `${sourcePath} -> ${destPath}`, 'copyFile');
         }
     }
 

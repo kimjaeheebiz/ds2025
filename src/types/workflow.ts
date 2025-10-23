@@ -1,20 +1,20 @@
 // Workflow 관련 전역 타입 정의 (시범 구축용 단순화)
 export interface Workflow {
-    seq?: number;  // UI용 순번 (옵셔널)
+    seq?: number; // UI용 순번 (옵셔널)
     id: string;
     name: string;
     description: string | null;
-    user_id: string;  // 사용자 이메일 아이디
+    user_id: string; // 사용자 이메일 아이디
     user_name: string;
     created_at: string;
     updated_at: string;
     status: 'active' | 'inactive' | 'stop' | 'expired';
-    isFavorite?: boolean;  // 즐겨찾기 (UI용)
+    isFavorite?: boolean; // 즐겨찾기 (UI용)
 }
 
 // Workflow 테이블 컬럼 정의
 export interface WorkflowTableColumn {
-    key: keyof Workflow | 'index';  // index는 테이블 순번용
+    key: keyof Workflow | 'index'; // index는 테이블 순번용
     label: string;
     sortable?: boolean;
     filterable?: boolean;
@@ -46,7 +46,7 @@ export interface WorkflowsApiResponse {
 export interface CreateWorkflowRequest {
     name: string;
     description?: string;
-    user_id: string;  // 사용자 이메일 아이디
+    user_id: string; // 사용자 이메일 아이디
 }
 
 // 워크플로우 수정 요청

@@ -4,7 +4,8 @@ import {
     FigmaImagesResponse,
     FigmaFileVersionsResponse,
     FigmaFileComponentsResponse,
-    FigmaFileStylesResponse
+    FigmaFileStylesResponse,
+    FigmaFileVariablesResponse,
 } from './types';
 import {
     FigmaAPIError,
@@ -14,7 +15,7 @@ import {
     FigmaRateLimitError,
     FigmaNetworkError,
     handleFigmaError,
-    retryWithBackoff
+    retryWithBackoff,
 } from './errors';
 
 export class FigmaAPIClient {
@@ -39,8 +40,8 @@ export class FigmaAPIClient {
                 const response = await fetch(`${this.baseURL}/files/${fileKey}`, {
                     headers: {
                         'X-Figma-Token': this.token,
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 });
 
                 if (!response.ok) {
@@ -56,7 +57,7 @@ export class FigmaAPIClient {
                     throw new FigmaAPIError(
                         `API Error: ${response.status} ${response.statusText}`,
                         fileKey,
-                        response.status
+                        response.status,
                     );
                 }
 
@@ -86,8 +87,8 @@ export class FigmaAPIClient {
                 const response = await fetch(`${this.baseURL}/files/${fileKey}/nodes?ids=${nodeIds.join(',')}`, {
                     headers: {
                         'X-Figma-Token': this.token,
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 });
 
                 if (!response.ok) {
@@ -100,14 +101,14 @@ export class FigmaAPIClient {
                     throw new FigmaAPIError(
                         `API Error: ${response.status} ${response.statusText}`,
                         fileKey,
-                        response.status
+                        response.status,
                     );
                 }
 
                 const data = await response.json();
-                
+
                 // 노드가 존재하지 않는 경우 확인
-                const missingNodes = nodeIds.filter(id => !data.nodes[id]);
+                const missingNodes = nodeIds.filter((id) => !data.nodes[id]);
                 if (missingNodes.length > 0) {
                     throw new FigmaNodeNotFoundError(missingNodes[0], fileKey);
                 }
@@ -131,23 +132,23 @@ export class FigmaAPIClient {
      * @returns 이미지 URL 맵
      */
     async getNodeImages(
-        fileKey: string, 
-        nodeIds: string[], 
+        fileKey: string,
+        nodeIds: string[],
         format: 'PNG' | 'JPG' | 'SVG' | 'PDF' = 'PNG',
-        scale: 1 | 2 | 4 = 1
+        scale: 1 | 2 | 4 = 1,
     ): Promise<FigmaImagesResponse> {
         try {
             const params = new URLSearchParams({
                 ids: nodeIds.join(','),
                 format,
-                scale: scale.toString()
+                scale: scale.toString(),
             });
 
             const response = await fetch(`${this.baseURL}/images/${fileKey}?${params}`, {
                 headers: {
                     'X-Figma-Token': this.token,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (!response.ok) {
@@ -171,8 +172,8 @@ export class FigmaAPIClient {
             const response = await fetch(`${this.baseURL}/files/${fileKey}/versions`, {
                 headers: {
                     'X-Figma-Token': this.token,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (!response.ok) {
@@ -196,8 +197,8 @@ export class FigmaAPIClient {
             const response = await fetch(`${this.baseURL}/files/${fileKey}/components`, {
                 headers: {
                     'X-Figma-Token': this.token,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (!response.ok) {
@@ -212,6 +213,38 @@ export class FigmaAPIClient {
     }
 
     /**
+     * 파일의 변수 정보 가져오기
+     * @param fileKey 피그마 파일 키
+     * @returns 변수 정보
+     */
+    async getFileVariables(fileKey: string): Promise<FigmaFileVariablesResponse> {
+        try {
+            const response = await fetch(`https://api.figma.com/v1/files/${fileKey}/variables`, {
+                method: 'GET',
+                headers: {
+                    'X-Figma-Token': this.token,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                // 404가 아닌 다른 오류인 경우에만 throw
+                if (response.status === 404) {
+                    console.warn('⚠️ Variables API not available (404) - using fallback method');
+                    return { meta: { variables: {} } };
+                }
+                throw new Error(`Figma API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to fetch Figma variables:', error);
+            // 네트워크 오류 등은 fallback으로 처리
+            return { meta: { variables: {} } };
+        }
+    }
+
+    /**
      * 파일의 스타일 정보 가져오기
      * @param fileKey 피그마 파일 키
      * @returns 스타일 정보
@@ -221,8 +254,8 @@ export class FigmaAPIClient {
             const response = await fetch(`${this.baseURL}/files/${fileKey}/styles`, {
                 headers: {
                     'X-Figma-Token': this.token,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (!response.ok) {

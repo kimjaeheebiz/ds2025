@@ -5,7 +5,7 @@
 ```
 Figma (Variables + Styles)
   ↓ Tokens Studio
-design-system/tokens/foundation/
+design-system/tokens/generated/
   ├── core.json                      # 핵심 UI 스타일
   ├── brand/Mode 1.json              # 브랜드 색상/사이즈
   ├── palette/Light.json             # 라이트 모드 테마

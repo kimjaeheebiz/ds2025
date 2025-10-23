@@ -129,7 +129,9 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                             ),
                         }}
                     />
-                    <Button variant="contained" startIcon={<Add />}>New Workflow</Button>
+                    <Button variant="contained" startIcon={<Add />}>
+                        New Workflow
+                    </Button>
                 </Stack>
             </Box>
 
@@ -147,31 +149,56 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <Button variant="text" color="inherit" onClick={() => handleSort('name')} sx={{ minWidth: 'auto', p: 0 }}>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => handleSort('name')}
+                                    sx={{ minWidth: 'auto', p: 0 }}
+                                >
                                     이름 / 아이디
                                     {sortKey === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" color="inherit" onClick={() => handleSort('description')} sx={{ minWidth: 'auto', p: 0 }}>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => handleSort('description')}
+                                    sx={{ minWidth: 'auto', p: 0 }}
+                                >
                                     설명
                                     {sortKey === 'description' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" color="inherit" onClick={() => handleSort('updated_at')} sx={{ minWidth: 'auto', p: 0 }}>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => handleSort('updated_at')}
+                                    sx={{ minWidth: 'auto', p: 0 }}
+                                >
                                     수정일
                                     {sortKey === 'updated_at' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" color="inherit" onClick={() => handleSort('user_name')} sx={{ minWidth: 'auto', p: 0 }}>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => handleSort('user_name')}
+                                    sx={{ minWidth: 'auto', p: 0 }}
+                                >
                                     소유자
                                     {sortKey === 'user_name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
                             </TableCell>
                             <TableCell>
-                                <Button variant="text" color="inherit" onClick={() => handleSort('status')} sx={{ minWidth: 'auto', p: 0 }}>
+                                <Button
+                                    variant="text"
+                                    color="inherit"
+                                    onClick={() => handleSort('status')}
+                                    sx={{ minWidth: 'auto', p: 0 }}
+                                >
                                     상태
                                     {sortKey === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
                                 </Button>
@@ -183,11 +210,17 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                         {sortedWorkflows.map((workflow) => (
                             <TableRow key={workflow.seq ?? workflow.id} hover>
                                 <TableCell>
-                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{workflow.name}</Typography>
-                                    <Typography variant="caption" color="text.secondary">{workflow.id}</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                        {workflow.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {workflow.id}
+                                    </Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Typography variant="body2" color="text.secondary">{workflow.description}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {workflow.description}
+                                    </Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2">{formatDate(workflow.updated_at || '')}</Typography>
@@ -202,20 +235,32 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
                                     <Stack direction="row" spacing={1}>
                                         <Tooltip title={workflow.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}>
                                             <IconButton size="small" onClick={() => toggleFavorite(workflow.id)}>
-                                                {workflow.isFavorite ? <Star fontSize="small" color="primary" /> : <StarBorder fontSize="small" />}
+                                                {workflow.isFavorite ? (
+                                                    <Star fontSize="small" color="primary" />
+                                                ) : (
+                                                    <StarBorder fontSize="small" />
+                                                )}
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip title="API KEY 발급">
-                                            <IconButton size="small"><Key fontSize="small" /></IconButton>
+                                            <IconButton size="small">
+                                                <Key fontSize="small" />
+                                            </IconButton>
                                         </Tooltip>
                                         <Tooltip title="챗봇">
-                                            <IconButton size="small"><SmartToy fontSize="small" /></IconButton>
+                                            <IconButton size="small">
+                                                <SmartToy fontSize="small" />
+                                            </IconButton>
                                         </Tooltip>
                                         <Tooltip title="빌더">
-                                            <IconButton size="small"><Build fontSize="small" /></IconButton>
+                                            <IconButton size="small">
+                                                <Build fontSize="small" />
+                                            </IconButton>
                                         </Tooltip>
                                         <Tooltip title="더보기">
-                                            <IconButton size="small"><MoreVert fontSize="small" /></IconButton>
+                                            <IconButton size="small">
+                                                <MoreVert fontSize="small" />
+                                            </IconButton>
                                         </Tooltip>
                                     </Stack>
                                 </TableCell>
@@ -227,5 +272,3 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
         </Box>
     );
 };
-
-

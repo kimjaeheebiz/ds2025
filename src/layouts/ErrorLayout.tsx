@@ -51,15 +51,13 @@ export const ErrorLayout = ({ statusCode = 404, title, message }: ErrorLayoutPro
                     <Brand size="large" showText={true} />
                 </Box>
 
-                <Typography component="h1" sx={{ fontSize: '7rem', fontWeight: '600', lineHeight: 1.2}}>
+                <Typography component="h1" sx={{ fontSize: '7rem', fontWeight: '600', lineHeight: 1.2 }}>
                     {statusCode}
                 </Typography>
                 <Typography variant="h4" component="h2" gutterBottom>
                     <strong>{errorTitle}</strong>
                 </Typography>
-                <Typography variant="body1">
-                    {errorMessage}
-                </Typography>
+                <Typography variant="body1">{errorMessage}</Typography>
                 <Button variant="contained" color="primary" size="large" sx={{ mt: 5 }} onClick={() => navigate('/')}>
                     Home
                 </Button>
