@@ -15,7 +15,7 @@ export const Test: React.FC = () => {
             <Typography
                 variant="body2"
                 sx={{
-                    color: '#ff9061ff',
+                    color: 'primary.light',
                 }}
             >
                 테스트용 노드 &lt;Typography&gt; 인스턴스(904:1013), 하위
