@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { Workflow } from '@/types';
 
 interface ProjectContextType {
@@ -72,3 +72,9 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
 };
 
 export { ProjectContext };
+
+export const useProject = () => {
+    const ctx = useContext(ProjectContext);
+    if (!ctx) throw new Error('useProject must be used within a ProjectProvider');
+    return ctx;
+};
