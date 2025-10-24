@@ -21,6 +21,15 @@ export const Test: React.FC = () => {
                 테스트용 노드 &lt;Typography&gt; 인스턴스(904:1013), 하위
                 텍스트(I904:1013;6605:52865)
             </Typography>
+
+            <Typography
+                variant="body2"
+                sx={{
+                    color: 'text.secondary',
+                }}
+            >
+                테스트 내용
+            </Typography>
         </Box>
     );
 };

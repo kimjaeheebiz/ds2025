@@ -160,12 +160,13 @@ program
             const service = new FigmaIntegrationService();
             
             if (options.page) {
-                // 특정 페이지 생성 (임시로 generateAllPages 사용)
-                console.log(`⚠️  단일 페이지 생성은 아직 구현되지 않았습니다. 모든 페이지를 생성합니다...`);
-                await service.generateAllPages();
-                console.log(`✅ 모든 페이지가 성공적으로 생성되었습니다.`);
+                // 특정 페이지 생성
+                console.log(`📄 ${options.page} 페이지 생성 중...`);
+                await service.generateSinglePage(options.page);
+                console.log(`✅ ${options.page} 페이지가 성공적으로 생성되었습니다.`);
             } else {
                 // 모든 페이지 생성
+                console.log('📄 모든 페이지 생성 중...');
                 await service.generateAllPages();
                 console.log('✅ 모든 페이지가 성공적으로 생성되었습니다.');
             }

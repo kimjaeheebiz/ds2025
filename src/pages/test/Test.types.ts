@@ -10,4 +10,6 @@ export interface TestPageState {
 
 export type TypographyProps = object;
 
+export type Typography1Props = object;
+
 export type TestProps = object;
