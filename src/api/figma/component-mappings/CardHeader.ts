@@ -156,7 +156,7 @@ export const CardHeaderMapping: ComponentMapping = {
         
         // hasAction 추출 - properties에서 actionIcon 정보 사용
         if (props.includes('hasAction="true"') || props.includes('hasAction={true}')) {
-            let actionIcon = '<MoreVertIcon />';
+            let actionIcon = '';
             
             // properties에서 actionIcon 정보 추출
             if (properties) {
@@ -165,12 +165,19 @@ export const CardHeaderMapping: ComponentMapping = {
                 
                 if (iconComponentId || iconName) {
                     const muiIconName = getMuiIconName(iconComponentId || '', iconName);
-                    actionIcon = `<${muiIconName} />`;
-                    console.log(`🎨 [CardHeader] Action icon 매핑: ${iconName || iconComponentId} → ${muiIconName}`);
+                    if (muiIconName) {
+                        actionIcon = `<${muiIconName} />`;
+                        console.log(`🎨 [CardHeader] Action icon 매핑: ${iconName || iconComponentId} → ${muiIconName}`);
+                    } else {
+                        console.log(`⚠️ [CardHeader] Action icon 매핑 실패, 아이콘 생성하지 않음`);
+                    }
                 }
             }
             
-            propsObj.action = `<IconButton aria-label="settings">${actionIcon}</IconButton>`;
+            // 아이콘이 있을 때만 IconButton 생성, 없으면 action 속성 자체를 추가하지 않음
+            if (actionIcon) {
+                propsObj.action = `<IconButton aria-label="settings">${actionIcon}</IconButton>`;
+            }
         }
         
         // props에서 avatar, hasAction 제거

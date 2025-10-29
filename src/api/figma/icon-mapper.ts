@@ -1,99 +1,48 @@
 /**
- * Figma 아이콘 인스턴스명을 MUI Icon 컴포넌트로 매핑
+ * Figma 아이콘 인스턴스명을 MUI Icon 컴포넌트로 변환
  * 
- * Figma에서는 아이콘을 INSTANCE_SWAP으로 관리하며, 아이콘의 컴포넌트 ID를 제공합니다.
- * 이 ID를 통해 아이콘 인스턴스명(name)을 가져와 MUI Icon 컴포넌트 이름으로 매핑합니다.
+ * 규칙:
+ * - 이름에서 Filled 접미사만 제거 (예: PersonFilled → Person)
+ * - 그 외는 대소문자 그대로 사용 (예: AccountCircleOutlined → AccountCircleOutlined)
+ * - 매핑 불가 시 null 반환 (아이콘 생성하지 않음)
  */
+export function getMuiIconName(figmaComponentIdOrName: string, iconName?: string): string | null {
+    if (!iconName) {
+        return null;
+    }
 
-export interface IconMapping {
-    figmaIconName: string; // Figma 아이콘 인스턴스명 (예: "AddFilled", "StarBorderFilled")
-    muiIconName: string; // MUI Icon 컴포넌트 이름 (예: "Add", "StarBorder")
-}
-
-/**
- * Figma 아이콘 인스턴스명 → MUI Icon 매핑
- * 
- * 주의: Figma Button의 Start Icon, End Icon을 선택할 때 나타나는 아이콘 인스턴스명을 매핑해야 합니다.
- * 
- * 매핑 규칙:
- * - Figma의 아이콘 인스턴스명은 대소문자를 구분합니다 (예: "AddFilled", "StarBorderFilled")
- * - MUI Icon 컴포넌트명과 일치하도록 매핑합니다 (예: "Add", "StarBorder")
- */
-const ICON_NAME_MAPPINGS: IconMapping[] = [
-    // MUI Icon 기본 매핑 (Figma 아이콘 인스턴스명 → MUI Icon 컴포넌트명)
-    // 참고: https://mui.com/material-ui/material-icons/
-    { figmaIconName: 'AddFilled', muiIconName: 'Add' },
-    { figmaIconName: 'Add', muiIconName: 'Add' },
-    { figmaIconName: 'StarBorderFilled', muiIconName: 'StarBorder' },
-    { figmaIconName: 'StarBorder', muiIconName: 'StarBorder' },
-    { figmaIconName: 'DeleteFilled', muiIconName: 'Delete' },
-    { figmaIconName: 'Delete', muiIconName: 'Delete' },
-    { figmaIconName: 'ChevronLeftFilled', muiIconName: 'ChevronLeft' },
-    { figmaIconName: 'ChevronLeft', muiIconName: 'ChevronLeft' },
-    { figmaIconName: 'ChevronRightFilled', muiIconName: 'ChevronRight' },
-    { figmaIconName: 'ChevronRight', muiIconName: 'ChevronRight' },
-    { figmaIconName: 'SettingsFilled', muiIconName: 'Settings' },
-    { figmaIconName: 'Settings', muiIconName: 'Settings' },
-    { figmaIconName: 'EditFilled', muiIconName: 'Edit' },
-    { figmaIconName: 'Edit', muiIconName: 'Edit' },
-    { figmaIconName: 'SearchFilled', muiIconName: 'Search' },
-    { figmaIconName: 'Search', muiIconName: 'Search' },
-    { figmaIconName: 'SaveFilled', muiIconName: 'Save' },
-    { figmaIconName: 'Save', muiIconName: 'Save' },
-    { figmaIconName: 'CloseFilled', muiIconName: 'Close' },
-    { figmaIconName: 'Close', muiIconName: 'Close' },
-    { figmaIconName: 'DownloadFilled', muiIconName: 'Download' },
-    { figmaIconName: 'Download', muiIconName: 'Download' },
-    { figmaIconName: 'UploadFilled', muiIconName: 'Upload' },
-    { figmaIconName: 'Upload', muiIconName: 'Upload' },
-    { figmaIconName: 'HomeFilled', muiIconName: 'Home' },
-    { figmaIconName: 'Home', muiIconName: 'Home' },
-    { figmaIconName: 'AccountCircleFilled', muiIconName: 'AccountCircle' },
-    { figmaIconName: 'AccountCircle', muiIconName: 'AccountCircle' },
-    { figmaIconName: 'EmailFilled', muiIconName: 'Email' },
-    { figmaIconName: 'Email', muiIconName: 'Email' },
-    { figmaIconName: 'PhoneFilled', muiIconName: 'Phone' },
-    { figmaIconName: 'Phone', muiIconName: 'Phone' },
-    { figmaIconName: 'MoreVertFilled', muiIconName: 'MoreVert' },
-    { figmaIconName: 'MoreVert', muiIconName: 'MoreVert' },
-    { figmaIconName: 'MoreVertIcon', muiIconName: 'MoreVert' },
-    { figmaIconName: 'MenuFilled', muiIconName: 'Menu' },
-    { figmaIconName: 'Menu', muiIconName: 'Menu' },
-    { figmaIconName: 'ArrowBackFilled', muiIconName: 'ArrowBack' },
-    { figmaIconName: 'ArrowBack', muiIconName: 'ArrowBack' },
-    { figmaIconName: 'ArrowForwardFilled', muiIconName: 'ArrowForward' },
-    { figmaIconName: 'ArrowForward', muiIconName: 'ArrowForward' },
-    { figmaIconName: 'CheckFilled', muiIconName: 'Check' },
-    { figmaIconName: 'Check', muiIconName: 'Check' },
-    { figmaIconName: 'ClearFilled', muiIconName: 'Clear' },
-    { figmaIconName: 'Clear', muiIconName: 'Clear' },
-    { figmaIconName: 'ExpandMoreFilled', muiIconName: 'ExpandMore' },
-    { figmaIconName: 'ExpandMore', muiIconName: 'ExpandMore' },
-    { figmaIconName: 'ExpandLessFilled', muiIconName: 'ExpandLess' },
-    { figmaIconName: 'ExpandLess', muiIconName: 'ExpandLess' },
-    { figmaIconName: 'MailOutlineFilled', muiIconName: 'Email' },
-    { figmaIconName: 'MailOutline', muiIconName: 'Email' },
-];
-
-/**
- * Figma 아이콘 인스턴스명으로 MUI Icon 이름 가져오기
- * 
- * 아이콘 이름으로 매핑 (대부분의 경우)
- */
-export function getMuiIconName(figmaComponentIdOrName: string, iconName?: string): string {
-    // 1. 아이콘 인스턴스명으로 매핑 시도
-    if (iconName) {
-        const nameMapping = ICON_NAME_MAPPINGS.find(m => 
-            m.figmaIconName.toLowerCase() === iconName.toLowerCase()
-        );
-        if (nameMapping) {
-            return nameMapping.muiIconName;
+    // 이름 정규화: 꺾쇠 제거, trim (대소문자 그대로 유지)
+    let normalized = iconName.replace(/[<>]/g, '').trim();
+    
+    // 공백/슬래시가 포함된 경우 마지막 토큰만 사용 (예: "Icon/SettingsOutlined" → "SettingsOutlined")
+    if (normalized.includes('/') || normalized.includes(' ')) {
+        const tokens = normalized.split(/[\s/]+/);
+        const lastToken = tokens[tokens.length - 1];
+        if (lastToken && /^[A-Z]/.test(lastToken)) {
+            normalized = lastToken;
         }
     }
     
-    // 2. 기본값
-    console.warn(`⚠️ 아이콘 매핑 없음: ${iconName || figmaComponentIdOrName}, 기본 Add 사용`);
-    return 'Add';
+    // Icon 컨테이너 이름은 제외
+    if (normalized === 'Icon' || normalized === '<Icon>') {
+        return null;
+    }
+    
+    // Filled로 끝나면 Filled만 제거
+    if (normalized.endsWith('Filled')) {
+        const withoutFilled = normalized.replace(/Filled$/, '');
+        if (withoutFilled && /^[A-Z]/.test(withoutFilled)) {
+            return withoutFilled;
+        }
+    }
+    
+    // 그 외는 PascalCase면 그대로 사용
+    if (normalized && /^[A-Z]/.test(normalized)) {
+        return normalized;
+    }
+    
+    // 매핑 불가 시 null 반환 (아이콘 생성하지 않음)
+    return null;
 }
 
 /**
@@ -107,7 +56,10 @@ export function hasIcon(properties: Record<string, any>): boolean {
         properties.startIcon ||
         properties.endIcon ||
         properties.actionIcon ||
-        properties.actionIconName
+        properties.actionIconName ||
+        // Avatar, IconButton 등 커스텀 아이콘 필드 지원
+        (properties as any).__avatarIconName ||
+        (properties as any).__iconButtonIconName
     );
 }
 
@@ -119,21 +71,35 @@ export function getRequiredIconNames(properties: Record<string, any>): string[] 
     
     // ✅ 실제로 사용되는 경우에만 import 추가
     if (properties.startIcon === true && properties.startIconComponentId) {
-        icons.add(getMuiIconName(properties.startIconComponentId, properties.startIconName));
-    } else if (properties.startIcon === true) {
-        icons.add('Add'); // 기본 아이콘
+        const iconName = getMuiIconName(properties.startIconComponentId, properties.startIconName);
+        if (iconName) {
+            icons.add(iconName);
+        }
     }
     
     if (properties.endIcon === true && properties.endIconComponentId) {
-        icons.add(getMuiIconName(properties.endIconComponentId, properties.endIconName));
-    } else if (properties.endIcon === true) {
-        icons.add('Settings'); // 기본 아이콘
+        const iconName = getMuiIconName(properties.endIconComponentId, properties.endIconName);
+        if (iconName) {
+            icons.add(iconName);
+        }
     }
     
     // ✅ CardHeader의 actionIcon 처리 추가
     if (properties.actionIconComponentId || properties.actionIconName) {
         const iconName = getMuiIconName(properties.actionIconComponentId || '', properties.actionIconName);
-        icons.add(iconName);
+        if (iconName) {
+            icons.add(iconName);
+        }
+    }
+    
+    // ✅ Avatar의 아이콘 처리 추가
+    if (properties.__avatarIconName) {
+        icons.add(properties.__avatarIconName);
+    }
+    
+    // ✅ IconButton의 아이콘 처리 추가
+    if (properties.__iconButtonIconName) {
+        icons.add(properties.__iconButtonIconName);
     }
     
     return Array.from(icons);

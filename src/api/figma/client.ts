@@ -157,7 +157,7 @@ export class FigmaAPIClient {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to fetch Figma images:', error);
+            console.error('피그마 이미지 가져오기에 실패했습니다:', error);
             throw error;
         }
     }
@@ -182,7 +182,7 @@ export class FigmaAPIClient {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to fetch Figma file versions:', error);
+            console.error('피그마 파일 버전 가져오기에 실패했습니다:', error);
             throw error;
         }
     }
@@ -207,7 +207,7 @@ export class FigmaAPIClient {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to fetch Figma components:', error);
+            console.error('피그마 컴포넌트 정보 가져오기에 실패했습니다:', error);
             throw error;
         }
     }
@@ -230,7 +230,7 @@ export class FigmaAPIClient {
             if (!response.ok) {
                 // 404가 아닌 다른 오류인 경우에만 throw
                 if (response.status === 404) {
-                    console.warn('⚠️ Variables API not available (404) - using fallback method');
+                    console.warn('⚠️  Variables API를 사용할 수 없음(404) - 대체 방식으로 처리합니다.');
                     return { meta: { variables: {} } };
                 }
                 throw new Error(`Figma API Error: ${response.status} ${response.statusText}`);
@@ -238,7 +238,7 @@ export class FigmaAPIClient {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to fetch Figma variables:', error);
+            console.error('피그마 변수 정보 가져오기에 실패했습니다:', error);
             // 네트워크 오류 등은 fallback으로 처리
             return { meta: { variables: {} } };
         }
@@ -264,7 +264,7 @@ export class FigmaAPIClient {
 
             return await response.json();
         } catch (error) {
-            console.error('Failed to fetch Figma styles:', error);
+            console.error('피그마 스타일 정보 가져오기에 실패했습니다:', error);
             throw error;
         }
     }

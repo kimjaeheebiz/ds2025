@@ -94,7 +94,7 @@ export async function fetchIconName(
     extractor: any
 ): Promise<string | undefined> {
     if (!extractor) {
-        console.warn(`⚠️ extractor가 제공되지 않음: ${iconComponentId}`);
+        console.warn(`⚠️ extractor를 찾을 수 없음: ${iconComponentId}`);
         return undefined;
     }
 
@@ -104,7 +104,6 @@ export async function fetchIconName(
             const componentInfo = (extractor as any).componentInfo.get(iconComponentId);
             const iconName = componentInfo?.name || componentInfo?.description || componentInfo?.key;
             if (iconName) {
-                console.log(`✅ [icon-extractor] componentInfo에서 아이콘 이름: ${iconName}`);
                 return iconName;
             }
         }
@@ -112,7 +111,6 @@ export async function fetchIconName(
         // 2. Figma API로 조회
         const fileKey = (extractor as any).fileKey || (extractor as any)._fileKey;
         if (!fileKey || !(extractor as any).client) {
-            console.warn(`⚠️ fileKey 또는 client를 찾을 수 없음: ${iconComponentId}`);
             return undefined;
         }
 
@@ -124,14 +122,6 @@ export async function fetchIconName(
         if (iconNodesResponse.nodes && iconNodesResponse.nodes[iconComponentId]) {
             const iconNode = iconNodesResponse.nodes[iconComponentId].document;
             let iconName = iconNode.name;
-
-            console.log(`🔍 [icon-extractor] 아이콘 노드 이름: ${iconName}`);
-            console.log(`🔍 [icon-extractor] 아이콘 노드 구조:`, {
-                name: iconNode.name,
-                type: iconNode.type,
-                children: iconNode.children?.map((c: any) => ({ name: c.name, type: c.type })),
-                childrenCount: iconNode.children?.length
-            });
 
             // 이름이 properties 형태이면 실제 아이콘 이름 추출
             if (iconName.includes('Size=') || iconName.includes('Type=') || iconName.includes('=')) {
@@ -163,7 +153,6 @@ export async function fetchIconName(
                     
                     if (childIcon) {
                         iconName = childIcon.name;
-                        console.log(`✅ [icon-extractor] 실제 아이콘 이름: ${iconName}`);
                     }
                 }
             }
@@ -171,7 +160,7 @@ export async function fetchIconName(
             return iconName;
         }
     } catch (error) {
-        console.warn(`⚠️ 아이콘 정보 조회 실패: ${error}`);
+        // 아이콘 정보 조회 실패 (무음)
     }
 
     return undefined;
@@ -196,7 +185,7 @@ export async function fetchIconNames(
     try {
         const fileKey = (extractor as any).fileKey || (extractor as any)._fileKey;
         if (!fileKey || !(extractor as any).client) {
-            console.warn(`⚠️ fileKey 또는 client를 찾을 수 없음`);
+            console.warn(`⚠️ fileKey 또는 client 정보가 없습니다.`);
             return iconNamesMap;
         }
 
@@ -209,8 +198,6 @@ export async function fetchIconNames(
             for (const [nodeId, nodeData] of Object.entries(iconNodesResponse.nodes)) {
                 const iconNode = (nodeData as any).document;
                 let iconName = iconNode.name;
-
-                console.log(`🔍 [icon-extractor] 아이콘 노드 이름: ${iconName}`, iconNode);
 
                 // 이름이 properties 형태이면 실제 아이콘 이름 추출
                 if (iconName.includes('Size=') || iconName.includes('Type=') || iconName.includes('=')) {
@@ -242,17 +229,15 @@ export async function fetchIconNames(
                         
                         if (childIcon) {
                             iconName = childIcon.name;
-                            console.log(`✅ [icon-extractor] 실제 아이콘 이름: ${iconName}`);
                         }
                     }
                 }
 
                 iconNamesMap.set(nodeId, iconName);
-                console.log(`🎨 [icon-extractor] 아이콘 매핑: ${nodeId} → ${iconName}`);
             }
         }
     } catch (error) {
-        console.warn(`⚠️ 아이콘 노드 조회 실패: ${error}`);
+        // 아이콘 노드 조회 실패 (무음)
     }
 
     return iconNamesMap;
@@ -314,13 +299,11 @@ export async function extractIconsForCardHeader(
         );
         
         if (iconButton && iconButton.children) {
-            console.log(`🔍 [CardHeader] IconButton 자식:`, iconButton.children.map((c: any) => ({ name: c.name, type: c.type, componentId: (c as any).componentId })));
             
             const iconChild = iconButton.children.find((child: any) => 
                 child.type === 'INSTANCE' && child.name.includes('Icon')
             );
             
-            console.log(`🔍 [CardHeader] IconButton에서 Icon 인스턴스:`, iconChild ? { name: iconChild.name, type: iconChild.type, componentId: (iconChild as any).componentId } : '없음');
             
             if (iconChild && (iconChild as any).componentId) {
                 const iconComponentId = (iconChild as any).componentId;
@@ -328,7 +311,6 @@ export async function extractIconsForCardHeader(
                 
                 // 1. 먼저 인스턴스 자체의 이름 확인
                 let iconName = (iconChild as any).name?.replace(/<|>/g, '');
-                console.log(`🔍 [CardHeader] IconButton 자식 이름: ${iconName}`);
                 
                 // 2. 이름이 빈 값이거나 'Icon'만 있으면 extractor의 componentInfo에서 조회
                 if (!iconName || iconName === 'Icon') {
@@ -336,23 +318,19 @@ export async function extractIconsForCardHeader(
                     if ((extractor as any).componentInfo && (extractor as any).componentInfo.has(iconComponentId)) {
                         const componentInfo = (extractor as any).componentInfo.get(iconComponentId);
                         iconName = componentInfo?.name || componentInfo?.description || componentInfo?.key;
-                        console.log(`✅ [CardHeader] componentInfo에서 아이콘 이름: ${iconName}`);
                     }
                     
                     // 여전히 없으면 fetchIconName으로 조회 (fallback)
                     if (!iconName || iconName === 'Icon') {
-                        console.log(`🔍 [CardHeader] fetchIconName 호출: ${iconComponentId}`);
                         const fetchedName = await fetchIconName(iconComponentId, extractor);
                         if (fetchedName) {
                             iconName = fetchedName;
-                            console.log(`✅ [CardHeader] fetchIconName 결과: ${iconName}`);
                         }
                     }
                 }
                 
                 if (iconName && iconName !== 'Icon') {
                     result.actionIconName = iconName;
-                    console.log(`✅ [CardHeader] 최종 아이콘 이름: ${iconName}`);
                 }
             }
         }

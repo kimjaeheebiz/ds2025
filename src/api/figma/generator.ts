@@ -295,18 +295,33 @@ ${typographyStyles}
             // 매핑에서 excludeFromSx 확인
             const excludeList = mapping?.excludeFromSx || [];
 
-        // width는 hug 또는 fill 설정이 아닌 경우에만 추가 (excludeFromSx에 있으면 제외)
-        if (!excludeList.includes('width') && properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
-            sxProps.push(`width: '${properties.width}px'`);
+        // width/height 처리
+        // - 일반 규칙: hug/fill은 제외
+        // - Avatar는 hug여도 절대 크기를 사용하여 렌더 크기를 보장
+        const isAvatar = mapping?.muiName === 'Avatar';
+        const absW = (properties as any).absoluteWidth;
+        const absH = (properties as any).absoluteHeight;
+        if (!excludeList.includes('width')) {
+            if (properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
+                sxProps.push(`width: '${properties.width}px'`);
+            } else if (isAvatar && typeof absW === 'number') {
+                sxProps.push(`width: '${absW}px'`);
+            }
         }
-
-        // height는 hug 또는 fill 설정이 아닌 경우에만 추가 (excludeFromSx에 있으면 제외)
-        if (!excludeList.includes('height') && properties.height && properties.height !== 'fill' && properties.height !== 'hug') {
-            sxProps.push(`height: '${properties.height}px'`);
+        if (!excludeList.includes('height')) {
+            if (properties.height && properties.height !== 'fill' && properties.height !== 'hug') {
+                sxProps.push(`height: '${properties.height}px'`);
+            } else if (isAvatar && typeof absH === 'number') {
+                sxProps.push(`height: '${absH}px'`);
+            }
         }
             if (componentType !== 'button' && !excludeList.includes('backgroundColor')) {
                 // 색상 속성 처리 (스타일 이름 우선, 텍스트는 color, 배경은 backgroundColor)
-                if (properties.colorStyle) {
+                const isAvatar = mapping?.muiName === 'Avatar';
+                const avatarColor = (properties as any).__avatarColorStyle;
+                if (isAvatar && avatarColor) {
+                    sxProps.push(`backgroundColor: '${avatarColor}'`);
+                } else if (properties.colorStyle) {
                     // properties.colorStyle은 이미 variable-mapping을 통해 MUI 테마 경로로 변환됨 (예: "primary.light")
                     // 따라서 그대로 사용하면 됨
                     if (componentType === 'typography') {
@@ -443,23 +458,14 @@ ${typographyStyles}
                             
                             const muiIconName = getMuiIconName(iconComponentId, iconName as string);
                             
-                            // 매핑된 아이콘 사용
+                            // 매핑된 아이콘 사용 (null이면 아이콘 생성하지 않음)
                             if (muiIconName) {
                                 props.push(`${propName}={<${muiIconName} />}`);
-                            } else {
-                                // 매핑되지 않은 경우만 기본 아이콘 사용
-                                const defaultIcon = propName === 'startIcon' ? 'Add' : 'Settings';
-                                props.push(`${propName}={<${defaultIcon} />}`);
                             }
+                            // 매핑 실패 시 아이콘 생성하지 않음
                         } else if (value === true) {
-                            // 아이콘 ID가 없으면 기본 아이콘 사용
-                            if (propName === 'startIcon') {
-                                props.push(`${propName}={<Add />}`);
-                            } else if (propName === 'endIcon') {
-                                props.push(`${propName}={<Settings />}`);
-                            } else {
-                                props.push(`${propName}={<Icon />}`);
-                            }
+                            // 아이콘 ID가 없으면 아이콘 생성하지 않음
+                            // value가 true지만 아이콘 ID가 없으면 아무것도 추가하지 않음
                         }
                     }
                 }

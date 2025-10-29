@@ -83,7 +83,6 @@ export class FigmaDesignExtractor {
      * @param fileKey 피그마 파일 키
      */
     private async loadVariableInfo(fileKey: string): Promise<void> {
-        console.log('🔍 변수 정보 로드 시작 - 1차: Variables API 시도');
         try {
             // 1차: Variables API로 실제 변수 정보 가져오기
             const variablesData = await this.client.getFileVariables(fileKey);
@@ -92,16 +91,13 @@ export class FigmaDesignExtractor {
                 for (const [variableId, variable] of Object.entries(variablesData.meta.variables)) {
                     this.variableInfo.set(variableId, variable);
                 }
-                console.log(`✅ Variables API로 ${this.variableInfo.size}개 변수 로드 완료`);
+                console.log(`✅ 변수 로드 완료: ${this.variableInfo.size}개`);
                 return;
-            } else {
-                console.log('⚠️ Variables API에서 변수 정보 없음 - fallback 진행');
             }
         } catch (error) {
-            console.warn('⚠️ Variables API 실패:', error);
+            console.warn('⚠️ Variables API 실패');
         }
 
-        console.log('🔍 변수 정보 로드 - 2차: 파일 메타데이터에서 변수 추출');
         // 2차: 파일 메타데이터에서 실제 변수 정보 추출
         try {
             const fileData = await this.client.getFile(fileKey);
@@ -109,17 +105,14 @@ export class FigmaDesignExtractor {
                 this.extractRealVariablesFromDocument(fileData.document);
             }
         } catch (error) {
-            console.warn('⚠️ 파일에서 변수 추출 실패:', error);
+            console.warn('⚠️ 파일에서 변수 추출 실패');
         }
 
-        console.log('🔍 변수 정보 로드 - 3차: 스타일 정보에서 변수 추출');
         // 3차: 스타일 정보에서 변수 정보 추출
         try {
-            console.log('🔍 3차: 스타일 정보에서 변수 정보 추출 시작');
             await this.extractVariablesFromStyles();
-            console.log(`✅ 스타일 정보 추출 완료: ${this.variableInfo.size}개 변수`);
         } catch (error) {
-            console.warn('⚠️ 스타일에서 변수 추출 실패:', error);
+            console.warn('⚠️ 스타일에서 변수 추출 실패');
         }
     }
 
@@ -143,7 +136,6 @@ export class FigmaDesignExtractor {
                         const realVariableName = this.extractRealVariableNameFromNode(node);
                         if (realVariableName) {
                             this.variableInfo.set(variableId, { name: realVariableName });
-                            console.log(`🔍 실제 변수 발견: ${variableId} → ${realVariableName}`);
                         }
                     }
                 }
@@ -157,7 +149,7 @@ export class FigmaDesignExtractor {
 
         extractFromNode(document);
         
-        console.log(`✅ 문서에서 ${this.variableInfo.size}개 실제 변수 추출 완료`);
+        // 변수 추출 완료 (무음)
     }
 
     /**
@@ -165,24 +157,18 @@ export class FigmaDesignExtractor {
      */
     private async extractVariablesFromStyles(): Promise<void> {
         try {
-            console.log(`🔍 스타일 정보 분석 시작: ${this.styleInfo.size}개 스타일`);
-            
             for (const [styleId, style] of this.styleInfo.entries()) {
                 const styleObj = style as { name?: string };
-                console.log(`🔍 스타일 분석: ${styleId} → ${styleObj.name}`);
                 
                 if (styleObj.name) {
-                    // 스타일 이름에서 변수 정보 추출
                     const variableName = this.parseStyleNameToVariable(styleObj.name);
                     if (variableName) {
-                        // 스타일 ID를 변수 ID로 사용 (근사치)
                         this.variableInfo.set(`style_${styleId}`, { name: variableName });
-                        console.log(`✅ 스타일에서 변수 추출: ${styleObj.name} → ${variableName}`);
                     }
                 }
             }
         } catch (error) {
-            console.warn('⚠️ 스타일에서 변수 추출 실패:', error);
+            console.warn('⚠️ 스타일에서 변수 추출 실패');
         }
     }
 
@@ -230,7 +216,6 @@ export class FigmaDesignExtractor {
      * @returns 변수명
      */
     private parseStyleNameToVariable(name: string): string | null {
-        console.log(`🔍 스타일 이름 파싱: "${name}"`);
         
         // 피그마 스타일 이름 패턴 분석 (진실 소스만)
         const patterns = [
@@ -245,20 +230,15 @@ export class FigmaDesignExtractor {
             const match = name.match(pattern);
             if (match) {
                 const [, group, tone] = match;
-                const variableName = `${group.toLowerCase()}/${tone.toLowerCase()}`;
-                console.log(`✅ 패턴 매칭: "${name}" → "${variableName}"`);
-                return variableName;
+                return `${group.toLowerCase()}/${tone.toLowerCase()}`;
             }
         }
 
         // 특별한 케이스: warning/light 같은 직접적인 변수명
         if (name.includes('/') && name.split('/').length === 2) {
-            const variableName = name.toLowerCase();
-            console.log(`✅ 직접 변수명: "${name}" → "${variableName}"`);
-            return variableName;
+            return name.toLowerCase();
         }
 
-        console.log(`❌ 패턴 매칭 실패: "${name}"`);
         return null;
     }
 
@@ -613,6 +593,10 @@ export class FigmaDesignExtractor {
      * @returns 컴포넌트 디자인 설정
      */
     private async extractComponentDesign(node: FigmaNode): Promise<ComponentDesignConfig | null> {
+        // 숨김 노드는 완전히 제외 (추출 및 하위 조회 모두 스킵)
+        if ((node as any)?.visible === false) {
+            return null;
+        }
         // 컴포넌트 타입 결정
         const componentType = this.determineComponentType(node);
         if (!componentType) return null;
@@ -631,7 +615,6 @@ export class FigmaDesignExtractor {
         const isLayout = componentType === 'layout';
             
         if ((isLayout || isCardFamily) && node.children) {
-            console.log(`🔍 [${componentType}] Extracting children for "${node.name}" (${node.children.length} children)`);
             
             // ✅ 매핑에서 extractChildren이 있는지 확인
             const mapping = findMappingByType(componentType);
@@ -644,26 +627,24 @@ export class FigmaDesignExtractor {
             if (useCustomExtractChildren && (mapping?.extractChildren || figmaNameMapping?.extractChildren)) {
                 // Card, CardHeader 등은 커스텀 추출 로직 사용
                 const customExtractFunction = figmaNameMapping?.extractChildren || mapping?.extractChildren;
-                if (!customExtractFunction) {
-                    console.log(`⚠️ [${componentType}] No extractChildren function found`);
-                } else {
-                        const customChildren = await customExtractFunction(node);
-                    console.log(`✅ [${componentType}] Custom extractChildren found: ${customChildren.length} children`);
+                if (customExtractFunction) {
+                    const customChildren = await customExtractFunction(node);
                     
                     // customChildren을 직접 추출하여 children으로 처리
                     const extractedChildren: ComponentDesignConfig[] = [];
                     for (const customChild of customChildren) {
-                        console.log(`🔍 [${componentType}] Extracting custom child: "${customChild.name}"`);
+                        // 숨김 레이어는 제외
+                        if ((customChild as any)?.visible === false) {
+                            continue;
+                        }
                         const childComponent = await this.extractComponentDesign(customChild);
                         if (childComponent) {
                             extractedChildren.push(childComponent);
-                            console.log(`✅ [${componentType}] Custom child extracted: "${customChild.name}" → ${childComponent.componentType} (children: ${childComponent.children?.length || 0})`);
                         }
                     }
                     
                     if (extractedChildren.length > 0) {
                         component.children = extractedChildren;
-                        console.log(`✅ [${componentType}] Total ${extractedChildren.length} children extracted for "${node.name}"`);
                         return component;
                     }
                 }
@@ -672,28 +653,23 @@ export class FigmaDesignExtractor {
             // 피그마 인스턴스명 기반으로 자식 처리
             const children: ComponentDesignConfig[] = [];
             for (const child of node.children) {
-                console.log(`🔍 [${componentType}] Processing child: "${child.name}" (type: ${child.type}, id: ${child.id})`);
-                
+                // 숨김 레이어는 제외
+                if ((child as any)?.visible === false) {
+                    continue;
+                }
                 // Instance Slot은 제외
                 if (child.name.includes('Instance Slot') || child.name.includes('_Library / Instance Slot')) {
-                    console.log(`⏭️ [${componentType}] Skipping "Instance Slot" node: "${child.name}"`);
                     continue;
                 }
                 
-                // 모든 자식 노드 처리 (피그마 인스턴스명 기반)
+                // 모든 자식 노드 처리
                 const childComponent = await this.extractComponentDesign(child);
                 if (childComponent) {
                     children.push(childComponent);
-                    console.log(`✅ [${componentType}] Child extracted: "${child.name}" → ${childComponent.componentType}`);
-                } else {
-                    console.log(`⚠️ [${componentType}] Could not extract child "${child.name}" (type: ${child.type})`);
                 }
             }
             if (children.length > 0) {
                 component.children = children;
-                console.log(`✅ [${componentType}] Total ${children.length} children extracted for "${node.name}"`);
-            } else {
-                console.log(`⚠️ [${componentType}] No children extracted for "${node.name}"`);
             }
         }
 
@@ -724,8 +700,6 @@ export class FigmaDesignExtractor {
                 const componentInfo = this.componentInfo.get(componentId)!;
                 const componentName = componentInfo.name || (componentInfo as any).description || (componentInfo as any).key;
                 
-                console.log(`🔍 INSTANCE componentId ${componentId} maps to name: ${componentName}`);
-                
                 // 실제 컴포넌트 이름으로 매핑 찾기
                 const actualMappingKey = findMappingKeyByFigmaName(componentName);
                 if (actualMappingKey) {
@@ -735,79 +709,61 @@ export class FigmaDesignExtractor {
             
             // children을 확인하여 내부 구조로 타입 판단
             if (node.children && node.children.length > 0) {
-                console.log(`🔍 INSTANCE children types:`, node.children.map((c: any) => `${c.type}(name: ${c.name})`).join(', '));
-                
-                // 자식들의 구조를 더 자세히 분석
+                // 자식들의 구조 분석
                 const textChildren = node.children.filter(c => c.type === 'TEXT');
                 const vectorChildren = node.children.filter(c => c.type === 'VECTOR');
                 const compChildren = node.children.filter(c => c.type === 'COMPONENT');
                 const frameChildren = node.children.filter(c => c.type === 'FRAME');
                 
-                console.log(`🔍 INSTANCE analysis: ${textChildren.length} text, ${vectorChildren.length} vectors, ${compChildren.length} components, ${frameChildren.length} frames`);
-                
-                // 각 child의 매핑을 먼저 확인 (가장 정확한 방법)
+                // 각 child의 매핑을 먼저 확인
                 for (const child of node.children) {
                     const childMappingKey = findMappingKeyByFigmaName(child.name);
                     if (childMappingKey) {
                         const childType = this.categorizeComponentType(childMappingKey);
                         if (childType && childType !== 'layout') {
-                            console.log(`✅ INSTANCE → ${childType} (mapping found: ${child.name})`);
                             return childType;
                         }
                     }
                     
-                    // TYPE으로 직접 판단
                     if (child.type === 'TEXT' && child.name.toLowerCase().includes('button')) {
-                        console.log(`✅ INSTANCE → Button (text node with 'button' in name)`);
                         return 'button';
                     }
                 }
                 
-                // 노드 이름으로 판단 (가장 신뢰할 수 있는 방법)
+                // 노드 이름으로 판단
                 const nameLower = node.name.toLowerCase();
                 if (nameLower.includes('button') || nameLower.includes('버튼')) {
-                    console.log(`✅ INSTANCE → button (name contains 'button')`);
                     return 'button';
                 }
                 if (nameLower.includes('typography') || nameLower.includes('text') || nameLower.includes('텍스트')) {
-                    console.log(`✅ INSTANCE → typography (name contains 'typography' or 'text')`);
                     return 'typography';
                 }
                 if (nameLower.includes('icon')) {
-                    console.log(`✅ INSTANCE → button (name contains 'icon')`);
                     return 'button';
                 }
                 if (nameLower.includes('card')) {
-                    console.log(`✅ INSTANCE → card (name contains 'card')`);
                     return 'card';
                 }
                 
-                // 구조 기반 판단 (간소화)
-                // 텍스트만 있고 FRAME/아이콘이 없는 경우 Typography
+                // 구조 기반 판단
                 if (textChildren.length > 0 && frameChildren.length === 0 && vectorChildren.length === 0 && compChildren.length === 0) {
-                    console.log(`✅ INSTANCE → typography (text only structure)`);
                     return 'typography';
                 }
                 
-                // FRAME이 있는 경우 layout
                 if (frameChildren.length > 0) {
-                    console.log(`✅ INSTANCE → layout (has frames)`);
                     return 'layout';
                 }
             } else {
-                // children이 없는 경우 - componentId로 타입 결정
+                // children이 없는 경우
                 if (this.componentInfo.has(componentId)) {
                     const componentInfo = this.componentInfo.get(componentId)!;
                     const actualComponentName = componentInfo.name || componentInfo.description || (componentInfo as any).key;
                     
-                    // 실제 컴포넌트 이름으로 매핑 찾기
                     const actualMappingKey = findMappingKeyByFigmaName(actualComponentName);
                     if (actualMappingKey) {
-                        console.log(`✅ INSTANCE → ${this.categorizeComponentType(actualMappingKey)} (from componentId)`);
                         return this.categorizeComponentType(actualMappingKey);
                     }
                     
-                    // 이름으로 직접 판단
                     const componentNameLower = actualComponentName.toLowerCase();
                     if (componentNameLower.includes('button')) return 'button';
                     if (componentNameLower.includes('typography') || componentNameLower.includes('text')) return 'typography';
@@ -816,7 +772,6 @@ export class FigmaDesignExtractor {
                     if (componentNameLower.includes('chip')) return 'chip';
                     if (componentNameLower.includes('avatar')) return 'dataDisplay';
                     
-                    console.log(`⚠️ INSTANCE componentName "${actualComponentName}" not mapped, defaulting to layout`);
                     return 'layout';
                 }
             }
@@ -1095,18 +1050,12 @@ export class FigmaDesignExtractor {
         
         // ✅ 커스텀 속성 추출 로직이 있으면 사용 (Card의 Paper 속성 추출 등)
         if (mapping?.extractProperties) {
-            console.log(`🔍 [${componentType}] 커스텀 속성 추출 시작`);
             const customProperties = await mapping.extractProperties(node, this);
             Object.assign(properties, customProperties);
-            console.log(`✅ [${componentType}] 커스텀 속성 추출 완료:`, Object.keys(customProperties));
         }
         
         if (mapping && mapping.muiProps) {
-            console.log(`🔍 [${componentType}] 컴포넌트 속성 추출 시작:`, {
-                componentName: node.name,
-                componentType,
-                componentProperties: (node as any).componentProperties,
-            });
+            // 컴포넌트 속성 추출
             
             // 모든 MUI Props 추출
             for (const [propName, propDef] of Object.entries(mapping.muiProps)) {
@@ -1146,16 +1095,12 @@ export class FigmaDesignExtractor {
                         const normalizedValue = typeof value === 'string' ? value.toLowerCase() : value;
                         const normalizedDefault = typeof propDef.default === 'string' ? propDef.default.toLowerCase() : propDef.default;
                         if (normalizedValue === normalizedDefault) {
-                            console.log(`⏭️ [${componentType}] ${propName}: 기본값(${propDef.default}) 제외`);
                             continue;
                         }
                     }
                     
                     // properties에 값 저장 (string은 toLowerCase())
                     properties[propName] = typeof value === 'string' ? value.toLowerCase() : value;
-                    console.log(`✅ [${componentType}] ${propName}: ${value}`);
-                } else {
-                    console.log(`❌ [${componentType}] ${propName}: 추출 실패`);
                 }
             }
             
@@ -1217,7 +1162,7 @@ export class FigmaDesignExtractor {
                 }
             }
             
-            console.log(`📦 [${componentType}] MUI Props 추출 완료:`, properties);
+            // MUI Props 추출 완료 (무음)
         }
 
         // 크기 정보 (채우기 및 hug 설정 감지)
@@ -1231,6 +1176,10 @@ export class FigmaDesignExtractor {
                 node.constraints?.horizontal === 'LEFT_RIGHT' || node.constraints?.horizontal === 'CENTER';
             const hasFillHeight =
                 node.constraints?.vertical === 'TOP_BOTTOM' || node.constraints?.vertical === 'CENTER';
+
+            // 항상 절대 크기도 함께 저장 (특정 컴포넌트에서 hug여도 고정 크기 사용 필요)
+            (properties as any).absoluteWidth = node.absoluteBoundingBox.width;
+            (properties as any).absoluteHeight = node.absoluteBoundingBox.height;
 
             // width 설정
             if (isHugWidth) {
@@ -1256,6 +1205,11 @@ export class FigmaDesignExtractor {
             const colorInfo = await this.extractColorWithStyle(node.fills[0]);
             if (colorInfo.styleName) {
                 properties.colorStyle = colorInfo.styleName;
+                // Avatar 인스턴스의 배경 컬러는 별도로 고정 저장 (텍스트 컬러 등에 의해 덮어쓰기 방지)
+                const nodeNameLower = ((node as any).name || '').toLowerCase();
+                if (node.type === 'INSTANCE' && nodeNameLower.includes('avatar')) {
+                    (properties as any).__avatarColorStyle = colorInfo.styleName;
+                }
                 } else {
                     // GPT-5 권장: boundVariables에서 Variable ID 추출
                     const fillObj = node.fills[0] as { boundVariables?: { color?: { id: string } } };
@@ -1265,6 +1219,10 @@ export class FigmaDesignExtractor {
                         const muiColorPath = await this.extractThemeTokenFromVariableId(variableId);
                         if (muiColorPath) {
                             properties.colorStyle = muiColorPath;
+                            const nodeNameLower2 = ((node as any).name || '').toLowerCase();
+                            if (node.type === 'INSTANCE' && nodeNameLower2.includes('avatar')) {
+                                (properties as any).__avatarColorStyle = muiColorPath;
+                            }
                             console.log(`🎨 GPT-5 방식: Variable ID ${variableId} → ${muiColorPath}`);
                         } else {
                             // 진실 소스가 없으면 HEX 색상 사용 (추측 금지)
@@ -1273,6 +1231,31 @@ export class FigmaDesignExtractor {
                         }
                     }
                 }
+        } else if ((node as any).children && (node as any).children.length > 0) {
+            // 일부 컴포넌트(예: Avatar)는 실제 배경 컬러가 자식 노드에 있을 수 있음
+            // 레이아웃 컨테이너(예: Frame/Stack/Box 등)에는 적용하지 않기 위해 Avatar로 한정
+            const nodeNameLower = ((node as any).name || '').toLowerCase();
+            const allowChildFillFallback = node.type === 'INSTANCE' && nodeNameLower.includes('avatar');
+            if (allowChildFillFallback) {
+                const stack: any[] = [...(node as any).children];
+                while (stack.length > 0 && !properties.colorStyle && !properties.backgroundColor) {
+                    const cur = stack.shift();
+                    // 숨김 노드는 제외
+                    if (cur?.visible === false) {
+                        continue;
+                    }
+                    if (cur?.fills && cur.fills.length > 0) {
+                        const colorInfo = await this.extractColorWithStyle(cur.fills[0]);
+                        if (colorInfo.styleName) {
+                            properties.colorStyle = colorInfo.styleName;
+                            break;
+                        }
+                    }
+                    if (cur?.children && cur.children.length > 0) {
+                        stack.push(...cur.children);
+                    }
+                }
+            }
         }
 
         // 테두리 정보
@@ -1298,7 +1281,7 @@ export class FigmaDesignExtractor {
                 properties.typography = this.extractTypographyConfig(node.style, null, node);
                 // 텍스트 스타일에서 컬러 정보 추출
                 const textColorInfo = this.extractTextColorFromStyle(node.style);
-                if (textColorInfo.styleName) {
+                if (textColorInfo.styleName && !properties.colorStyle) {
                     properties.colorStyle = textColorInfo.styleName;
                 }
             }
@@ -1421,7 +1404,6 @@ export class FigmaDesignExtractor {
                 const prop = propData as any;
                 if (prop && typeof prop === 'object' && prop.type === 'INSTANCE_SWAP') {
                     properties[key] = prop;
-                    console.log(`🔍 [${componentType}] INSTANCE_SWAP property "${key}": ${prop.value}`);
                 }
             }
 

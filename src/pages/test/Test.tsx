@@ -12,7 +12,7 @@ import {
     CardActions,
     CardMedia,
 } from '@mui/material';
-import { Settings, ChevronRight, Add } from '@mui/icons-material';
+import { SettingsOutlined, ChevronRight, Settings, Person } from '@mui/icons-material';
 
 // Import page-specific types
 import { TestPageState } from './Test.types';
@@ -33,30 +33,14 @@ export const Test: React.FC = () => {
                 }}
             >
                 <Typography
-                    variant="body2"
+                    variant="subtitle1"
                     sx={{
-                        color: 'success.light',
+                        color: 'warning.light',
                     }}
                 >
                     테스트용 노드 &lt;Typography&gt; 인스턴스(904:1013),
                     <br />
                     하위 텍스트(I904:1013;6605:52865)
-                </Typography>
-                <Typography
-                    variant="h5"
-                    sx={{
-                        color: 'primary.main',
-                    }}
-                >
-                    텍스트 테스트 1
-                </Typography>
-                <Typography
-                    variant="subtitle2"
-                    sx={{
-                        color: 'warning.light',
-                    }}
-                >
-                    텍스트 테스트 2
                 </Typography>
                 <Stack
                     direction="row"
@@ -66,13 +50,32 @@ export const Test: React.FC = () => {
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar>OP</Avatar>
-                    <Avatar></Avatar>
-                    <IconButton size="medium" color="default"></IconButton>
+                    <Avatar
+                        variant="rounded"
+                        sx={{
+                            width: '32px',
+                            height: '32px',
+                            backgroundColor: 'info.light',
+                        }}
+                    >
+                        BB
+                    </Avatar>
+                    <Avatar
+                        sx={{
+                            width: '40px',
+                            height: '40px',
+                            backgroundColor: 'warning.light',
+                        }}
+                    >
+                        <SettingsOutlined />
+                    </Avatar>
+                    <IconButton size="medium" color="default">
+                        <SettingsOutlined />
+                    </IconButton>
                     <Button
                         variant="contained"
                         color="secondary"
-                        startIcon={<Settings />}
+                        startIcon={<SettingsOutlined />}
                         endIcon={<ChevronRight />}
                     >
                         버튼명버튼명
@@ -80,7 +83,12 @@ export const Test: React.FC = () => {
                     <Button variant="outlined" size="small" color="info">
                         버튼명
                         <br />
+                        줄바꿈 테스트
+                    </Button>
+                    <Button variant="outlined" size="small" color="info">
                         버튼명
+                        <br />
+                        줄바꿈 테스트
                     </Button>
                     <Typography
                         variant="subtitle2"
@@ -90,7 +98,7 @@ export const Test: React.FC = () => {
                     >
                         Typography
                         <br />
-                        Typography
+                        줄바꿈 테스트입니다.
                     </Typography>
                 </Stack>
                 <Stack
@@ -107,7 +115,7 @@ export const Test: React.FC = () => {
                             color: 'text.disabled',
                         }}
                     >
-                        Typography
+                        Stack &gt; Typography
                     </Typography>
                     <Button
                         variant="outlined"
@@ -124,11 +132,6 @@ export const Test: React.FC = () => {
                         avatar={<Avatar aria-label="recipe">R</Avatar>}
                         title="카드 제목입니다."
                         subheader="카드 서브 제목입니다."
-                        action={
-                            <IconButton aria-label="settings">
-                                <Add />
-                            </IconButton>
-                        }
                     />
                     <CardContent>
                         <Typography

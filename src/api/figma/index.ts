@@ -34,7 +34,7 @@ export class FigmaIntegrationService {
      */
     async generateSinglePage(pageName: string): Promise<void> {
         try {
-            console.log(`🚀 Starting Figma integration for ${pageName}...`);
+            console.log(`🚀 ${pageName} 페이지 Figma 통합 시작 중...`);
 
             // 플랫폼 파일에서 특정 페이지만 추출
             const platformFileKey = FIGMA_CONFIG.files.platform;
@@ -44,7 +44,7 @@ export class FigmaIntegrationService {
                 throw new Error(`Page node not found for: ${pageName}`);
             }
 
-            console.log(`📄 Extracting page design from Figma for ${pageName}...`);
+            console.log(`📄 Figma에서 ${pageName} 페이지 디자인 추출 중...`);
             const pageDesigns = await this.extractor.extractPageDesigns(platformFileKey, [pageNodeId]);
 
             if (pageDesigns.length === 0) {
@@ -54,9 +54,9 @@ export class FigmaIntegrationService {
             // 해당 페이지만 코드 생성
             await this.generateLayoutIntegratedPage(pageDesigns[0]);
 
-            console.log(`✅ Figma integration completed successfully for ${pageName}!`);
+            console.log(`✅ ${pageName} 페이지 Figma 통합 완료!`);
         } catch (error) {
-            console.error(`❌ Figma integration failed for ${pageName}:`, error);
+            console.error(`❌ ${pageName} 페이지 Figma 통합 실패:`, error);
             throw error;
         }
     }
@@ -66,13 +66,13 @@ export class FigmaIntegrationService {
      */
     async generateAllPages(): Promise<void> {
         try {
-            console.log('🚀 Starting Figma integration process...');
+            console.log('🚀 Figma 통합 프로세스 시작 중...');
 
             // 플랫폼 파일에서 페이지들 추출
             const platformFileKey = FIGMA_CONFIG.files.platform;
             const pageNodeIds = Object.values(FIGMA_CONFIG.pageNodes.pages);
 
-            console.log('📄 Extracting page designs from Figma...');
+            console.log('📄 Figma에서 페이지 디자인들 추출 중...');
             const pageDesigns = await this.extractor.extractPageDesigns(platformFileKey, pageNodeIds);
 
             // 각 페이지별로 코드 생성
@@ -80,9 +80,9 @@ export class FigmaIntegrationService {
                 await this.generateLayoutIntegratedPage(pageDesign);
             }
 
-            console.log('✅ Figma integration completed successfully!');
+            console.log('✅ Figma 통합 완료!');
         } catch (error) {
-            console.error('❌ Figma integration failed:', error);
+            console.error('❌ Figma 통합 실패:', error);
             throw error;
         }
     }
@@ -99,7 +99,7 @@ export class FigmaIntegrationService {
     ): Promise<void> {
         try {
             const { pageName } = pageDesign;
-            console.log(`📝 Generating layout-integrated content for ${pageName}...`);
+            console.log(`📝 ${pageName} 페이지 레이아웃 통합 콘텐츠 생성 중...`);
 
             // Figma 디자인을 페이지 콘텐츠로 변환
             const figmaContent: PageContentConfig = {
@@ -127,9 +127,9 @@ export class FigmaIntegrationService {
             // 디렉토리 생성 및 파일 저장
             await this.saveGeneratedFiles(contentPath, contentCode, typesPath, typeDefinitions);
 
-            console.log(`✅ Generated layout-integrated content for ${pageName} successfully`);
+            console.log(`✅ ${pageName} 페이지 레이아웃 통합 콘텐츠 생성 완료`);
         } catch (error) {
-            console.error(`❌ Failed to generate layout-integrated content for ${pageDesign.pageName}:`, error);
+            console.error(`❌ ${pageDesign.pageName} 페이지 레이아웃 통합 콘텐츠 생성 실패:`, error);
             throw error;
         }
     }
@@ -139,7 +139,7 @@ export class FigmaIntegrationService {
      */
     async extractLibraryComponents(): Promise<void> {
         try {
-            console.log('📚 Extracting library components...');
+            console.log('📚 라이브러리 컴포넌트 추출 중...');
 
             const libraryFileKey = FIGMA_CONFIG.files.library;
             const libraryNodeId = FIGMA_CONFIG.pageNodes.libraryComponents;
@@ -149,7 +149,7 @@ export class FigmaIntegrationService {
             const libraryNode = fileData.nodes[libraryNodeId]?.document;
 
             if (libraryNode && libraryNode.children) {
-                console.log(`Found ${libraryNode.children.length} library components`);
+                console.log(`📦 라이브러리 컴포넌트 ${libraryNode.children.length}개 발견`);
 
                 // 각 컴포넌트별로 처리
                 for (const componentNode of libraryNode.children) {
@@ -157,9 +157,9 @@ export class FigmaIntegrationService {
                 }
             }
 
-            console.log('✅ Library components extraction completed');
+            console.log('✅ 라이브러리 컴포넌트 추출 완료');
         } catch (error) {
-            console.error('❌ Library components extraction failed:', error);
+            console.error('❌ 라이브러리 컴포넌트 추출 실패:', error);
             throw error;
         }
     }
@@ -171,12 +171,12 @@ export class FigmaIntegrationService {
     private async processLibraryComponent(componentNode: FigmaNode & { name: string; id: string }): Promise<void> {
         try {
             const componentName = componentNode.name;
-            console.log(`🔧 Processing library component: ${componentName}`);
+            console.log(`🔧 라이브러리 컴포넌트 처리 중: ${componentName}`);
 
             // 컴포넌트 타입 결정
             const componentType = this.determineComponentType(componentName);
             if (!componentType) {
-                console.log(`⚠️  Unknown component type for: ${componentName}`);
+                console.log(`⚠️ 알 수 없는 컴포넌트 타입: ${componentName}`);
                 return;
             }
 
@@ -191,9 +191,9 @@ export class FigmaIntegrationService {
             const filePath = `src/components/generated/${fileName}.tsx`;
             await this.saveFile(filePath, componentCode);
 
-            console.log(`✅ Generated library component: ${componentName}`);
+            console.log(`✅ 라이브러리 컴포넌트 생성 완료: ${componentName}`);
         } catch (error) {
-            console.error(`❌ Failed to process library component ${componentNode.name}:`, error);
+            console.error(`❌ 라이브러리 컴포넌트 처리 실패: ${componentNode.name}`, error);
         }
     }
 
@@ -479,7 +479,7 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
      */
     async syncLayoutComponents(pageDesign: PageDesignConfig): Promise<void> {
         try {
-            console.log(`🔄 Syncing layout components for ${pageDesign.pageName}...`);
+            console.log(`🔄 ${pageDesign.pageName} 페이지 레이아웃 컴포넌트 동기화 중...`);
 
             // 레이아웃 컴포넌트 추출 (페이지 노드에서)
             const pageNode = await this.getPageNode(pageDesign.pageId);
@@ -492,9 +492,9 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
                 }
             }
 
-            console.log(`✅ Layout components synced successfully`);
+            console.log(`✅ 레이아웃 컴포넌트 동기화 완료`);
         } catch (error) {
-            console.error('Failed to sync layout components:', error);
+            console.error('레이아웃 컴포넌트 동기화 실패:', error);
             throw error;
         }
     }
@@ -525,13 +525,13 @@ export const ${pascalName}: React.FC<${pascalName}Props> = (props) => {
         const componentPath = this.getLayoutComponentPath(componentType);
 
         if (await this.fileSystem.fileExists(componentPath)) {
-            console.log(`📝 Updating existing ${componentType} component...`);
+            console.log(`📝 기존 ${componentType} 컴포넌트 업데이트 중...`);
 
             // 기존 컴포넌트 업데이트 (스타일만)
             const styleUpdates = this.generateStyleUpdates(componentDesign);
             await this.updateComponentStyles(componentPath, styleUpdates);
         } else {
-            console.log(`🆕 Creating new ${componentType} component...`);
+            console.log(`🆕 새 ${componentType} 컴포넌트 생성 중...`);
 
             // 새 컴포넌트 생성
             const componentCode = await this.generator.generatePageContent({

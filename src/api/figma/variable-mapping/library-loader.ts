@@ -32,7 +32,7 @@ export function loadLibraryVariableMappings(): Map<string, VariableMappingInfo> 
                     };
                     
                     mappings.set(variableId as string, mappingInfo);
-                    console.log(`📚 라이브러리 변수 매핑: ${variableId} → ${tokenPath}`);
+                    // console.log(`📚 라이브러리 변수 매핑: ${variableId} → ${tokenPath}`);
                 }
             }
         }
