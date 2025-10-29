@@ -184,7 +184,7 @@ export class FigmaIntegrationService {
             const properties = this.extractComponentProperties(componentNode);
 
             // 컴포넌트 코드 생성
-            const componentCode = this.generateLibraryComponentCode(componentName, componentType, properties);
+            const componentCode = await this.generateLibraryComponentCode(componentName, componentType, properties);
 
             // 파일 저장
             const fileName = this.toKebabCase(componentName);
@@ -246,13 +246,15 @@ export class FigmaIntegrationService {
      * @param properties 컴포넌트 속성
      * @returns 컴포넌트 코드
      */
-    private generateLibraryComponentCode(
+    private async generateLibraryComponentCode(
         componentName: string,
         componentType: string,
         properties: ComponentProperties,
-    ): string {
+    ): Promise<string> {
         const pascalName = this.toPascalCase(componentName);
-        const muiComponent = FIGMA_CONFIG.muiMapping[componentType] || 'Box';
+        const { findMappingByType } = await import('./component-mappings');
+        const mapping = findMappingByType(componentType);
+        const muiComponent = mapping?.muiName || 'Box';
 
         const sxProps = Object.entries(properties)
             .map(([key, value]) => {

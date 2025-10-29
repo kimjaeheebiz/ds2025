@@ -1,5 +1,7 @@
 import { FigmaAPIClient } from './client';
 import { FIGMA_CONFIG } from './config';
+import { findMappingByFigmaName, findMappingByType, findMappingKeyByFigmaName, COMPONENT_MAPPINGS } from './component-mappings';
+import { VariableMappingManager } from './variable-mapping';
 import { 
     FigmaNode, 
     FigmaComponent,
@@ -14,90 +16,65 @@ import {
 export class FigmaDesignExtractor {
     private client: FigmaAPIClient;
     private token: string; // 토큰 저장
+    private fileKey?: string; // 현재 작업 중인 파일 키
     private componentInfo: Map<string, FigmaComponent> = new Map(); // 컴포넌트 정보 캐시
     private styleInfo: Map<string, unknown> = new Map(); // 스타일 정보 캐시
     private variableInfo: Map<string, unknown> = new Map(); // 변수 정보 캐시
-    private tokenStudioColors: Map<string, string> = new Map();
-    private libraryVariableMappings: Map<string, string> = new Map(); // Variable ID → 변수명 매핑 // 토큰 스튜디오 색상 캐시
+    private variableMappingManager: VariableMappingManager; // 변수 매핑 매니저
 
     constructor(token: string) {
         this.client = new FigmaAPIClient(token);
         this.token = token; // 토큰 저장
-        this.loadTokenStudioColors(); // 토큰 스튜디오 색상 로드
-        this.loadLibraryVariableMappings(); // 라이브러리 변수 매핑 로드
+        this.variableMappingManager = new VariableMappingManager(token);
+        this.initializeAsync();
     }
 
     /**
-     * 토큰 스튜디오 색상 로드
+     * 특정 노드 가져오기 (swap된 컴포넌트용)
+     * @param nodeId 노드 ID
+     * @returns Figma 노드
      */
-    private loadTokenStudioColors(): void {
-        // 토큰 스튜디오에서 정의된 색상 토큰들
-        this.tokenStudioColors.set('text.primary', '#000000de');
-        this.tokenStudioColors.set('text.secondary', '#00000099');
-        this.tokenStudioColors.set('text.disabled', '#00000061');
+    private async getFileNodes(nodeId: string): Promise<FigmaNode | null> {
+        if (!this.fileKey) return null;
         
-        // 추가 색상 토큰들 (필요에 따라 확장)
-        this.tokenStudioColors.set('primary.main', '#1976d2');
-        this.tokenStudioColors.set('primary.light', '#42a5f5');
-        this.tokenStudioColors.set('primary.dark', '#1565c0');
-        
-        this.tokenStudioColors.set('secondary.main', '#dc004e');
-        this.tokenStudioColors.set('secondary.light', '#ff5983');
-        this.tokenStudioColors.set('secondary.dark', '#9a0036');
-        
-        this.tokenStudioColors.set('success.main', '#2e7d32');
-        this.tokenStudioColors.set('success.light', '#4caf50');
-        this.tokenStudioColors.set('success.dark', '#1b5e20');
-        
-        this.tokenStudioColors.set('info.main', '#0288d1');
-        this.tokenStudioColors.set('info.light', '#29b6f6');
-        this.tokenStudioColors.set('info.dark', '#01579b');
-        
-        this.tokenStudioColors.set('warning.main', '#ed6c02');
-        this.tokenStudioColors.set('warning.light', '#ff9800');
-        this.tokenStudioColors.set('warning.dark', '#e65100');
-        
-        this.tokenStudioColors.set('error.main', '#d32f2f');
-        this.tokenStudioColors.set('error.light', '#ef5350');
-        this.tokenStudioColors.set('error.dark', '#c62828');
-        
-        console.log(`✅ 토큰 스튜디오 색상 ${this.tokenStudioColors.size}개 로드 완료`);
-    }
-
-    /**
-     * 라이브러리 변수 매핑 로드 ($themes.json에서 Variable ID → 변수명 매핑)
-     */
-    private loadLibraryVariableMappings(): void {
         try {
-            // 하드코딩된 라이브러리 변수 매핑 (실제 $themes.json에서 추출한 값들)
-            const hardcodedMappings: Record<string, string> = {
-                // metadata-mode 1 테마의 변수들
-                'VariableID:099cac8012c9e93fec37659ac579d55e6c71a441/099cac8012c9e93fec37659ac579d55e6c71a441': 'color.red',
-                'VariableID:abe67bef22d093bc14b4d218946dcccb1ac0e962/abe67bef22d093bc14b4d218946dcccb1ac0e962': 'text',
-                'VariableID:805ae1d5a92abe125567a6befe97be58c2414b4c/805ae1d5a92abe125567a6befe97be58c2414b4c': 'n',
-                
-                // menu-menu 테마의 변수들
-                'VariableID:e166e023ba96fa8824448e98d54a6e1cc50f87df/e166e023ba96fa8824448e98d54a6e1cc50f87df': 'id.home',
-                'VariableID:dd26207594461475f9b3b9e7093f4ec3d8232e4f/dd26207594461475f9b3b9e7093f4ec3d8232e4f': 'id.project',
-                'VariableID:cd7e536bc5e29939aaabef28e95c34de7a4d97d6/cd7e536bc5e29939aaabef28e95c34de7a4d97d6': 'label.home',
-                'VariableID:46e3b9bb0a6525067bcadbbbef4b1b64326a742e/46e3b9bb0a6525067bcadbbbef4b1b64326a742e': 'label.project',
-                'VariableID:d54d3c3ae46a2480fee9491f88ea97947dc23198/d54d3c3ae46a2480fee9491f88ea97947dc23198': 'path.home',
-                'VariableID:e4ab0ccb733cbf74793f2b865d3e8c1ea117a9bf/e4ab0ccb733cbf74793f2b865d3e8c1ea117a9bf': 'path.project',
-                
-                // 추가 변수들 (실제 사용되는 Variable ID들)
-                'VariableID:3e610bb471e3cb29ac3fb442fe0fc3223a66b5c7/14026:28': 'primary.light', // 실제 테스트에서 사용되는 Variable ID
-                'VariableID:2d3212224e9d9d37b4023de86fea8d82303d3d08/1540:0': 'text.primary', // 실제 테스트에서 사용되는 Variable ID
-            };
-            
-            // 하드코딩된 매핑을 Map에 추가
-            Object.entries(hardcodedMappings).forEach(([variableId, variableName]) => {
-                this.libraryVariableMappings.set(variableId, variableName);
-                console.log(`📚 라이브러리 변수 매핑: ${variableId} → ${variableName}`);
-            });
-            
-            console.log(`✅ 라이브러리 변수 매핑 ${this.libraryVariableMappings.size}개 로드 완료`);
+            const response = await this.client.getFileNodes(this.fileKey, [nodeId]);
+            if (response.nodes && response.nodes[nodeId]) {
+                return response.nodes[nodeId].document;
+            }
         } catch (error) {
-            console.warn('⚠️ 라이브러리 변수 매핑 로드 실패:', error);
+            console.log(`⚠️ Failed to get node ${nodeId}: ${error}`);
+        }
+        return null;
+    }
+
+    /**
+     * 비동기 초기화 (변수 매핑 로드)
+     */
+    private async initializeAsync(): Promise<void> {
+        await this.loadVariableMappings(); // 변수 매핑 로드
+    }
+
+    /**
+     * 변수 매핑 로드 ($themes.json에서 자동 로드)
+     */
+    private async loadVariableMappings(): Promise<void> {
+        try {
+            // 라이브러리 파일 변수 로드 ($themes.json에서)
+            await this.variableMappingManager.loadFileMappings(
+                FIGMA_CONFIG.files.library,
+                'library'
+            );
+            
+            // 플랫폼 파일 변수 로드
+            await this.variableMappingManager.loadFileMappings(
+                FIGMA_CONFIG.files.platform,
+                'platform'
+            );
+            
+            console.log('✅ 변수 매핑 로드 완료');
+        } catch (error) {
+            console.warn('⚠️ 변수 매핑 로드 실패:', error);
         }
     }
 
@@ -387,6 +364,9 @@ export class FigmaDesignExtractor {
 
     async extractPageDesigns(fileKey: string, pageNodeIds: string[]): Promise<PageDesignConfig[]> {
         try {
+            // 파일 키 저장
+            this.fileKey = fileKey;
+            
             // 먼저 컴포넌트 정보와 스타일 정보 가져오기
             await Promise.all([
                 this.loadComponentInfo(fileKey),
@@ -645,35 +625,348 @@ export class FigmaDesignExtractor {
             variants: await this.extractComponentVariants(node),
         };
 
+        // layout, card 타입인 경우 자식 노드 추출
+        // Card는 커스텀 추출 로직 사용
+        const isCardFamily = componentType === 'card';
+        const isLayout = componentType === 'layout';
+            
+        if ((isLayout || isCardFamily) && node.children) {
+            console.log(`🔍 [${componentType}] Extracting children for "${node.name}" (${node.children.length} children)`);
+            
+            // ✅ 매핑에서 extractChildren이 있는지 확인
+            const mapping = findMappingByType(componentType);
+            const figmaNameMapping = findMappingByFigmaName(node.name);
+            const useCustomExtractChildren = (mapping?.extractChildren || figmaNameMapping?.extractChildren) && 
+                                             (node.name === '<Card>' || node.name === '<CardHeader>' || 
+                                              node.name === 'CardHeader' || node.name === 'CardContent' ||
+                                              node.name === 'CardActions' || node.name === 'CardMedia');
+            
+            if (useCustomExtractChildren && (mapping?.extractChildren || figmaNameMapping?.extractChildren)) {
+                // Card, CardHeader 등은 커스텀 추출 로직 사용
+                const customExtractFunction = figmaNameMapping?.extractChildren || mapping?.extractChildren;
+                if (!customExtractFunction) {
+                    console.log(`⚠️ [${componentType}] No extractChildren function found`);
+                } else {
+                        const customChildren = await customExtractFunction(node);
+                    console.log(`✅ [${componentType}] Custom extractChildren found: ${customChildren.length} children`);
+                    
+                    // customChildren을 직접 추출하여 children으로 처리
+                    const extractedChildren: ComponentDesignConfig[] = [];
+                    for (const customChild of customChildren) {
+                        console.log(`🔍 [${componentType}] Extracting custom child: "${customChild.name}"`);
+                        const childComponent = await this.extractComponentDesign(customChild);
+                        if (childComponent) {
+                            extractedChildren.push(childComponent);
+                            console.log(`✅ [${componentType}] Custom child extracted: "${customChild.name}" → ${childComponent.componentType} (children: ${childComponent.children?.length || 0})`);
+                        }
+                    }
+                    
+                    if (extractedChildren.length > 0) {
+                        component.children = extractedChildren;
+                        console.log(`✅ [${componentType}] Total ${extractedChildren.length} children extracted for "${node.name}"`);
+                        return component;
+                    }
+                }
+            }
+            
+            // 피그마 인스턴스명 기반으로 자식 처리
+            const children: ComponentDesignConfig[] = [];
+            for (const child of node.children) {
+                console.log(`🔍 [${componentType}] Processing child: "${child.name}" (type: ${child.type}, id: ${child.id})`);
+                
+                // Instance Slot은 제외
+                if (child.name.includes('Instance Slot') || child.name.includes('_Library / Instance Slot')) {
+                    console.log(`⏭️ [${componentType}] Skipping "Instance Slot" node: "${child.name}"`);
+                    continue;
+                }
+                
+                // 모든 자식 노드 처리 (피그마 인스턴스명 기반)
+                const childComponent = await this.extractComponentDesign(child);
+                if (childComponent) {
+                    children.push(childComponent);
+                    console.log(`✅ [${componentType}] Child extracted: "${child.name}" → ${childComponent.componentType}`);
+                } else {
+                    console.log(`⚠️ [${componentType}] Could not extract child "${child.name}" (type: ${child.type})`);
+                }
+            }
+            if (children.length > 0) {
+                component.children = children;
+                console.log(`✅ [${componentType}] Total ${children.length} children extracted for "${node.name}"`);
+            } else {
+                console.log(`⚠️ [${componentType}] No children extracted for "${node.name}"`);
+            }
+        }
+
         return component;
     }
 
     /**
-     * 컴포넌트 타입 결정 (설정 파일 기반)
+     * 컴포넌트 타입 결정 (새로운 매핑 시스템 사용)
      * @param node 피그마 노드
      * @returns 컴포넌트 타입
      */
     private determineComponentType(node: FigmaNode): ComponentDesignConfig['componentType'] | null {
         const name = node.name;
 
-        // 새로운 설정 구조 사용
-        // 컴포넌트 인스턴스 매칭
+        // 1. 새 매핑 시스템에서 MUI 컴포넌트 검색 (우선) - INSTANCE 타입도 처리
+        const mappingKey = findMappingKeyByFigmaName(name);
+        if (mappingKey) {
+            // 68개 매핑을 14개 카테고리로 분류
+            return this.categorizeComponentType(mappingKey);
+        }
+
+        // 2. INSTANCE 타입인 경우, componentId를 사용하여 실제 컴포넌트 이름 찾기
+        if (node.type === 'INSTANCE' && (node as any).componentId) {
+            const componentId = (node as any).componentId;
+            
+            // componentInfo에서 실제 컴포넌트 이름 가져오기
+            if (this.componentInfo.has(componentId)) {
+                const componentInfo = this.componentInfo.get(componentId)!;
+                const componentName = componentInfo.name || (componentInfo as any).description || (componentInfo as any).key;
+                
+                console.log(`🔍 INSTANCE componentId ${componentId} maps to name: ${componentName}`);
+                
+                // 실제 컴포넌트 이름으로 매핑 찾기
+                const actualMappingKey = findMappingKeyByFigmaName(componentName);
+                if (actualMappingKey) {
+                    return this.categorizeComponentType(actualMappingKey);
+                }
+            }
+            
+            // children을 확인하여 내부 구조로 타입 판단
+            if (node.children && node.children.length > 0) {
+                console.log(`🔍 INSTANCE children types:`, node.children.map((c: any) => `${c.type}(name: ${c.name})`).join(', '));
+                
+                // 자식들의 구조를 더 자세히 분석
+                const textChildren = node.children.filter(c => c.type === 'TEXT');
+                const vectorChildren = node.children.filter(c => c.type === 'VECTOR');
+                const compChildren = node.children.filter(c => c.type === 'COMPONENT');
+                const frameChildren = node.children.filter(c => c.type === 'FRAME');
+                
+                console.log(`🔍 INSTANCE analysis: ${textChildren.length} text, ${vectorChildren.length} vectors, ${compChildren.length} components, ${frameChildren.length} frames`);
+                
+                // 각 child의 매핑을 먼저 확인 (가장 정확한 방법)
+                for (const child of node.children) {
+                    const childMappingKey = findMappingKeyByFigmaName(child.name);
+                    if (childMappingKey) {
+                        const childType = this.categorizeComponentType(childMappingKey);
+                        if (childType && childType !== 'layout') {
+                            console.log(`✅ INSTANCE → ${childType} (mapping found: ${child.name})`);
+                            return childType;
+                        }
+                    }
+                    
+                    // TYPE으로 직접 판단
+                    if (child.type === 'TEXT' && child.name.toLowerCase().includes('button')) {
+                        console.log(`✅ INSTANCE → Button (text node with 'button' in name)`);
+                        return 'button';
+                    }
+                }
+                
+                // 노드 이름으로 판단 (가장 신뢰할 수 있는 방법)
+                const nameLower = node.name.toLowerCase();
+                if (nameLower.includes('button') || nameLower.includes('버튼')) {
+                    console.log(`✅ INSTANCE → button (name contains 'button')`);
+                    return 'button';
+                }
+                if (nameLower.includes('typography') || nameLower.includes('text') || nameLower.includes('텍스트')) {
+                    console.log(`✅ INSTANCE → typography (name contains 'typography' or 'text')`);
+                    return 'typography';
+                }
+                if (nameLower.includes('icon')) {
+                    console.log(`✅ INSTANCE → button (name contains 'icon')`);
+                    return 'button';
+                }
+                if (nameLower.includes('card')) {
+                    console.log(`✅ INSTANCE → card (name contains 'card')`);
+                    return 'card';
+                }
+                
+                // 구조 기반 판단 (간소화)
+                // 텍스트만 있고 FRAME/아이콘이 없는 경우 Typography
+                if (textChildren.length > 0 && frameChildren.length === 0 && vectorChildren.length === 0 && compChildren.length === 0) {
+                    console.log(`✅ INSTANCE → typography (text only structure)`);
+                    return 'typography';
+                }
+                
+                // FRAME이 있는 경우 layout
+                if (frameChildren.length > 0) {
+                    console.log(`✅ INSTANCE → layout (has frames)`);
+                    return 'layout';
+                }
+            } else {
+                // children이 없는 경우 - componentId로 타입 결정
+                if (this.componentInfo.has(componentId)) {
+                    const componentInfo = this.componentInfo.get(componentId)!;
+                    const actualComponentName = componentInfo.name || componentInfo.description || (componentInfo as any).key;
+                    
+                    // 실제 컴포넌트 이름으로 매핑 찾기
+                    const actualMappingKey = findMappingKeyByFigmaName(actualComponentName);
+                    if (actualMappingKey) {
+                        console.log(`✅ INSTANCE → ${this.categorizeComponentType(actualMappingKey)} (from componentId)`);
+                        return this.categorizeComponentType(actualMappingKey);
+                    }
+                    
+                    // 이름으로 직접 판단
+                    const componentNameLower = actualComponentName.toLowerCase();
+                    if (componentNameLower.includes('button')) return 'button';
+                    if (componentNameLower.includes('typography') || componentNameLower.includes('text')) return 'typography';
+                    if (componentNameLower.includes('icon')) return 'button';
+                    if (componentNameLower.includes('card')) return 'card';
+                    if (componentNameLower.includes('chip')) return 'chip';
+                    if (componentNameLower.includes('avatar')) return 'dataDisplay';
+                    
+                    console.log(`⚠️ INSTANCE componentName "${actualComponentName}" not mapped, defaulting to layout`);
+                    return 'layout';
+                }
+            }
+        }
+
+        // 3. FRAME 노드는 오토레이아웃 여부에 따라 Stack/Box로 처리
+        // (매핑되지 않은 경우에만)
+        if (node.type === 'FRAME' && node.layoutMode) {
+            // 오토레이아웃이 있는 경우 Stack 컴포넌트로 처리
+            return 'layout';
+        } else if (node.type === 'FRAME' && !node.layoutMode) {
+            // 오토레이아웃이 없는 경우 Box 컴포넌트로 처리
+            return 'layout';
+        }
+
+        // 3. 기존 설정 구조 (백업 - 레이아웃 컴포넌트용)
         const components = FIGMA_CONFIG.figmaMapping.components as Record<string, readonly string[]>;
         for (const [componentType, typeNames] of Object.entries(components)) {
             if (typeNames.includes(name)) {
+                // 레이아웃 컴포넌트는 navigation 타입으로 처리
+                if (['header', 'sidebar', 'pageHeader', 'drawer', 'submenu'].includes(componentType)) {
+                    return 'navigation';
+                }
                 return componentType as ComponentDesignConfig['componentType'];
             }
         }
 
-        // MUI 컴포넌트 매칭
+        // 4. 기존 MUI 컴포넌트 매칭 (백업 - 사용자 정의 타입)
         const muiComponents = FIGMA_CONFIG.figmaMapping.muiComponents as Record<string, readonly string[]>;
         for (const [componentType, typeNames] of Object.entries(muiComponents)) {
             if (typeNames.includes(name)) {
-                return componentType as ComponentDesignConfig['componentType'];
+                return this.categorizeComponentType(componentType);
             }
         }
         
         return null;
+    }
+
+    /**
+     * 매핑 키를 componentType 카테고리로 변환
+     * @param mappingKey COMPONENT_MAPPINGS의 키
+     * @returns componentType
+     */
+    private categorizeComponentType(mappingKey: string): ComponentDesignConfig['componentType'] {
+        // 68개를 14개 카테고리로 분류
+        const categoryMap: Record<string, ComponentDesignConfig['componentType']> = {
+            // Button 카테고리
+            'button': 'button',
+            'iconButton': 'button',
+            'toggleButton': 'button',
+            'fab': 'button',
+            'speedDial': 'button',
+            
+            // Input 카테고리
+            'input': 'input',
+            'textField': 'input',
+            'select': 'input',
+            'checkbox': 'input',
+            'switch': 'input',
+            'radio': 'input',
+            'slider': 'input',
+            'autocomplete': 'input',
+            'rating': 'input',
+            
+            // Table 카테고리
+            'table': 'table',
+            'tableContainer': 'table',
+            'tableHead': 'table',
+            'tableBody': 'table',
+            'tableRow': 'table',
+            'tableCell': 'table',
+            
+            // Card 카테고리
+            'card': 'card',
+            'paper': 'card',
+            'cardContent': 'card',
+            'cardActions': 'card',
+            'cardHeader': 'card',  // CardHeader는 별도 처리 (props 기반)
+            'cardMedia': 'card',
+            
+            // Navigation 카테고리
+            'appBar': 'navigation',
+            'toolbar': 'navigation',
+            'menu': 'navigation',
+            'menuItem': 'navigation',
+            'drawer': 'navigation',
+            'breadcrumbs': 'navigation',
+            'bottomNavigation': 'navigation',
+            'tabs': 'navigation',
+            'tab': 'navigation',
+            
+            // Layout 카테고리
+            'stack': 'layout',
+            'grid': 'layout',
+            'container': 'layout',
+            'layout': 'layout',
+            'content': 'layout',
+            'submenu': 'layout',
+            'controlArea': 'layout',
+            
+            // Chip 카테고리
+            'chip': 'chip',
+            'badge': 'chip',
+            
+            // Dialog 카테고리
+            'dialog': 'dialog',
+            'dialogTitle': 'dialog',
+            'dialogContent': 'dialog',
+            'dialogActions': 'dialog',
+            'alert': 'dialog',
+            'alertTitle': 'dialog',
+            'snackbar': 'dialog',
+            'backdrop': 'dialog',
+            
+            // Form 카테고리
+            'formControl': 'form',
+            'formLabel': 'form',
+            'formControlLabel': 'form',
+            'inputLabel': 'form',
+            'radioGroup': 'form',
+            
+            // List 카테고리
+            'list': 'list',
+            'listItem': 'list',
+            'listItemText': 'list',
+            'listItemIcon': 'list',
+            'accordion': 'list',
+            
+            // Tabs 카테고리
+            'toggleButtonGroup': 'tabs',
+            
+            // Typography 카테고리
+            'typography': 'typography',
+            
+            // Feedback 카테고리
+            'circularProgress': 'feedback',
+            'linearProgress': 'feedback',
+            'skeleton': 'feedback',
+            'pagination': 'feedback',
+            
+            // DataDisplay 카테고리
+            'avatar': 'dataDisplay',
+            'divider': 'dataDisplay',
+            'stepper': 'dataDisplay',
+            
+            // Link 카테고리
+            'link': 'link',
+        };
+        
+        return categoryMap[mappingKey] || 'layout';
     }
 
     /**
@@ -794,6 +1087,139 @@ export class FigmaDesignExtractor {
             | Array<{ key: string; label: string; type: string }>
         > = {};
 
+        // 1. 먼저 컴포넌트 타입 결정 및 MUI Props 추출 (우선순위)
+        const componentType = this.determineComponentType(node);
+        
+        // ✅ 매핑 기반으로 props 추출 (name 우선, 없으면 type으로)
+        const mapping = findMappingByFigmaName(node.name) || (componentType ? findMappingByType(componentType) : null);
+        
+        // ✅ 커스텀 속성 추출 로직이 있으면 사용 (Card의 Paper 속성 추출 등)
+        if (mapping?.extractProperties) {
+            console.log(`🔍 [${componentType}] 커스텀 속성 추출 시작`);
+            const customProperties = await mapping.extractProperties(node, this);
+            Object.assign(properties, customProperties);
+            console.log(`✅ [${componentType}] 커스텀 속성 추출 완료:`, Object.keys(customProperties));
+        }
+        
+        if (mapping && mapping.muiProps) {
+            console.log(`🔍 [${componentType}] 컴포넌트 속성 추출 시작:`, {
+                componentName: node.name,
+                componentType,
+                componentProperties: (node as any).componentProperties,
+            });
+            
+            // 모든 MUI Props 추출
+            for (const [propName, propDef] of Object.entries(mapping.muiProps)) {
+                let value: any = undefined;
+                
+                // extractFromFigma 함수가 있으면 사용
+                if (propDef.extractFromFigma) {
+                    value = propDef.extractFromFigma(node);
+                } else {
+                    // componentProperties에서 직접 추출
+                    // Figma 디자인 키트는 PascalCase, 개발은 camelCase를 사용하므로 대소문자 무시 매칭
+                    const props = (node as any).componentProperties || {};
+                    const matchingKey = Object.keys(props).find(
+                        key => key.toLowerCase() === propName.toLowerCase()
+                    );
+                    
+                    if (matchingKey) {
+                        const propData = props[matchingKey];
+                        if (propData && typeof propData === 'object' && 'value' in propData) {
+                            value = propData.value;
+                        } else if (propData !== undefined) {
+                            value = propData;
+                        }
+                    }
+                }
+                
+                // 값이 있으면 properties에 추가
+                if (value !== undefined && value !== null) {
+                    // 변환 함수가 있으면 적용
+                    if (propDef.transform) {
+                        value = propDef.transform(value);
+                    }
+                    
+                    // 기본값인 경우 스킵
+                    // string 타입인 경우 대소문자 비교
+                    if (propDef.default !== undefined) {
+                        const normalizedValue = typeof value === 'string' ? value.toLowerCase() : value;
+                        const normalizedDefault = typeof propDef.default === 'string' ? propDef.default.toLowerCase() : propDef.default;
+                        if (normalizedValue === normalizedDefault) {
+                            console.log(`⏭️ [${componentType}] ${propName}: 기본값(${propDef.default}) 제외`);
+                            continue;
+                        }
+                    }
+                    
+                    // properties에 값 저장 (string은 toLowerCase())
+                    properties[propName] = typeof value === 'string' ? value.toLowerCase() : value;
+                    console.log(`✅ [${componentType}] ${propName}: ${value}`);
+                } else {
+                    console.log(`❌ [${componentType}] ${propName}: 추출 실패`);
+                }
+            }
+            
+            // ✅ 매핑에 커스텀 아이콘 추출 로직이 있으면 사용
+            if (mapping.extractIcons) {
+                // extractor를 두 번째 인자로 전달
+                const iconData = await mapping.extractIcons.call(mapping.extractIcons, node, this);
+                
+                if (iconData.startIconComponentId) {
+                    properties['startIconComponentId'] = iconData.startIconComponentId;
+                    if (iconData.startIcon) {
+                        properties['startIconName'] = iconData.startIcon;
+                    }
+                }
+                if (iconData.endIconComponentId) {
+                    properties['endIconComponentId'] = iconData.endIconComponentId;
+                    if (iconData.endIcon) {
+                        properties['endIconName'] = iconData.endIcon;
+                    }
+                }
+            } else {
+                // ✅ 기본 아이콘 추출 로직 (하드코딩 유지)
+                const iconProps = (node as any).componentProperties || {};
+                const iconNodeIds: string[] = [];
+                
+                for (const [key, propData] of Object.entries(iconProps)) {
+                    const prop = propData as any;
+                    if (prop && typeof prop === 'object' && prop.type === 'INSTANCE_SWAP') {
+                        const iconComponentId = prop.value;
+                        iconNodeIds.push(iconComponentId);
+                        
+                        if (key.toLowerCase().includes('start')) {
+                            properties['startIconComponentId'] = iconComponentId;
+                        } else if (key.toLowerCase().includes('end')) {
+                            properties['endIconComponentId'] = iconComponentId;
+                        }
+                    }
+                }
+                
+                if (iconNodeIds.length > 0 && this.fileKey) {
+                    try {
+                        const iconNodesResponse = await this.client.getFileNodes(this.fileKey, iconNodeIds);
+                        if (iconNodesResponse.nodes) {
+                            for (const [nodeId, nodeData] of Object.entries(iconNodesResponse.nodes)) {
+                                const iconNode = nodeData.document;
+                                const iconName = iconNode.name;
+                                
+                                if (nodeId === properties.startIconComponentId) {
+                                    properties['startIconName'] = iconName;
+                                }
+                                if (nodeId === properties.endIconComponentId) {
+                                    properties['endIconName'] = iconName;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ 아이콘 노드 조회 실패: ${error}`);
+                    }
+                }
+            }
+            
+            console.log(`📦 [${componentType}] MUI Props 추출 완료:`, properties);
+        }
+
         // 크기 정보 (채우기 및 hug 설정 감지)
         if (node.absoluteBoundingBox) {
             // layoutSizing 속성 확인 (hug content 감지)
@@ -891,10 +1317,12 @@ export class FigmaDesignExtractor {
                         }
             }
         } else if (node.children) {
-            // MUI Typography 컴포넌트의 경우: 자식 노드에서 실제 텍스트 찾기
-            console.log(`🔍 Typography 인스턴스 "${node.name}" 구조:`, {
+            // ✅ 매핑 기반 텍스트 추출 (하드코딩 제거)
+            const componentType = this.determineComponentType(node);
+            console.log(`🔍 ${componentType} 인스턴스 "${node.name}" 구조:`, {
                 type: node.type,
                 name: node.name,
+                componentType,
                 children: node.children?.map(child => ({
                     type: child.type,
                     name: child.name,
@@ -904,14 +1332,39 @@ export class FigmaDesignExtractor {
                 }))
             });
             
+            // ✅ 매핑의 extractContent 사용
+            let mappingUsed = false;
+            if (componentType) {
+                const mapping = findMappingByType(componentType);
+                if (mapping?.extractContent) {
+                    const extractedText = mapping.extractContent(node);
+                    if (extractedText) {
+                        mappingUsed = true;
+                        // Button은 label, Typography는 text
+                        if (componentType === 'button') {
+                            properties.label = extractedText;
+                        } else {
+                            properties.text = extractedText;
+                        }
+                        console.log(`✅ ${componentType} label/text 매핑으로 추출됨: "${extractedText}"`);
+                    }
+                }
+            }
+            
             for (const child of node.children) {
                 if (child.characters) {
-                    properties.text = child.characters;
-                    if (child.style) {
-                        properties.typography = this.extractTypographyConfig(child.style, null, node);
+                    // ✅ 매핑을 사용하지 않은 경우에만 기본 처리
+                    if (!mappingUsed) {
+                        // Button이 아닌 경우에만 처리 (Button은 이미 매핑에서 처리됨)
+                        if (componentType !== 'button') {
+                            properties.text = child.characters;
+                            if (child.style) {
+                                properties.typography = this.extractTypographyConfig(child.style, null, node);
+                            }
+                        }
                     }
                     
-                    // 실제 텍스트 노드의 컬러 정보 추출 (MUI Typography 구조)
+                    // 실제 텍스트 노드의 컬러 정보 추출
                     if (child.fills && child.fills.length > 0) {
                         console.log(`🔍 하위 텍스트 노드 "${child.characters}" fills 상세:`, child.fills[0]);
                         
@@ -919,7 +1372,7 @@ export class FigmaDesignExtractor {
                         const colorInfo = await this.extractColorWithStyle(child.fills[0]);
                         if (colorInfo.styleName) {
                             properties.colorStyle = colorInfo.styleName;
-                            console.log(`🎨 MUI Typography 텍스트 "${child.characters}" 스타일 컬러 발견: ${colorInfo.styleName}`);
+                            console.log(`🎨 텍스트 "${child.characters}" 스타일 컬러 발견: ${colorInfo.styleName}`);
                         } else {
                             // GPT-5 권장: boundVariables에서 Variable ID 추출
                             const fillObj = child.fills[0] as { boundVariables?: { color?: { id: string } } };
@@ -937,7 +1390,7 @@ export class FigmaDesignExtractor {
                                 }
                             } else {
                                 properties.colorStyle = colorInfo.color;
-                                console.log(`🎨 MUI Typography 텍스트 "${child.characters}" HEX 색상 사용: ${colorInfo.color}`);
+                                console.log(`🎨 텍스트 "${child.characters}" HEX 색상 사용: ${colorInfo.color}`);
                             }
                         }
                     }
@@ -946,43 +1399,56 @@ export class FigmaDesignExtractor {
             }
         }
 
-        // 테이블 컬럼 정보 추출
-        if (this.determineComponentType(node) === 'table') {
-            properties.columns = this.extractTableColumns(node);
-        }
+        // layout 타입인 경우 Auto Layout 속성 추출
+        // componentType은 위에서 이미 선언됨
+        if (componentType === 'layout') {
+            // display: flex 기본 설정
+            properties.display = 'flex';
 
-        // 레이아웃 속성
-        if (node.layoutMode) {
-            properties.layoutMode = node.layoutMode;
-            properties.direction = node.layoutMode === 'HORIZONTAL' ? 'row' : 'column';
-        }
+            // Auto Layout 흐름 (direction)
+            if (node.layoutMode) {
+                properties.flexDirection = node.layoutMode === 'HORIZONTAL' ? 'row' : 'column';
+            }
 
-        if (node.primaryAxisAlignItems) {
-            properties.justifyContent = this.mapAlignment(node.primaryAxisAlignItems);
-        }
+            // Auto Layout 정렬 (justifyContent)
+            if (node.primaryAxisAlignItems) {
+                properties.justifyContent = this.mapAlignment(node.primaryAxisAlignItems);
+            }
+            
+            // componentProperties에서 INSTANCE_SWAP 추출 (Stack의 children을 위한 것)
+            const componentProps = (node as any).componentProperties || {};
+            for (const [key, propData] of Object.entries(componentProps)) {
+                const prop = propData as any;
+                if (prop && typeof prop === 'object' && prop.type === 'INSTANCE_SWAP') {
+                    properties[key] = prop;
+                    console.log(`🔍 [${componentType}] INSTANCE_SWAP property "${key}": ${prop.value}`);
+                }
+            }
 
-        if (node.counterAxisAlignItems) {
-            properties.alignItems = this.mapAlignment(node.counterAxisAlignItems);
-        }
+            // Auto Layout 정렬 (alignItems)
+            if (node.counterAxisAlignItems) {
+                properties.alignItems = this.mapAlignment(node.counterAxisAlignItems);
+            }
 
-        // 패딩
-        if (
-            node.paddingLeft !== undefined ||
-            node.paddingRight !== undefined ||
-            node.paddingTop !== undefined ||
-            node.paddingBottom !== undefined
-        ) {
-            properties.padding = {
-                left: node.paddingLeft || 0,
-                right: node.paddingRight || 0,
-                top: node.paddingTop || 0,
-                bottom: node.paddingBottom || 0,
-            };
-        }
+            // 패딩
+            if (
+                node.paddingLeft !== undefined ||
+                node.paddingRight !== undefined ||
+                node.paddingTop !== undefined ||
+                node.paddingBottom !== undefined
+            ) {
+                properties.padding = {
+                    left: node.paddingLeft || 0,
+                    right: node.paddingRight || 0,
+                    top: node.paddingTop || 0,
+                    bottom: node.paddingBottom || 0,
+                };
+            }
 
-        // 간격
-        if (node.itemSpacing !== undefined) {
-            properties.gap = node.itemSpacing;
+            // 간격
+            if (node.itemSpacing !== undefined) {
+                properties.gap = node.itemSpacing;
+            }
         }
 
         return properties;
@@ -1134,25 +1600,15 @@ export class FigmaDesignExtractor {
         componentVariant?: string | null,
         node?: FigmaNode,
     ): TypographyConfig {
-        // 피그마에서 가져온 값만 사용 (하드코딩된 기본값 제거)
+        // 피그마에서 가져온 값만 사용
         const fontSize = style.fontSize;
         const fontWeight = style.fontWeight;
 
-        // 피그마 variant 정보만 추출 (추정/대안 로직 제거)
+        // 피그마 variant 정보만 추출 (피그마 변수에서 직접 추출)
         const figmaVariant = this.extractFigmaVariant(node);
 
-        let variant: string | undefined;
-
-        // 피그마 속성이 있으면 사용, 없으면 스타일 기반 추정
-        if (figmaVariant) {
-            variant = figmaVariant;
-        } else if (fontSize && fontWeight) {
-            // 디자인 시스템 토큰 기반 variant 추정
-            variant = this.estimateVariantFromDesignTokens(fontSize, fontWeight, style.fontFamily);
-        } else {
-            // 피그마 속성이 없으면 variant 생략
-            variant = undefined;
-        }
+        // 하드코딩 제거: figmaVariant가 있으면 사용, 없으면 undefined
+        const variant: string | undefined = figmaVariant || undefined;
 
         return {
             fontFamily: style.fontFamily,
@@ -1165,66 +1621,31 @@ export class FigmaDesignExtractor {
     }
 
     /**
-     * 디자인 시스템 토큰 기반 variant 추정 (스타일 바인딩 활용)
+     * 디자인 시스템 토큰 기반 variant 추정 (피그마 변수 기반)
      * @param fontSize 폰트 크기
      * @param fontWeight 폰트 두께
      * @param fontFamily 폰트 패밀리
      * @returns 추정된 variant
      */
-    private estimateVariantFromDesignTokens(fontSize: number, fontWeight: number, fontFamily?: string): string {
-        // 디자인 시스템 토큰 기반 매핑 (core.json 기준)
-        // Ag typography/body1, Ag typography/body2 등과 매칭
+    private estimateVariantFromDesignTokens(fontSize: number, fontWeight: number, fontFamily?: string): string | undefined {
+        // 하드코딩 제거: 피그마 변수에서 직접 추출
+        // fontSize와 fontWeight는 이미 피그마에서 추출한 실제 값
+        // 하지만 하드코딩된 매핑은 사용하지 않음
         
-        // 폰트 패밀리 확인 (Ag typography 스타일인지)
-        const isAgTypography = fontFamily?.includes('Ag') || fontFamily?.includes('Pretendard');
-        
-        // 디자인 시스템 토큰 기반 정확한 매핑
-        if (isAgTypography) {
-            // Ag typography 스타일 기반 매핑
-            if (fontSize >= 60 && fontWeight >= 600) return 'h1';
-            if (fontSize >= 32 && fontWeight >= 600) return 'h2';
-            if (fontSize >= 24 && fontWeight >= 600) return 'h3';
-            if (fontSize >= 20 && fontWeight >= 600) return 'h4';
-            if (fontSize >= 18 && fontWeight >= 600) return 'h5';
-            if (fontSize >= 16 && fontWeight >= 600) return 'h6';
-            if (fontSize >= 16 && fontWeight >= 500) return 'subtitle1';
-            if (fontSize >= 14 && fontWeight >= 500) return 'subtitle2';
-            if (fontSize >= 16 && fontWeight >= 400) return 'body1';
-            if (fontSize >= 14 && fontWeight >= 400) return 'body2';
-            if (fontSize >= 12 && fontWeight >= 400) return 'caption';
-            if (fontSize >= 10 && fontWeight >= 400) return 'overline';
-        } else {
-            // 일반 폰트의 경우 기존 로직 사용
-            return this.estimateVariantFromStyle(fontSize, fontWeight);
-        }
-        
-        // 기본값
-        return 'body1';
+        // 피그마 variantProperties 또는 componentProperties에서 직접 추출
+        // 이 함수는 더 이상 사용하지 않음
+        return undefined;
     }
 
     /**
-     * 스타일 정보로부터 variant 추정 (일반 텍스트용)
+     * 스타일 정보로부터 variant 추정 (하드코딩 제거)
      * @param fontSize 폰트 크기
      * @param fontWeight 폰트 두께
      * @returns 추정된 variant
      */
-    private estimateVariantFromStyle(fontSize: number, fontWeight: number): string {
-        // MUI Typography variant 매핑 (일반적인 기준)
-        if (fontSize >= 32 && fontWeight >= 600) return 'h1';
-        if (fontSize >= 28 && fontWeight >= 600) return 'h2';
-        if (fontSize >= 24 && fontWeight >= 600) return 'h3';
-        if (fontSize >= 20 && fontWeight >= 600) return 'h4';
-        if (fontSize >= 18 && fontWeight >= 600) return 'h5';
-        if (fontSize >= 16 && fontWeight >= 600) return 'h6';
-        if (fontSize >= 16 && fontWeight >= 500) return 'subtitle1';
-        if (fontSize >= 14 && fontWeight >= 500) return 'subtitle2';
-        if (fontSize >= 16 && fontWeight >= 400) return 'body1';
-        if (fontSize >= 14 && fontWeight >= 400) return 'body2';
-        if (fontSize >= 12 && fontWeight >= 400) return 'caption';
-        if (fontSize >= 10 && fontWeight >= 400) return 'overline';
-        
-        // 기본값
-        return 'body1';
+    private estimateVariantFromStyle(fontSize: number, fontWeight: number): string | undefined {
+        // 하드코딩 제거: 피그마에서 직접 추출한 값만 사용
+        return undefined;
     }
 
     /**
@@ -1267,6 +1688,29 @@ export class FigmaDesignExtractor {
             }
         }
 
+        return null;
+    }
+
+    /**
+     * 자식 노드들에서 텍스트를 재귀적으로 찾기
+     * @param children 자식 노드 배열
+     * @returns 찾은 텍스트 또는 null
+     */
+    private findTextInChildren(children: FigmaNode[]): string | null {
+        for (const child of children) {
+            // 직접 텍스트가 있는 경우
+            if (child.characters) {
+                return child.characters;
+            }
+            
+            // 자식 노드가 있는 경우 재귀적으로 찾기
+            if (child.children && child.children.length > 0) {
+                const text = this.findTextInChildren(child.children);
+                if (text) {
+                    return text;
+                }
+            }
+        }
         return null;
     }
 
@@ -1330,16 +1774,8 @@ export class FigmaDesignExtractor {
             const variableId = fillObj.boundVariables.color.id;
             const themeToken = await this.extractThemeTokenFromVariableId(variableId);
             if (themeToken) {
-                // 토큰 스튜디오 색상이 있으면 우선 사용
-                const tokenStudioColor = this.tokenStudioColors.get(themeToken);
-                if (tokenStudioColor) {
-                    console.log(`🎨 토큰 스튜디오 색상 사용: ${themeToken} → ${tokenStudioColor}`);
-                    return {
-                        color: tokenStudioColor,
-                        styleName: themeToken
-                    };
-                }
-                
+                // variable-mapping에서 MUI 테마 경로 반환 (예: "primary.main")
+                console.log(`🎨 MUI 테마 경로: ${themeToken}`);
                 return {
                     color: this.extractColor(fillObj),
                     styleName: themeToken
@@ -1377,47 +1813,38 @@ export class FigmaDesignExtractor {
     private async extractThemeTokenFromVariableId(variableId: string): Promise<string | null> {
         console.log(`🔍 Variable ID 분석: ${variableId}`);
         
-        // 1. 라이브러리 변수 매핑에서 먼저 확인
-        const libraryVariableName = this.libraryVariableMappings.get(variableId);
-        if (libraryVariableName) {
-            console.log(`📚 라이브러리 변수 발견: ${variableId} → ${libraryVariableName}`);
-            const muiColorPath = this.toMuiColorPath(libraryVariableName);
-            console.log(`🎨 MUI 변환: ${libraryVariableName} → ${muiColorPath}`);
-            return muiColorPath;
+        // 1. VariableMappingManager에서 매핑 가져오기
+        const mapping = await this.variableMappingManager.getMapping(variableId);
+        
+        if (mapping) {
+            console.log(`✅ 변수 매핑 발견: ${variableId} → ${mapping.muiThemePath}`);
+            return mapping.muiThemePath;
         }
         
-        // 2. Variables API 시도 (GPT-5 권장 방식)
-        const rawId = variableId;
-        const varId = rawId.split('/').pop()!; // "835:458"
-        const encoded = encodeURIComponent(varId); // "835%3A458"
-        
-        console.log(`🔍 정규화된 ID: ${varId} → ${encoded}`);
+        // 2. VariableMappingManager가 없으면 직접 API 호출 (fallback)
+        const varId = variableId.split('/').pop()!;
+        const encoded = encodeURIComponent(varId);
         
         try {
             const response = await fetch(`https://api.figma.com/v1/variables/${encoded}`, {
                 headers: { 'X-Figma-Token': this.token }
             });
             
-            if (!response.ok) {
-                console.warn(`⚠️ Variables API ${response.status}: ${variableId}`);
-                // Variables API 실패 시 토큰 스튜디오 색상 사용
-                return this.getTokenStudioColorForVariableId(variableId);
+            if (response.ok) {
+                const data = await response.json();
+                const variableName = data.name;
+                console.log(`✅ Variables API 성공: ${variableId} → ${variableName}`);
+                
+                const muiColorPath = this.toMuiColorPath(variableName);
+                console.log(`🎨 MUI 변환: ${variableName} → ${muiColorPath}`);
+                return muiColorPath;
             }
-            
-            const data = await response.json();
-            const variableName = data.name;
-            console.log(`✅ Variables API 성공: ${variableId} → ${variableName}`);
-            
-            // GPT-5 권장: MUI 경로 변환
-            const muiColorPath = this.toMuiColorPath(variableName);
-            console.log(`🎨 MUI 변환: ${variableName} → ${muiColorPath}`);
-            return muiColorPath;
-            
         } catch (error) {
             console.warn(`⚠️ Variables API 실패: ${variableId}`, error);
-            // Variables API 실패 시 토큰 스튜디오 색상 사용
-            return this.getTokenStudioColorForVariableId(variableId);
         }
+        
+        console.warn(`⚠️ 변수 매핑 없음: ${variableId}`);
+        return null;
     }
 
     /**
@@ -1434,8 +1861,8 @@ export class FigmaDesignExtractor {
         };
         
         const tokenPath = variableMappings[variableId];
-        if (tokenPath && this.tokenStudioColors.has(tokenPath)) {
-            console.log(`🎨 토큰 스튜디오 매핑: ${variableId} → ${tokenPath}`);
+        if (tokenPath) {
+            console.log(`🎨 MUI 테마 경로 매핑: ${variableId} → ${tokenPath}`);
             return tokenPath;
         }
         

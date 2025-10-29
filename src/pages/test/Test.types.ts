@@ -8,8 +8,6 @@ export interface TestPageState {
     // Add page-specific state types here
 }
 
-export type TypographyProps = object;
-
-export type Typography1Props = object;
+export type BoxProps = object;
 
 export type TestProps = object;

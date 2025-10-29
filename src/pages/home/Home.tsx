@@ -8,8 +8,8 @@ const HomeContent = () => {
     return (
         <Box sx={{ minHeight: '100%', p: 3, gap: 3 }}>
             <Grid container spacing={2} sx={{ minHeight: '100%' }}>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 Project
@@ -25,8 +25,8 @@ const HomeContent = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 Users
@@ -38,8 +38,8 @@ const HomeContent = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 UI Components
@@ -52,6 +52,24 @@ const HomeContent = () => {
                                 onClick={() => navigate('/components')}
                             >
                                 Components
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Typography variant="h5" component="h3" gutterBottom>
+                                Test
+                            </Typography>
+                            <Typography color="error.main" sx={{ mb: 2 }}>페이지 자동 생성 (컴포넌트 매핑 개발 중)</Typography>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                endIcon={<ArrowForward />}
+                                onClick={() => navigate('/test')}
+                            >
+                                Test
                             </Button>
                         </CardContent>
                     </Card>

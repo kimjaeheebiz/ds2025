@@ -14,26 +14,7 @@ export const Users: React.FC = () => {
                 minHeight: '100%',
             }}
         >
-            <Box
-                sx={{
-                    width: '1572px',
-                    gap: '393px',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            ></Box>
-
-            <Card
-                sx={{
-                    width: '1572px',
-                    backgroundColor: '#ffffffff',
-                    borderColor: '#000000ff',
-                    borderWidth: '1px',
-                    borderRadius: '4px',
-                }}
-            >
-                {/* Card content will be generated based on design */}
-            </Card>
+            Users Page
         </Box>
     );
 };

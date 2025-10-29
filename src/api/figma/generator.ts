@@ -8,6 +8,8 @@ import {
 } from './types';
 import { PageContentConfig } from './pageTemplateManager';
 import { FIGMA_CONFIG } from './config';
+import { findMappingByType, findMappingByFigmaName } from './component-mappings';
+import { getMuiIconName, hasIcon as hasIconProperty, getRequiredIconNames } from './icon-mapper';
 import * as prettier from 'prettier';
 
 export class FigmaCodeGenerator {
@@ -186,78 +188,161 @@ ${typographyStyles}
      * @returns JSX 문자열
      */
     private generateComponentJSX(component: ComponentDesignConfig): string {
-        const { componentType, properties } = component;
+        const { componentType, componentName, properties, children } = component;
 
         // 테이블 컴포넌트는 특별 처리
         if (componentType === 'table') {
             return this.generateTableJSX(component);
         }
 
-        const muiComponent = FIGMA_CONFIG.muiMapping[componentType] || 'Box';
+        // 먼저 componentName으로 매핑을 찾고, 없으면 componentType으로 찾음
+        const mapping = findMappingByFigmaName(componentName) || findMappingByType(componentType);
         
-        const sxProps = this.generateSXProps(properties, componentType);
-        const componentProps = this.generateComponentProps(componentType, properties);
+        // layout, card 타입 및 Card 하위 컴포넌트는 children 렌더링
+        const isCardSubComponent = componentName === 'CardHeader' || 
+                                   componentName === 'CardContent' || 
+                                   componentName === 'CardActions' || 
+                                   componentName === 'CardMedia';
+        const shouldRenderChildren = (componentType === 'layout' || componentType === 'card' || isCardSubComponent) && children && children.length > 0;
+            
+        let content = '';
+        if (shouldRenderChildren) {
+            content = children.map(child => this.generateComponentJSX(child)).join('\n        ');
+        } else {
+            content = this.generateComponentContent(componentType, componentName, properties);
+        }
 
-        // sx 속성이 있으면 포함, 없으면 제거
+        // ✅ 매핑에 generateJSX가 있으면 사용 (우선)
+        if (mapping?.generateJSX) {
+            const isStack = mapping.muiName === 'Stack';
+            const sxProps = this.generateSXProps(properties, componentType, componentName, isStack);
+            const componentProps = this.generateComponentProps(componentType, componentName, properties);
+            return mapping.generateJSX(componentName, componentProps, content, sxProps, properties);
+        }
+        
+        // ✅ 기본 생성 로직 (매핑 템플릿 없을 때)
+        const muiComponent = mapping?.muiName || 'Box';
+        const isStack = mapping?.muiName === 'Stack';
+        
+        const sxProps = isStack
+            ? this.generateSXProps(properties, componentType, componentName, true) 
+            : this.generateSXProps(properties, componentType, componentName);
+        const componentProps = this.generateComponentProps(componentType, componentName, properties);
+
         const sxAttribute = sxProps ? `sx={${sxProps}}` : '';
 
         return `<${muiComponent}
             ${componentProps}
             ${sxAttribute}
         >
-            ${this.generateComponentContent(componentType, properties)}
+        ${content}
         </${muiComponent}>`;
     }
 
     /**
      * SX 속성 생성 (최적화된 버전)
      * @param properties 컴포넌트 속성
+     * @param componentName 컴포넌트 이름
+     * @param isStack Stack 컴포넌트인 경우 true
      * @returns SX 속성 문자열 또는 null (빈 객체인 경우)
      */
-    private generateSXProps(properties: ComponentProperties, componentType: string): string | null {
+    private generateSXProps(properties: ComponentProperties, componentType: string, componentName?: string, isStack: boolean = false): string | null {
         const sxProps: string[] = [];
+        // componentName이 있으면 figmaName으로 먼저 매핑을 찾음 (Box 등)
+        const mapping = componentName 
+            ? (findMappingByFigmaName(componentName) || findMappingByType(componentType))
+            : findMappingByType(componentType);
 
-        // width는 hug 또는 fill 설정이 아닌 경우에만 추가
-        if (properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
+        // layout 타입인 경우 Auto Layout 속성 추가
+        if (componentType === 'layout') {
+            // display: flex - Stack인 경우 제외 (기본값이므로 불필요)
+            if (properties.display && !isStack) {
+                sxProps.push(`display: '${properties.display}'`);
+            }
+
+            // flexDirection - Stack인 경우 제외 (direction prop으로 처리)
+            if (properties.flexDirection && !isStack) {
+                sxProps.push(`flexDirection: '${properties.flexDirection}'`);
+            }
+
+            // justifyContent
+            if (properties.justifyContent) {
+                sxProps.push(`justifyContent: '${properties.justifyContent}'`);
+            }
+
+            // alignItems
+            if (properties.alignItems) {
+                sxProps.push(`alignItems: '${properties.alignItems}'`);
+            }
+
+            // gap - Stack인 경우 제외 (spacing prop으로 처리)
+            if (properties.gap && !isStack) {
+                const gapValue = this.mapSpacingToVariable(properties.gap);
+                sxProps.push(`gap: ${gapValue}`);
+            }
+
+            // padding
+            if (properties.padding) {
+                if (typeof properties.padding === 'object') {
+                    const { left, right, top, bottom } = properties.padding;
+                    sxProps.push(`padding: '${top}px ${right}px ${bottom}px ${left}px'`);
+                } else {
+                    sxProps.push(`padding: '${properties.padding}'`);
+                }
+            }
+        }
+
+            // 매핑에서 excludeFromSx 확인
+            const excludeList = mapping?.excludeFromSx || [];
+
+        // width는 hug 또는 fill 설정이 아닌 경우에만 추가 (excludeFromSx에 있으면 제외)
+        if (!excludeList.includes('width') && properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
             sxProps.push(`width: '${properties.width}px'`);
         }
 
-        // height는 hug 또는 fill 설정이 아닌 경우에만 추가
-        if (properties.height && properties.height !== 'fill' && properties.height !== 'hug') {
+        // height는 hug 또는 fill 설정이 아닌 경우에만 추가 (excludeFromSx에 있으면 제외)
+        if (!excludeList.includes('height') && properties.height && properties.height !== 'fill' && properties.height !== 'hug') {
             sxProps.push(`height: '${properties.height}px'`);
         }
-
-            // 색상 속성 처리 (스타일 이름 우선, 텍스트는 color, 배경은 backgroundColor)
-            if (properties.colorStyle) {
-                // 피그마 스타일 이름을 디자인 토큰으로 변환
-                const designToken = this.mapFigmaStyleToDesignToken(properties.colorStyle);
-                if (componentType === 'typography') {
-                    sxProps.push(`color: '${designToken}'`);
-                } else {
-                    sxProps.push(`backgroundColor: '${designToken}'`);
-                }
-            } else if (properties.backgroundColor && properties.backgroundColor !== 'transparent' && !properties.colorStyle) {
-                // 스타일 이름이 없는 경우 기본 색상 사용
-                if (componentType === 'typography') {
-                    sxProps.push(`color: '${properties.backgroundColor}'`);
-                } else {
-                    sxProps.push(`backgroundColor: '${properties.backgroundColor}'`);
+            if (componentType !== 'button' && !excludeList.includes('backgroundColor')) {
+                // 색상 속성 처리 (스타일 이름 우선, 텍스트는 color, 배경은 backgroundColor)
+                if (properties.colorStyle) {
+                    // properties.colorStyle은 이미 variable-mapping을 통해 MUI 테마 경로로 변환됨 (예: "primary.light")
+                    // 따라서 그대로 사용하면 됨
+                    if (componentType === 'typography') {
+                        sxProps.push(`color: '${properties.colorStyle}'`);
+                    } else {
+                        sxProps.push(`backgroundColor: '${properties.colorStyle}'`);
+                    }
+                } else if (properties.backgroundColor && properties.backgroundColor !== 'transparent' && !properties.colorStyle) {
+                    // 스타일 이름이 없는 경우 기본 색상 사용
+                    if (componentType === 'typography') {
+                        sxProps.push(`color: '${properties.backgroundColor}'`);
+                    } else {
+                        sxProps.push(`backgroundColor: '${properties.backgroundColor}'`);
+                    }
                 }
             }
 
-        if (properties.borderColor) sxProps.push(`borderColor: '${properties.borderColor}'`);
-        if (properties.borderWidth) sxProps.push(`borderWidth: '${properties.borderWidth}px'`);
-        if (properties.borderRadius) sxProps.push(`borderRadius: '${properties.borderRadius}px'`);
+        // excludeFromSx에 있는 속성들은 sx에서 제외
+        if (!excludeList.includes('borderRadius') && !excludeList.includes('borderColor')) {
+            if (properties.borderColor) sxProps.push(`borderColor: '${properties.borderColor}'`);
+            if (properties.borderWidth) sxProps.push(`borderWidth: '${properties.borderWidth}px'`);
+            if (properties.borderRadius) sxProps.push(`borderRadius: '${properties.borderRadius}px'`);
+        }
         if (properties.opacity) sxProps.push(`opacity: ${properties.opacity}`);
 
-        // gap은 변수 기반으로 처리
-        if (properties.gap) {
+        // gap은 변수 기반으로 처리 (layout 타입이 아닌 경우만)
+        if (properties.gap && componentType !== 'layout') {
             const gapValue = this.mapSpacingToVariable(properties.gap);
             sxProps.push(`gap: ${gapValue}`);
         }
 
-        if (properties.justifyContent) sxProps.push(`justifyContent: '${properties.justifyContent}'`);
-        if (properties.alignItems) sxProps.push(`alignItems: '${properties.alignItems}'`);
+        // excludeFromSx에 있는 속성들은 sx에서 제외 (layout 타입이 아닌 경우만)
+        if (componentType !== 'layout' && !excludeList.includes('justifyContent') && !excludeList.includes('alignItems')) {
+            if (properties.justifyContent) sxProps.push(`justifyContent: '${properties.justifyContent}'`);
+            if (properties.alignItems) sxProps.push(`alignItems: '${properties.alignItems}'`);
+        }
 
         // 속성이 없으면 null 반환 (sx 속성 자체를 제거)
         if (sxProps.length === 0) {
@@ -275,60 +360,110 @@ ${typographyStyles}
      * @param properties 컴포넌트 속성
      * @returns 컴포넌트 속성 문자열
      */
-    private generateComponentProps(componentType: string, properties: ComponentProperties): string {
+    private generateComponentProps(componentType: string, componentName: string, properties: ComponentProperties): string {
         const props: string[] = [];
-        const muiProps = FIGMA_CONFIG.muiProps[componentType];
+        
+        // ✅ 매핑 기반으로 props 생성 (componentName 우선, 없으면 componentType 사용)
+        const mapping = findMappingByFigmaName(componentName) || findMappingByType(componentType);
+        const muiProps = mapping?.muiProps;
 
-        // 컴포넌트별 특수 처리 (기존 소스 기반)
-        switch (componentType) {
-            case 'button':
-                if (properties.text) props.push(`children="${properties.text}"`);
-                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
-                    props.push(`variant="${properties.variant}"`);
+        // 새 매핑 시스템 사용 (동적 처리)
+        if (mapping && muiProps) {
+            for (const [propName, propDef] of Object.entries(muiProps)) {
+                const value = properties[propName];
+                
+                // union 타입인 경우 values에 포함된 값만 추가
+                if (value !== undefined && propDef.values?.includes(value as any)) {
+                    // 기본값인 경우 스킵
+                    if (propDef.default !== undefined && value === propDef.default) {
+                        continue;
+                    }
+                    
+                    if (typeof value === 'string') {
+                        props.push(`${propName}="${value}"`);
+                    } else {
+                        props.push(`${propName}={${value}}`);
+                    }
                 }
-                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
-                    props.push(`size="${properties.size}"`);
+                // union-number 타입인 경우
+                else if (propDef.type === 'union-number') {
+                    if (value !== undefined && value !== null) {
+                        const numValue = typeof value === 'number' ? value : parseInt(value as string);
+                        // 기본값인 경우 스킵
+                        if (propDef.default !== undefined && numValue === propDef.default) {
+                            continue;
+                        }
+                        
+                        // Stack의 spacing은 변수로 매핑
+                        if (componentType === 'layout' && propName === 'spacing') {
+                            const mappedValue = this.mapSpacingToVariable(numValue);
+                            props.push(`${propName}={${mappedValue}}`);
+                        } else {
+                            props.push(`${propName}={${numValue}}`);
+                        }
+                    }
                 }
-                break;
-            case 'textField':
-                if (properties.text) props.push(`placeholder="${properties.text}"`);
-                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
-                    props.push(`variant="${properties.variant}"`);
+                // boolean 타입인 경우
+                else if (typeof value === 'boolean' && propDef.type === 'boolean') {
+                    // 기본값인 경우 스킵 (MUI 기본값은 false)
+                    const defaultValue = propDef.default !== undefined ? propDef.default : false;
+                    if (value === defaultValue) {
+                        continue;
+                    }
+                    
+                    props.push(`${propName}={${value}}`);
                 }
-                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
-                    props.push(`size="${properties.size}"`);
+                // string 타입인 경우
+                else if (typeof value === 'string' && propDef.type === 'string') {
+                    // 기본값인 경우 스킵
+                    if (propDef.default !== undefined && value === propDef.default) {
+                        continue;
+                    }
+                    
+                    props.push(`${propName}="${value}"`);
                 }
-                break;
-            case 'table':
-                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
-                    props.push(`size="${properties.size}"`);
+                // react-node 타입은 아이콘 컴포넌트로 처리
+                else if (propDef.type === 'react-node') {
+                    // value가 false인 경우 아이콘 추가하지 않음
+                    if (value === false) {
+                        continue; // 아무것도 추가하지 않음
+                    }
+                    
+                    // value가 true이거나 undefined인 경우에만 아이콘 생성
+                    if (value === true || value === undefined) {
+                        const iconComponentId = propName === 'startIcon' 
+                            ? properties.startIconComponentId 
+                            : properties.endIconComponentId;
+                        
+                        if (iconComponentId) {
+                            // 아이콘 이름도 함께 전달 (우선순위 1)
+                            const iconName = propName === 'startIcon' 
+                                ? properties.startIconName 
+                                : properties.endIconName;
+                            
+                            const muiIconName = getMuiIconName(iconComponentId, iconName as string);
+                            
+                            // 매핑된 아이콘 사용
+                            if (muiIconName) {
+                                props.push(`${propName}={<${muiIconName} />}`);
+                            } else {
+                                // 매핑되지 않은 경우만 기본 아이콘 사용
+                                const defaultIcon = propName === 'startIcon' ? 'Add' : 'Settings';
+                                props.push(`${propName}={<${defaultIcon} />}`);
+                            }
+                        } else if (value === true) {
+                            // 아이콘 ID가 없으면 기본 아이콘 사용
+                            if (propName === 'startIcon') {
+                                props.push(`${propName}={<Add />}`);
+                            } else if (propName === 'endIcon') {
+                                props.push(`${propName}={<Settings />}`);
+                            } else {
+                                props.push(`${propName}={<Icon />}`);
+                            }
+                        }
+                    }
                 }
-                break;
-            case 'card':
-                if (properties.elevation !== undefined && muiProps?.elevations?.includes(properties.elevation)) {
-                    props.push(`elevation={${properties.elevation}}`);
-                }
-                break;
-            case 'chip':
-                if (properties.label) props.push(`label="${properties.label}"`);
-                if (properties.variant && muiProps?.variants?.includes(properties.variant)) {
-                    props.push(`variant="${properties.variant}"`);
-                }
-                if (properties.color && muiProps?.colors?.includes(properties.color)) {
-                    props.push(`color="${properties.color}"`);
-                }
-                if (properties.size && muiProps?.sizes?.includes(properties.size)) {
-                    props.push(`size="${properties.size}"`);
-                }
-                break;
-            case 'typography': {
-                // Typography 컴포넌트의 경우 variant가 있을 때만 추가
-                const typographyVariant = (properties as { typography?: { variant?: string } }).typography?.variant;
-                if (typographyVariant) {
-                    props.push(`variant="${typographyVariant}"`);
-                }
-                break;
-        }
+            }
         }
 
         return props.length > 0 ? ` ${props.join(' ')}` : '';
@@ -349,32 +484,43 @@ ${typographyStyles}
             48: 6, // 48px = spacing(6)
         };
 
-        const numericValue = typeof spacingValue === 'string' ? parseInt(spacingValue) : spacingValue;
+        let numericValue: number;
+        if (typeof spacingValue === 'string') {
+            // 'px' 같은 단위 제거
+            numericValue = parseInt(spacingValue.replace(/[^\d]/g, ''), 10);
+        } else {
+            numericValue = spacingValue;
+        }
+
         const mappedValue = spacingMap[numericValue];
 
-        return mappedValue ? `${mappedValue}` : `'${numericValue}px'`;
+        // 숫자만 반환 (문자열로 감싸지 않음)
+        return mappedValue ? `${mappedValue}` : `${numericValue}`;
     }
 
     /**
-     * 컴포넌트 내용 생성
+     * 컴포넌트 내용 생성 (매핑 기반)
      * @param componentType 컴포넌트 타입
+     * @param componentName 컴포넌트 이름
      * @param properties 컴포넌트 속성
      * @returns 컴포넌트 내용 문자열
      */
-    private generateComponentContent(componentType: string, properties: ComponentProperties): string {
-        switch (componentType) {
-            case 'table':
-                return `{/* Table content will be generated based on data */}`;
-            case 'card':
-                return `{/* Card content will be generated based on design */}`;
-            case 'navigation':
-                return `{/* Navigation items will be generated based on menu structure */}`;
-            case 'typography':
-                // Typography 컴포넌트인 경우 텍스트만 반환 (HTML 태그 이스케이프)
-                return properties.text ? this.escapeHtml(properties.text) : '';
-            default:
-                return properties.text ? this.escapeHtml(properties.text) : '';
+    private generateComponentContent(componentType: string, componentName: string, properties: ComponentProperties): string {
+        const mapping = findMappingByType(componentType);
+        
+        // ✅ 매핑에 extractContent가 있으면 사용
+        if (mapping?.extractContent) {
+            // extractContent는 FigmaNode를 받아야 하므로 properties에서 필요한 값만 사용
+            const mockNode = { characters: properties.text, children: [] } as any;
+            const content = mapping.extractContent(mockNode);
+            if (content) return this.escapeHtml(content);
         }
+        
+        // ✅ 기본 추론 로직 (하드코딩 제거)
+        if (properties.text) return this.escapeHtml(properties.text);
+        if (properties.label) return this.escapeHtml(properties.label);
+        
+        return '';
     }
 
     /**
@@ -398,38 +544,60 @@ ${typographyStyles}
      */
     private generateImports(components: ComponentDesignConfig[]): string {
         const imports = new Set<string>();
+        const iconImports = new Set<string>();
 
         // 기본 MUI 컴포넌트들
         imports.add('Box');
         
-        // 컴포넌트별 필요한 임포트 추가
+        // 컴포넌트별 필요한 임포트 추가 (children 포함)
+        this.collectImportsRecursively(components, imports, iconImports);
+
+        const importsList = Array.from(imports).join(', ');
+        let iconImportsList = '';
+        if (iconImports.size > 0) {
+            iconImportsList = `\nimport { ${Array.from(iconImports).join(', ')} } from '@mui/icons-material';`;
+        }
+        
+        return `import React from 'react';
+import { ${importsList} } from '@mui/material';${iconImportsList}`;
+    }
+
+    /**
+     * 컴포넌트와 그 children을 재귀적으로 순회하며 필요한 import 수집
+     * @param components 컴포넌트 배열
+     * @param imports MUI 컴포넌트 import Set
+     * @param iconImports 아이콘 import Set
+     */
+    private collectImportsRecursively(
+        components: ComponentDesignConfig[],
+        imports: Set<string>,
+        iconImports: Set<string>
+    ): void {
         components.forEach((component) => {
-            const muiComponent = FIGMA_CONFIG.muiMapping[component.componentType];
+            // ✅ 컴포넌트 이름으로 직접 매핑 찾기
+            const mapping = findMappingByFigmaName(component.componentName) || findMappingByType(component.componentType);
+            const muiComponent = mapping?.muiName;
+            
             if (muiComponent) {
                 imports.add(muiComponent);
 
-                // 테이블 컴포넌트의 경우 하위 컴포넌트들도 추가
-                if (component.componentType === 'table') {
-                    const tableProps = FIGMA_CONFIG.muiProps.table;
-                    if (tableProps?.subComponents) {
-                        tableProps.subComponents.forEach((subComp) => imports.add(subComp));
-                    }
-                    imports.add('Paper');
+                // 하위 컴포넌트 import 추가 (매핑에서 관리)
+                if (mapping.subComponents) {
+                    mapping.subComponents.forEach((comp) => imports.add(comp));
+                }
+                
+                // ✅ 매핑 기반 아이콘 import 추가 (하드코딩 제거)
+                if (component.properties && hasIconProperty(component.properties)) {
+                    const iconNames = getRequiredIconNames(component.properties);
+                    iconNames.forEach(iconName => iconImports.add(iconName));
                 }
 
-                // 카드 컴포넌트의 경우 하위 컴포넌트들도 추가
-                if (component.componentType === 'card') {
-                    const cardProps = FIGMA_CONFIG.muiProps.card;
-                    if (cardProps?.subComponents) {
-                        cardProps.subComponents.forEach((subComp) => imports.add(subComp));
-                    }
+                // ✅ layout, card 타입이거나 children이 있는 경우 children도 처리
+                if ((component.componentType === 'layout' || component.componentType === 'card' || component.children) && component.children) {
+                    this.collectImportsRecursively(component.children, imports, iconImports);
                 }
             }
         });
-
-        const importsList = Array.from(imports).join(', ');
-        return `import React from 'react';
-import { ${importsList} } from '@mui/material';`;
     }
 
     /**
@@ -763,32 +931,46 @@ export interface ${this.toPascalCase(pageName)}PageState {
     }
 
     /**
-     * 컴포넌트 Props 타입 생성
+     * 컴포넌트 Props 타입 생성 (매핑 기반)
      * @param component 컴포넌트 설정
      * @returns Props 타입 문자열
      */
     private generateComponentPropsType(component: ComponentDesignConfig): string {
         const { componentType } = component;
         const props: string[] = [];
-
-        switch (componentType) {
-            case 'button':
-                props.push('variant?: "contained" | "outlined" | "text"');
-                props.push('size?: "small" | "medium" | "large"');
-                props.push('onClick?: () => void');
-                break;
-            case 'input':
-                props.push('value?: string');
-                props.push('onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void');
-                props.push('placeholder?: string');
-                break;
-            case 'table':
-                props.push('data: User[]'); // 전역 타입 사용
-                props.push('columns: TableColumn<User>[]'); // 전역 타입 사용
-                props.push('onEdit?: (user: User) => void');
-                props.push('onDelete?: (userId: number) => void');
-                props.push('isLoading?: boolean');
-                break;
+        
+        // ✅ 매핑에서 props 가져오기
+        const mapping = findMappingByType(componentType);
+        if (mapping?.muiProps) {
+            for (const [propName, propDef] of Object.entries(mapping.muiProps)) {
+                let typeStr = '';
+                
+                if (propDef.type === 'union' && propDef.values) {
+                    // union 타입
+                    typeStr = `"${propDef.values.join('" | "')}"`;
+                } else if (propDef.type === 'boolean') {
+                    typeStr = 'boolean';
+                } else if (propDef.type === 'string') {
+                    typeStr = 'string';
+                } else if (propDef.type === 'number' || propDef.type === 'union-number') {
+                    typeStr = 'number';
+                } else if (propDef.type === 'react-node') {
+                    typeStr = 'React.ReactNode';
+                } else {
+                    typeStr = 'any';
+                }
+                
+                // optional로 설정
+                props.push(`${propName}?: ${typeStr}`);
+            }
+        }
+        
+        // ✅ 추가 이벤트 핸들러 (특수 케이스)
+        if (componentType === 'button') {
+            props.push('onClick?: () => void');
+        } else if (componentType === 'input') {
+            props.push('onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void');
+            props.push('placeholder?: string');
         }
 
         return props.join(';\n    ');

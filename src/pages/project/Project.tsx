@@ -14,21 +14,7 @@ export const Project: React.FC = () => {
                 minHeight: '100%',
             }}
         >
-            <Box
-                sx={{
-                    width: '1572px',
-                    height: '42px',
-                    borderColor: '#000000ff',
-                    borderWidth: '1px',
-                }}
-            ></Box>
-
-            <Box
-                sx={{
-                    width: '1572px',
-                    gap: 3,
-                }}
-            ></Box>
+            Project Page
         </Box>
     );
 };

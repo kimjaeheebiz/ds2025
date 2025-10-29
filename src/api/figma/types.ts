@@ -279,20 +279,24 @@ export interface ComponentDesignConfig {
     componentId: string;
     componentName: string;
     componentType:
-        | 'button'
-        | 'input'
-        | 'table'
-        | 'card'
-        | 'navigation'
-        | 'layout'
-        | 'chip'
-        | 'dialog'
-        | 'form'
-        | 'list'
-        | 'tabs'
-        | 'typography';
+        | 'button'      // Button, IconButton, ToggleButton, Fab, SpeedDial
+        | 'input'       // TextField, Autocomplete, Select, Checkbox, Switch, Radio, Slider
+        | 'table'       // Table, TableContainer, TableHead, TableBody, TableRow, TableCell
+        | 'card'        // Card, Paper, CardContent, CardActions, CardHeader, CardMedia
+        | 'navigation'  // AppBar, Toolbar, Menu, MenuItem, Drawer, Breadcrumbs, BottomNavigation, Tabs, Tab
+        | 'layout'      // Stack, Grid, Container, Box
+        | 'chip'        // Chip, Badge
+        | 'dialog'      // Dialog, DialogTitle, DialogContent, DialogActions, Alert, AlertTitle, Snackbar, Backdrop
+        | 'form'        // FormControl, FormLabel, FormControlLabel, InputLabel, RadioGroup, Select, Autocomplete
+        | 'list'        // List, ListItem, ListItemText, ListItemIcon, Accordion
+        | 'tabs'        // Tabs, Tab, ToggleButtonGroup, ToggleButton
+        | 'typography'  // Typography
+        | 'feedback'    // CircularProgress, LinearProgress, Skeleton, Rating, Pagination
+        | 'dataDisplay' // Avatar, Divider, Stepper
+        | 'link'        // Link;
     properties: ComponentProperties;
     variants?: ComponentVariant[];
+    children?: ComponentDesignConfig[]; // layout 타입의 경우 자식 컴포넌트
 }
 
 export interface ComponentProperties {
@@ -348,6 +352,14 @@ export interface ComponentProperties {
     type?: string;
     // Table-specific properties
     columns?: Array<{ key: string; label: string; type: string }>;
+    // Icon properties
+    startIconComponentId?: string; // Figma의 아이콘 컴포넌트 ID
+    endIconComponentId?: string;
+    startIconName?: string; // Figma 아이콘 인스턴스명 (예: "AddFilled", "StarBorderFilled")
+    endIconName?: string;
+    // Stack properties
+    direction?: string;
+    spacing?: number | string;
 }
 
 export interface ComponentVariant {
