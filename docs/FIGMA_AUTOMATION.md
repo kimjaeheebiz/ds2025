@@ -134,7 +134,7 @@ pageNodes: {
 
 ## 9. 상세 문서
 
-- 디자인 시스템: docs/DESIGN_SYSTEM.md
-- 페이지 생성: docs/PAGES.md
-- 메뉴 토큰: docs/MENU_TOKENS.md
-- 명령어: docs/COMMANDS.md
+- [디자인 시스템](./DESIGN_SYSTEM.md)
+- [메뉴 토큰 연동](./MENU_TOKENS.md)
+- [페이지 생성 절차](./PAGES.md)
+- [명령어](./COMMANDS.md)

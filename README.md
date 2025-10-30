@@ -94,10 +94,11 @@ Figma 연동으로 페이지 콘텐츠 자동 생성, 레이아웃/메뉴/브레
 
 ## 📚 문서
 
-- [아키텍처 개요](docs/ARCHITECTURE.md) - 프로젝트 구조, 레이아웃/라우팅 개요
-- [레이아웃 시스템](docs/LAYOUT_SYSTEM.md) - Header/Sidebar/PageHeader/Outlet 구성과 배치 규칙
-- [설정 가이드](docs/CONFIG.md) - pages.ts, mainmenu.ts, navigation.ts 연동 규칙
-- [Figma 자동화](docs/FIGMA_AUTOMATION.md) - 토큰/페이지 생성 흐름과 상태 점검
-- [명령어 모음](docs/COMMANDS.md) - 개발/빌드/토큰/메뉴/Figma 전체 명령
-- [페이지 생성](docs/PAGES.md) - 페이지 생성 절차, 파일 구조, 연동/유의사항
-- [디자인 시스템](docs/DESIGN_SYSTEM.md) - 토큰 → MUI 테마 반영 흐름
+- [아키텍처 개요](./docs/ARCHITECTURE.md) - 프로젝트 구조, 레이아웃/라우팅 개요
+- [레이아웃 시스템](./docs/LAYOUT_SYSTEM.md) - Header/Sidebar/PageHeader/Outlet 구성과 배치 규칙
+- [설정 가이드](./docs/CONFIG.md) - pages.ts, mainmenu.ts, navigation.ts 연동 규칙
+- [Figma 자동화](./docs/FIGMA_AUTOMATION.md) - 토큰/페이지 생성 흐름과 상태 점검
+- [명령어 모음](./docs/COMMANDS.md) - 개발/빌드/토큰/메뉴/Figma 전체 명령
+- [디자인 시스템](./docs/DESIGN_SYSTEM.md) - 토큰 → MUI 테마 반영 흐름
+- [메뉴 토큰 연동](./docs/MENU_TOKENS.md) - Figma 변수/토큰 기반 메뉴 → mainmenu.ts 동기화
+- [페이지 생성 절차](./docs/PAGES.md) - 페이지 생성 절차, 파일 구조, 연동/유의사항

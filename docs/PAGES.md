@@ -10,8 +10,8 @@
 
 ## 2. 신규 페이지 생성 절차
 
-- Figma에서 신규 페이지 생성: MainContent 레이어 포함, 페이지 이름은 메뉴명과 일치
-- 생성: `npm run figma:page -- <PageName>` 실행 (MainContent에서 콘텐츠 추출)
+- Figma에서 신규 페이지 생성: "MainContent" 레이어 포함, 페이지 이름은 메뉴명과 일치
+- 생성: `npm run figma:page -- <PageName>` 실행 ("MainContent" 레이어에서 콘텐츠 추출)
 - 설정 연동: `pages.ts` 메타데이터 등록, `mainmenu.ts` 메뉴 항목 추가
 - 확인: 브레드크럼/라우팅 자동 반영
 

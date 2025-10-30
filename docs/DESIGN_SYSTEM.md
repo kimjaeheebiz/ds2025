@@ -41,7 +41,7 @@ App 적용
 ## 5. 확장 원칙
 
 - 토큰 네이밍: `component/property/variant/state` 규칙 유지
-- 참조 우선순위: core.json → 영역별 토큰 → 기본값
+- 참조 우선순위: `core.json` → 영역별 토큰 → 기본값
 - Props는 동작/자식 요소 제어, 시각 스타일은 토큰으로 일원화
 
 
