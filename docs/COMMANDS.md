@@ -1,4 +1,4 @@
-## 명령어 모음
+# 명령어 모음
 
 
 ## 1. 개발/빌드
@@ -11,7 +11,7 @@
 
 ## 2. Figma
 
-- `figma:setup`: 환경 설정(.env 템플릿 생성)
+- `figma:setup`: 환경 설정(`.env` 템플릿 생성)
 - `figma:status`: 로컬 상태 확인(환경/출력/최근 파일)
 - `figma:status -- --remote: Figma`: 파일 원격 연결 확인
 - `figma:page -- <PageName>`: 지정 페이지 콘텐츠 생성

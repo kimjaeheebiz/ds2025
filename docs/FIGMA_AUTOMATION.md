@@ -136,5 +136,5 @@ pageNodes: {
 
 - [디자인 시스템](./DESIGN_SYSTEM.md)
 - [메뉴 토큰 연동](./MENU_TOKENS.md)
-- [페이지 생성 절차](./PAGES.md)
+- [페이지 생성](./PAGES.md)
 - [명령어](./COMMANDS.md)

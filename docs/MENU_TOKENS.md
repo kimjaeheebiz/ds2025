@@ -40,7 +40,7 @@
 - 아이콘 네이밍은 UI 라이브러리 규칙에 부합하도록 관리
 
 ### 명명/구조 가이드
-- ID: 소문자, 중복 금지
-- Label: 사용자 노출명
-- Group: path 없이 트리 구조만 형성
-- Item: path/pageId 필수, label이 없을 시 pages 설정에서 대체 가능
+- `id`: 소문자, 중복 금지
+- `label`: 사용자 노출명
+- `group`: path 없이 트리 구조만 형성
+- `item`: path/pageId 필수, label이 없을 시 pages 설정에서 대체 가능

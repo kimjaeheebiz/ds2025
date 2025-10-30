@@ -15,8 +15,7 @@ src/
 
 design-system/
 ├── tokens/              # 디자인 토큰 (Figma 동기화)
-├── generators/          # 코드 생성기
-└── validators/          # 유효성 검사
+└── generators/          # 코드 생성기
 
 docs/                    # 프로젝트 문서
 scripts/                 # 빌드 및 유틸리티 스크립트
@@ -31,7 +30,7 @@ scripts/                 # 빌드 및 유틸리티 스크립트
 
 ## 3. 생성/연동 흐름
 
-- 페이지 생성: Figma → 콘텐츠 생성 → 기존 레이아웃과 통합
+- 페이지 생성: Figma → 콘텐츠 생성 → 기본 레이아웃과 통합
 - 디자인 시스템: 토큰 → MUI 테마 → UI 일괄 적용
 
 

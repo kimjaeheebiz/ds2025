@@ -4,14 +4,14 @@
 ## 1. 개념
 
 - 메인 컨텐츠 자동 생성: Figma 페이지 → React 컴포넌트 변환
-- 레이아웃 통합: 기존 레이아웃/네비게이션과 자동 결합
+- 레이아웃 통합: 기본 레이아웃/네비게이션과 자동 결합
 - 파일 구조: kebab-case 디렉토리 + PascalCase 파일명 규칙
 
 
 ## 2. 신규 페이지 생성 절차
 
-- Figma에서 신규 페이지 생성: "MainContent" 레이어 포함, 페이지 이름은 메뉴명과 일치
-- 생성: `npm run figma:page -- <PageName>` 실행 ("MainContent" 레이어에서 콘텐츠 추출)
+- Figma에서 신규 페이지 생성: "MainContent" 프레임 포함, 페이지 이름은 메뉴명과 일치
+- 생성: `npm run figma:page -- <PageName>` 실행 ("MainContent" 프레임에서 콘텐츠 추출)
 - 설정 연동: `pages.ts` 메타데이터 등록, `mainmenu.ts` 메뉴 항목 추가
 - 확인: 브레드크럼/라우팅 자동 반영
 
