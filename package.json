@@ -1,7 +1,7 @@
 {
     "name": "ds_202509",
     "private": true,
-    "version": "0.0.0",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -12,14 +12,10 @@
         "preview": "vite preview",
         "build:theme": "npx --yes tsx design-system/generators/to-mui-theme.ts",
         "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts",
-        "figma:sync": "npx tsx scripts/figma-sync.ts",
-        "figma:library": "npx tsx scripts/figma-sync.ts -- --library",
         "figma:setup": "npx tsx scripts/figma-sync-cli.ts setup",
-        "figma:content": "npx tsx scripts/figma-sync-cli.ts generate-content",
-        "figma:page": "npx tsx scripts/figma-sync-cli.ts generate-page",
-        "figma:pages": "npx tsx scripts/figma-sync-cli.ts generate-page --all",
-        "figma:extract": "npx tsx scripts/figma-sync-cli.ts extract-library",
-        "figma:sync-types": "npx tsx scripts/figma-sync-cli.ts sync-types",
+        "figma:page": "npx tsx scripts/figma-sync-cli.ts generate-content --page",
+        "figma:pages": "npx tsx scripts/figma-sync-cli.ts generate-content",
+      
         "figma:validate": "npx tsx scripts/figma-sync-cli.ts validate",
         "figma:status": "npx tsx scripts/figma-sync-cli.ts status",
         "figma:clean": "npx tsx scripts/figma-sync-cli.ts clean"
@@ -56,7 +52,6 @@
         "globals": "^16.3.0",
         "postcss": "^8.5.6",
         "prettier": "^3.6.2",
-        "tailwindcss": "3.4",
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.41.0",
         "vite": "^5.4.19"
