@@ -72,7 +72,7 @@ export const ${componentName}: React.FC = () => {
      */
     generatePageComponent(pageConfig: PageComponentConfig): string {
         const { pageName, components, layout, styles } = pageConfig;
-        
+
         const componentName = this.toPascalCase(pageName);
         const imports = this.generateImports(components);
         const componentCode = this.generateComponentCode(componentName, components, layout);
@@ -145,8 +145,8 @@ ${typographyStyles}
      * @returns 컴포넌트 코드
      */
     private generateComponentCode(
-        componentName: string, 
-        components: ComponentDesignConfig[], 
+        componentName: string,
+        components: ComponentDesignConfig[],
         layout: LayoutConfig,
     ): string {
         const jsxElements = components.map((component) => this.generateComponentJSX(component)).join('\n        ');
@@ -157,10 +157,9 @@ ${typographyStyles}
             display: '${layout.containerType}',
             flexDirection: '${layout.direction}',
             gap: ${layout.spacing},
-            padding: ${
-                layout.padding
-                    ? `${layout.padding.top}px ${layout.padding.right}px ${layout.padding.bottom}px ${layout.padding.left}px`
-                    : '0px'
+            padding: ${layout.padding
+                ? `${layout.padding.top}px ${layout.padding.right}px ${layout.padding.bottom}px ${layout.padding.left}px`
+                : '0px'
             }
         }}>
             ${jsxElements}
@@ -197,14 +196,14 @@ ${typographyStyles}
 
         // 먼저 componentName으로 매핑을 찾고, 없으면 componentType으로 찾음
         const mapping = findMappingByFigmaName(componentName) || findMappingByType(componentType);
-        
+
         // layout, card 타입 및 Card 하위 컴포넌트는 children 렌더링
-        const isCardSubComponent = componentName === 'CardHeader' || 
-                                   componentName === 'CardContent' || 
-                                   componentName === 'CardActions' || 
-                                   componentName === 'CardMedia';
+        const isCardSubComponent = componentName === 'CardHeader' ||
+            componentName === 'CardContent' ||
+            componentName === 'CardActions' ||
+            componentName === 'CardMedia';
         const shouldRenderChildren = (componentType === 'layout' || componentType === 'card' || isCardSubComponent) && children && children.length > 0;
-            
+
         let content = '';
         if (shouldRenderChildren) {
             content = children.map(child => this.generateComponentJSX(child)).join('\n        ');
@@ -219,13 +218,13 @@ ${typographyStyles}
             const componentProps = this.generateComponentProps(componentType, componentName, properties);
             return mapping.generateJSX(componentName, componentProps, content, sxProps, properties);
         }
-        
+
         // ✅ 기본 생성 로직 (매핑 템플릿 없을 때)
         const muiComponent = mapping?.muiName || 'Box';
         const isStack = mapping?.muiName === 'Stack';
-        
+
         const sxProps = isStack
-            ? this.generateSXProps(properties, componentType, componentName, true) 
+            ? this.generateSXProps(properties, componentType, componentName, true)
             : this.generateSXProps(properties, componentType, componentName);
         const componentProps = this.generateComponentProps(componentType, componentName, properties);
 
@@ -249,7 +248,7 @@ ${typographyStyles}
     private generateSXProps(properties: ComponentProperties, componentType: string, componentName?: string, isStack: boolean = false): string | null {
         const sxProps: string[] = [];
         // componentName이 있으면 figmaName으로 먼저 매핑을 찾음 (Box 등)
-        const mapping = componentName 
+        const mapping = componentName
             ? (findMappingByFigmaName(componentName) || findMappingByType(componentType))
             : findMappingByType(componentType);
 
@@ -292,52 +291,50 @@ ${typographyStyles}
             }
         }
 
-            // 매핑에서 excludeFromSx 확인
-            const excludeList = mapping?.excludeFromSx || [];
+        // 매핑에서 excludeFromSx 확인
+        const excludeList = mapping?.excludeFromSx || [];
 
         // width/height 처리
-        // - 일반 규칙: hug/fill은 제외
-        // - Avatar는 hug여도 절대 크기를 사용하여 렌더 크기를 보장
-        const isAvatar = mapping?.muiName === 'Avatar';
+        // - 고정 사이즈(px): width 추가
+        // - 허그(hug): width 없음
+        // - 채우기(fill): width 없음, 하지만 flex 자식이면 flex: 1 추가
         const absW = (properties as any).absoluteWidth;
         const absH = (properties as any).absoluteHeight;
+        const isFlexChild = (properties as any).isFlexChild;
+
         if (!excludeList.includes('width')) {
             if (properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
+                // 고정 사이즈
                 sxProps.push(`width: '${properties.width}px'`);
-            } else if (isAvatar && typeof absW === 'number') {
-                sxProps.push(`width: '${absW}px'`);
+            } else if (properties.width === 'fill' && isFlexChild) {
+                // 채우기이고 flex 자식인 경우 flex: 1 추가
+                sxProps.push(`flex: 1`);
             }
         }
         if (!excludeList.includes('height')) {
             if (properties.height && properties.height !== 'fill' && properties.height !== 'hug') {
                 sxProps.push(`height: '${properties.height}px'`);
-            } else if (isAvatar && typeof absH === 'number') {
-                sxProps.push(`height: '${absH}px'`);
             }
         }
-            if (componentType !== 'button' && !excludeList.includes('backgroundColor')) {
-                // 색상 속성 처리 (스타일 이름 우선, 텍스트는 color, 배경은 backgroundColor)
-                const isAvatar = mapping?.muiName === 'Avatar';
-                const avatarColor = (properties as any).__avatarColorStyle;
-                if (isAvatar && avatarColor) {
-                    sxProps.push(`backgroundColor: '${avatarColor}'`);
-                } else if (properties.colorStyle) {
-                    // properties.colorStyle은 이미 variable-mapping을 통해 MUI 테마 경로로 변환됨 (예: "primary.light")
-                    // 따라서 그대로 사용하면 됨
-                    if (componentType === 'typography') {
-                        sxProps.push(`color: '${properties.colorStyle}'`);
-                    } else {
-                        sxProps.push(`backgroundColor: '${properties.colorStyle}'`);
-                    }
-                } else if (properties.backgroundColor && properties.backgroundColor !== 'transparent' && !properties.colorStyle) {
-                    // 스타일 이름이 없는 경우 기본 색상 사용
-                    if (componentType === 'typography') {
-                        sxProps.push(`color: '${properties.backgroundColor}'`);
-                    } else {
-                        sxProps.push(`backgroundColor: '${properties.backgroundColor}'`);
-                    }
+        if (componentType !== 'button' && !excludeList.includes('backgroundColor')) {
+            // 색상 속성 처리 (스타일 이름 우선, 텍스트는 color, 배경은 backgroundColor)
+            if (properties.colorStyle) {
+                // properties.colorStyle은 이미 variable-mapping을 통해 MUI 테마 경로로 변환됨 (예: "primary.light")
+                // 따라서 그대로 사용하면 됨
+                if (componentType === 'typography') {
+                    sxProps.push(`color: '${properties.colorStyle}'`);
+                } else {
+                    sxProps.push(`backgroundColor: '${properties.colorStyle}'`);
+                }
+            } else if (properties.backgroundColor && properties.backgroundColor !== 'transparent' && !properties.colorStyle) {
+                // 스타일 이름이 없는 경우 기본 색상 사용
+                if (componentType === 'typography') {
+                    sxProps.push(`color: '${properties.backgroundColor}'`);
+                } else {
+                    sxProps.push(`backgroundColor: '${properties.backgroundColor}'`);
                 }
             }
+        }
 
         // excludeFromSx에 있는 속성들은 sx에서 제외
         if (!excludeList.includes('borderRadius') && !excludeList.includes('borderColor')) {
@@ -377,7 +374,7 @@ ${typographyStyles}
      */
     private generateComponentProps(componentType: string, componentName: string, properties: ComponentProperties): string {
         const props: string[] = [];
-        
+
         // ✅ 매핑 기반으로 props 생성 (componentName 우선, 없으면 componentType 사용)
         const mapping = findMappingByFigmaName(componentName) || findMappingByType(componentType);
         const muiProps = mapping?.muiProps;
@@ -386,14 +383,14 @@ ${typographyStyles}
         if (mapping && muiProps) {
             for (const [propName, propDef] of Object.entries(muiProps)) {
                 const value = properties[propName];
-                
+
                 // union 타입인 경우 values에 포함된 값만 추가
                 if (value !== undefined && propDef.values?.includes(value as any)) {
                     // 기본값인 경우 스킵
                     if (propDef.default !== undefined && value === propDef.default) {
                         continue;
                     }
-                    
+
                     if (typeof value === 'string') {
                         props.push(`${propName}="${value}"`);
                     } else {
@@ -408,7 +405,7 @@ ${typographyStyles}
                         if (propDef.default !== undefined && numValue === propDef.default) {
                             continue;
                         }
-                        
+
                         // Stack의 spacing은 변수로 매핑
                         if (componentType === 'layout' && propName === 'spacing') {
                             const mappedValue = this.mapSpacingToVariable(numValue);
@@ -425,7 +422,7 @@ ${typographyStyles}
                     if (value === defaultValue) {
                         continue;
                     }
-                    
+
                     props.push(`${propName}={${value}}`);
                 }
                 // string 타입인 경우
@@ -434,7 +431,7 @@ ${typographyStyles}
                     if (propDef.default !== undefined && value === propDef.default) {
                         continue;
                     }
-                    
+
                     props.push(`${propName}="${value}"`);
                 }
                 // react-node 타입은 아이콘 컴포넌트로 처리
@@ -443,21 +440,21 @@ ${typographyStyles}
                     if (value === false) {
                         continue; // 아무것도 추가하지 않음
                     }
-                    
+
                     // value가 true이거나 undefined인 경우에만 아이콘 생성
                     if (value === true || value === undefined) {
-                        const iconComponentId = propName === 'startIcon' 
-                            ? properties.startIconComponentId 
+                        const iconComponentId = propName === 'startIcon'
+                            ? properties.startIconComponentId
                             : properties.endIconComponentId;
-                        
+
                         if (iconComponentId) {
                             // 아이콘 이름도 함께 전달 (우선순위 1)
-                            const iconName = propName === 'startIcon' 
-                                ? properties.startIconName 
+                            const iconName = propName === 'startIcon'
+                                ? properties.startIconName
                                 : properties.endIconName;
-                            
+
                             const muiIconName = getMuiIconName(iconComponentId, iconName as string);
-                            
+
                             // 매핑된 아이콘 사용 (null이면 아이콘 생성하지 않음)
                             if (muiIconName) {
                                 props.push(`${propName}={<${muiIconName} />}`);
@@ -513,7 +510,7 @@ ${typographyStyles}
      */
     private generateComponentContent(componentType: string, componentName: string, properties: ComponentProperties): string {
         const mapping = findMappingByType(componentType);
-        
+
         // ✅ 매핑에 extractContent가 있으면 사용
         if (mapping?.extractContent) {
             // extractContent는 FigmaNode를 받아야 하므로 properties에서 필요한 값만 사용
@@ -521,11 +518,11 @@ ${typographyStyles}
             const content = mapping.extractContent(mockNode);
             if (content) return this.escapeHtml(content);
         }
-        
+
         // ✅ 기본 추론 로직 (하드코딩 제거)
         if (properties.text) return this.escapeHtml(properties.text);
         if (properties.label) return this.escapeHtml(properties.label);
-        
+
         return '';
     }
 
@@ -554,7 +551,7 @@ ${typographyStyles}
 
         // 기본 MUI 컴포넌트들
         imports.add('Box');
-        
+
         // 컴포넌트별 필요한 임포트 추가 (children 포함)
         this.collectImportsRecursively(components, imports, iconImports);
 
@@ -563,7 +560,7 @@ ${typographyStyles}
         if (iconImports.size > 0) {
             iconImportsList = `\nimport { ${Array.from(iconImports).join(', ')} } from '@mui/icons-material';`;
         }
-        
+
         return `import React from 'react';
 import { ${importsList} } from '@mui/material';${iconImportsList}`;
     }
@@ -583,7 +580,7 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
             // ✅ 컴포넌트 이름으로 직접 매핑 찾기
             const mapping = findMappingByFigmaName(component.componentName) || findMappingByType(component.componentType);
             const muiComponent = mapping?.muiName;
-            
+
             if (muiComponent) {
                 imports.add(muiComponent);
 
@@ -591,7 +588,7 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
                 if (mapping.subComponents) {
                     mapping.subComponents.forEach((comp) => imports.add(comp));
                 }
-                
+
                 // ✅ 매핑 기반 아이콘 import 추가 (하드코딩 제거)
                 if (component.properties && hasIconProperty(component.properties)) {
                     const iconNames = getRequiredIconNames(component.properties);
@@ -615,12 +612,12 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
      */
     private sanitizeComponentName(name: string, componentType: string, index: number): string {
         const sanitized = this.toPascalCase(name);
-        
+
         // 빈 문자열이거나 유효하지 않은 경우 컴포넌트 타입 기반으로 생성
         if (!sanitized || sanitized.length === 0) {
             return `${this.toPascalCase(componentType)}${index + 1}`;
         }
-        
+
         return sanitized;
     }
 
@@ -689,7 +686,7 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
         const componentTypes = components
             .map((component, index) => {
                 const componentName = this.sanitizeComponentName(component.componentName, component.componentType, index);
-                
+
                 // 중복된 이름 방지
                 let finalName = componentName;
                 let counter = 1;
@@ -698,7 +695,7 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
                     counter++;
                 }
                 usedNames.add(finalName);
-                
+
                 return `export type ${finalName}Props = object;`;
             })
             .join('\n\n');
@@ -860,12 +857,12 @@ export interface ${this.toPascalCase(pageName)}PageState {
         <TableHead>
             <TableRow>
                 ${columns
-                    .map(
-                        (col) => `<TableCell key="${col.key}" sx={{ fontWeight: 'bold' }}>
+                .map(
+                    (col) => `<TableCell key="${col.key}" sx={{ fontWeight: 'bold' }}>
                     ${col.label}
                 </TableCell>`,
-                    )
-                    .join('\n                ')}
+                )
+                .join('\n                ')}
             </TableRow>
         </TableHead>
         <TableBody>
@@ -919,16 +916,16 @@ export interface ${this.toPascalCase(pageName)}PageState {
         return `const tableConfig = {
     columns: [
         ${columns
-            .map(
-                (col) => `{
+                .map(
+                    (col) => `{
             key: '${col.key}',
             label: '${col.label}',
             type: '${col.type}',
             sortable: true,
             filterable: true
         }`,
-            )
-            .join(',\n        ')}
+                )
+                .join(',\n        ')}
     ],
     pagination: true,
     sorting: true,
@@ -944,13 +941,13 @@ export interface ${this.toPascalCase(pageName)}PageState {
     private generateComponentPropsType(component: ComponentDesignConfig): string {
         const { componentType } = component;
         const props: string[] = [];
-        
+
         // ✅ 매핑에서 props 가져오기
         const mapping = findMappingByType(componentType);
         if (mapping?.muiProps) {
             for (const [propName, propDef] of Object.entries(mapping.muiProps)) {
                 let typeStr = '';
-                
+
                 if (propDef.type === 'union' && propDef.values) {
                     // union 타입
                     typeStr = `"${propDef.values.join('" | "')}"`;
@@ -965,12 +962,12 @@ export interface ${this.toPascalCase(pageName)}PageState {
                 } else {
                     typeStr = 'any';
                 }
-                
+
                 // optional로 설정
                 props.push(`${propName}?: ${typeStr}`);
             }
         }
-        
+
         // ✅ 추가 이벤트 핸들러 (특수 케이스)
         if (componentType === 'button') {
             props.push('onClick?: () => void');
@@ -1139,7 +1136,7 @@ export const Users = () => {
                 arrowParens: 'avoid',
                 endOfLine: 'lf',
             });
-            
+
             console.log('✅ Prettier 포맷팅 성공');
             return formatted;
         } catch (error) {

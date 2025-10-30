@@ -47,12 +47,34 @@ export const GridMapping: ComponentMapping = {
         },
     },
     
-    excludeFromSx: [],
+    excludeFromSx: [
+        'display',
+        'flexDirection',
+        'gap',
+        'width',
+    ],
     
     // ✅ JSX 생성 템플릿 정의
     generateJSX: (componentName, props, content, sx) => {
-        const sxAttribute = sx ? `\n            sx={${sx}}` : '';
-        return `<Grid${props}${sxAttribute}>
+        let workingSx = sx || '';
+        let spacingSnippet = '';
+
+        // sx에 gap이 있으면 spacing으로 변환 (값을 그대로 전달)
+        if (workingSx) {
+            const genericMatch = workingSx.match(/(?:,|\{|\s)gap:\s*([^,}]+)\s*(?:,|\})/);
+            if (genericMatch && genericMatch[1]) {
+                const rawValue = genericMatch[1].trim();
+                spacingSnippet = ` spacing={${rawValue}}`;
+                // gap 항목 제거
+                workingSx = workingSx
+                    .replace(/\s*gap:\s*[^,}]+\s*,?/g, '')
+                    .replace(/,\s*}/g, ' }')
+                    .replace(/\{\s*,/g, '{ ');
+            }
+        }
+
+        const sxAttribute = workingSx && /\{\s*\}/.test(workingSx) === false ? `\n            sx={${workingSx}}` : '';
+        return `<Grid${props}${spacingSnippet}${sxAttribute}>
             ${content}
         </Grid>`;
     },

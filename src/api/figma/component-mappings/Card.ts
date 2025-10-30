@@ -47,7 +47,7 @@ export const CardMapping: ComponentMapping = {
         },
     },
     
-    excludeFromSx: ['width'],
+    excludeFromSx: [],
     
     // 하위 컴포넌트 import 목록
     subComponents: [

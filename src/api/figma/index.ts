@@ -188,13 +188,21 @@ export class FigmaIntegrationService {
 
             // 파일 저장
             const fileName = this.toKebabCase(componentName);
-            const filePath = `src/components/generated/${fileName}.tsx`;
+            const outputBase = this.getOutputPath();
+            const filePath = `${outputBase}/${fileName}.tsx`;
             await this.saveFile(filePath, componentCode);
 
             console.log(`✅ 라이브러리 컴포넌트 생성 완료: ${componentName}`);
         } catch (error) {
             console.error(`❌ 라이브러리 컴포넌트 처리 실패: ${componentNode.name}`, error);
         }
+    }
+
+    /**
+     * 생성물 출력 기본 경로 반환
+     */
+    private getOutputPath(): string {
+        return process.env.OUTPUT_PATH || 'src/pages/generated';
     }
 
     /**

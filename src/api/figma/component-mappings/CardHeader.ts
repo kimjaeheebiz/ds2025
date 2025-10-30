@@ -145,12 +145,24 @@ export const CardHeaderMapping: ComponentMapping = {
         // props에서 avatar와 action 추출
         const propsObj: any = {};
         
-        // avatar 추출 (properties에서 직접 가져오기)
-        if (properties && properties.avatar) {
-            // avatar가 'true' 문자열이면 기본값 사용, 아니면 실제 텍스트 사용
-            const avatarText = properties.avatar === 'true' || properties.avatar === true 
-                ? 'R' 
-                : properties.avatar;
+        // avatar 추출 (Avatar 토글이 true일 때만 렌더링)
+        const avatarEnabled = (
+            props.includes('avatar="true"') ||
+            props.includes('avatar={true}') ||
+            (properties && (properties.avatar === true || properties.avatar === 'true'))
+        );
+
+        if (avatarEnabled) {
+            // avatar 텍스트가 실제로 제공되면 사용, 없거나 true일 경우 기본값 'R'
+            const hasRealAvatarText = (
+                properties &&
+                typeof properties.avatar === 'string' &&
+                properties.avatar.trim().length > 0 &&
+                properties.avatar !== 'true' &&
+                properties.avatar !== 'false'
+            );
+
+            const avatarText = hasRealAvatarText ? properties.avatar : 'R';
             propsObj.avatar = `<Avatar aria-label="recipe">${avatarText}</Avatar>`;
         }
         

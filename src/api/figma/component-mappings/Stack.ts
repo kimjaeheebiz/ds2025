@@ -68,7 +68,9 @@ export const StackMapping: ComponentMapping = {
         },
     },
     
-    excludeFromSx: [],
+    excludeFromSx: [
+        'width',
+    ],
     
     // ✅ JSX 생성 템플릿 정의
     generateJSX: (componentName, props, content, sx) => {
