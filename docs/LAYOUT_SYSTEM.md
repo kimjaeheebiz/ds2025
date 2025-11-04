@@ -4,7 +4,7 @@
 ## 1. 구성 요소
 
 - 기본 레이아웃 구성 요소: `Header`, `Sidebar`, `PageHeader`, `MainContent`, `Outlet`
-- 공통 UI: 브랜드/네비게이션/색상 체계 일관 유지
+- 공통 UI: 브랜드/네비게이션/색상 체계 일관성 유지
 
 
 ## 2. 적용 원칙

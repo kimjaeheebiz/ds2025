@@ -1,6 +1,7 @@
 # Agent Platform Design System 2025
 
-React + TypeScript + Vite 기반 관리 시스템
+React + TypeScript + Vite
+
 
 ## 🚀 시작하기
 
@@ -100,4 +101,4 @@ Figma 연동으로 페이지 콘텐츠 자동 생성, 레이아웃/메뉴/브레
 - [명령어 모음](./docs/COMMANDS.md) - 개발/빌드/토큰/메뉴/Figma 전체 명령
 - [디자인 시스템](./docs/DESIGN_SYSTEM.md) - 토큰 → MUI 테마 반영 흐름
 - [메뉴 토큰 연동](./docs/MENU_TOKENS.md) - Figma 변수/토큰 기반 메뉴 → mainmenu.ts 동기화
-- [페이지 생성](./docs/PAGES.md) - 페이지 생성 절차, 파일 구조, 연동/유의사항
+- [페이지 생성](./docs/PAGES.md) - 페이지 생성 절차, 파일 구조, 연동/유의 사항

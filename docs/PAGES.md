@@ -24,11 +24,11 @@
 
 ## 4. 연동
 
-- 경로/브레드크럼: `src/config/pages.ts`, `src/config/mainmenu.ts`와 일관 연동
+- 경로/브레드크럼: `src/config/pages.ts`, `src/config/mainmenu.ts`와 연동
 - 디자인 시스템: 토큰 기반 테마가 생성물에 일괄 적용
 
 
-## 5. 유의
+## 5. 유의 사항
 
 - 사용되지 않는 아이콘/컴포넌트 불필요 임포트 방지
 - 하드 코딩된 계산식 제거, 토큰/설정 값 직접 반영

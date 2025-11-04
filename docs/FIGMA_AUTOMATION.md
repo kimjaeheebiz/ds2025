@@ -71,7 +71,7 @@ defaultLayoutTemplate (Root Frame)
 - 목적: Figma 컴포넌트/프로퍼티/스타일 → MUI 컴포넌트/props/sx 스타일 매핑
 - 아이콘: 공통 추출/매핑 유틸 사용, 실제 아이콘명 기준으로 `@mui/icons-material` 임포트 최소화
 - 예시 범주: `Typography.ts`, `Button.ts`, `Card.ts`, `Stack.ts` 등
-- 주의
+- 유의 사항
   - MUI Figma 디자인 키트 일부 컴포넌트 미포함, 커스터마이징 요소 다수
   - MUI 컴포넌트의 Figma 디자인과 React 소스 구조가 상이하여 모든 컴포넌트 매핑 파일 선개발 필요
   - MUI 버전 업그레이드 시 컴포넌트 매핑 구조 변경 필요
