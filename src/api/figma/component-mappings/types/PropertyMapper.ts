@@ -52,5 +52,8 @@ export interface ComponentMapping {
     
     /** ✅ 추가: 자식 노드 추출 로직 (Card, Table 등 복잡한 구조) */
     extractChildren?: (node: FigmaNode) => Promise<FigmaNode[]>;
+    
+    /** ✅ 추가: Props 변환 로직 (Table의 small → size 같은 특수 변환) */
+    transformProps?: (properties: ComponentProperties) => ComponentProperties;
 }
 

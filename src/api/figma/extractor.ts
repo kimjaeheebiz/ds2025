@@ -590,9 +590,10 @@ export class FigmaDesignExtractor {
     /**
      * 컴포넌트 노드 파싱
      * @param node 피그마 노드
+     * @param context 컨텍스트 (Table의 small 값 등)
      * @returns 컴포넌트 디자인 설정
      */
-    private async extractComponentDesign(node: FigmaNode): Promise<ComponentDesignConfig | null> {
+    private async extractComponentDesign(node: FigmaNode, context?: { tableSmall?: boolean }): Promise<ComponentDesignConfig | null> {
         // 숨김 노드는 완전히 제외 (추출 및 하위 조회 모두 스킵)
         if ((node as any)?.visible === false) {
             return null;
@@ -601,20 +602,33 @@ export class FigmaDesignExtractor {
         const componentType = this.determineComponentType(node);
         if (!componentType) return null;
 
+        // ✅ Table인 경우 small 값을 먼저 추출하여 컨텍스트로 사용
+        const isTable = componentType === 'table' && (node.name === '<Table>' || node.name === 'Table');
+        let tableSmallContext: { tableSmall?: boolean } | undefined = undefined;
+        
+        if (isTable) {
+            // Table의 small 값을 먼저 추출
+            const tempProps = await this.extractComponentProperties(node);
+            const tableSmall = tempProps['small'] === true;
+            tableSmallContext = { tableSmall };
+            console.log(`🔍 [Table] small 값 추출: ${tableSmall}, 컨텍스트 설정`);
+        }
+
         const component: ComponentDesignConfig = {
             componentId: node.id,
             componentName: node.name,
             componentType,
-            properties: await this.extractComponentProperties(node),
+            properties: await this.extractComponentProperties(node, tableSmallContext),
             variants: await this.extractComponentVariants(node),
         };
 
-        // layout, card 타입인 경우 자식 노드 추출
+        // layout, card, table 타입인 경우 자식 노드 추출
         // Card는 커스텀 추출 로직 사용
         const isCardFamily = componentType === 'card';
         const isLayout = componentType === 'layout';
+        const isTableType = componentType === 'table'; // TableContainer도 포함
 
-        if ((isLayout || isCardFamily) && node.children) {
+        if ((isLayout || isCardFamily || isTableType) && node.children) {
 
             // ✅ 매핑에서 extractChildren이 있는지 확인
             const mapping = findMappingByType(componentType);
@@ -662,13 +676,337 @@ export class FigmaDesignExtractor {
                     continue;
                 }
 
+                // Table 중첩 방지: Table 안에 또 다른 Table이 있으면 스킵하고 그 children을 직접 추가
+                if (isTable && (component.componentName === '<Table>' || component.componentName === 'Table')) {
+                    const childType = this.determineComponentType(child);
+                    if (childType === 'table' && (child.name === '<Table>' || child.name === 'Table')) {
+                        console.log(`⚠️ [Table] 중첩된 Table 발견, children을 직접 추가: ${child.name}`);
+                        // 중첩된 Table의 children을 직접 추가
+                        if (child.children) {
+                            for (const nestedChild of child.children) {
+                                if ((nestedChild as any)?.visible === false) continue;
+                                const nestedComponent = await this.extractComponentDesign(nestedChild);
+                                if (nestedComponent) {
+                                    children.push(nestedComponent);
+                                }
+                            }
+                        }
+                        continue;
+                    }
+                }
+
+                // ✅ 참고: Table과 TableCell은 각각 피그마 인스턴스에서 직접 Small 속성을 추출함
+                // propagateTableSize는 제거하고, extractComponentProperties에서 직접 추출된 값을 사용
+
+                // ✅ 변환 규칙 1: <TableHeadRow> → <TableHead> + <TableRow>
+                if (child.name === '<TableHeadRow>' || child.name === 'TableHeadRow') {
+                    console.log(`🔄 [Table] TableHeadRow를 TableHead + TableRow로 변환: ${child.name}`);
+                    
+                    // TableHeadRow의 children을 추출하고 <TableHead>를 <TableCell>로 변환
+                    const tableCellChildren: ComponentDesignConfig[] = [];
+                    if (child.children) {
+                        for (const headRowChild of child.children) {
+                            if ((headRowChild as any)?.visible === false) continue;
+                            
+                            // <TableHead> 인스턴스를 <TableCell>로 변환
+                            if (headRowChild.name === '<TableHead>' || headRowChild.name === 'TableHead') {
+                                // <TableHead>의 텍스트 내용만 추출하여 TableCell로 변환
+                                let textContent = '';
+                                if (headRowChild.children) {
+                                    // TEXT 노드에서 텍스트 추출
+                                    for (const textNode of headRowChild.children) {
+                                        if (textNode.type === 'TEXT' && textNode.characters) {
+                                            textContent = textNode.characters;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                // <TableHead>의 속성 추출 (피그마 인스턴스에서 직접 Small 속성 추출)
+                                // 디버깅: <TableHead> 인스턴스의 componentProperties 확인
+                                console.log(`🔍 [<TableHead>] extractComponentProperties 호출 전: name=${headRowChild.name}, componentProperties=`, JSON.stringify((headRowChild as any).componentProperties || {}));
+                                const headCellProperties = await this.extractComponentProperties(headRowChild, tableSmallContext);
+                                console.log(`🔍 [<TableHead>] extractComponentProperties 호출 후: properties=`, JSON.stringify(headCellProperties));
+                                if (textContent) {
+                                    headCellProperties.text = textContent;
+                                }
+                                
+                                // TableCell로 변환 (children 없이 텍스트만)
+                                const tableCell: ComponentDesignConfig = {
+                                    componentId: headRowChild.id,
+                                    componentName: '<TableCell>',
+                                    componentType: 'table',
+                                    properties: headCellProperties,
+                                    children: [] // 텍스트는 properties.text로 처리
+                                };
+                                tableCellChildren.push(tableCell);
+                            } else {
+                                // 다른 타입의 children도 처리
+                                const headRowChildComponent = await this.extractComponentDesign(headRowChild, tableSmallContext);
+                                if (headRowChildComponent) {
+                                    tableCellChildren.push(headRowChildComponent);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // TableRow 생성 (TableCell들을 children으로)
+                    const tableRow: ComponentDesignConfig = {
+                        componentId: `${child.id}_row`,
+                        componentName: '<TableRow>',
+                        componentType: 'table',
+                        properties: {},
+                        children: tableCellChildren
+                    };
+                    
+                    // TableHead 생성 (TableRow를 children으로)
+                    const tableHead: ComponentDesignConfig = {
+                        componentId: child.id,
+                        componentName: '<TableHead>',
+                        componentType: 'table',
+                        properties: await this.extractComponentProperties(child, tableSmallContext),
+                        children: [tableRow]
+                    };
+                    
+                    children.push(tableHead);
+                    continue;
+                }
+
+                // ✅ 변환 규칙 2: <TableCellRow> (Row #1, Row #2, ...) → <TableRow>
+                // Row #1, Row #2 등의 패턴을 감지하여 TableRow로 변환
+                const isTableCellRow = child.name.startsWith('Row #') || 
+                                      child.name === '<TableCellRow>' || 
+                                      child.name === 'TableCellRow';
+                
+                if (isTableCellRow) {
+                    console.log(`🔄 [Table] TableCellRow를 TableRow로 변환: ${child.name}`);
+                    
+                    // TableCellRow의 children을 추출하고 <TableCell>로 변환
+                    const tableCellChildren: ComponentDesignConfig[] = [];
+                    if (child.children) {
+                        for (const cellRowChild of child.children) {
+                            if ((cellRowChild as any)?.visible === false) continue;
+                            
+                            // <TableCell> 인스턴스 감지
+                            // 피그마에서 Cell #1, Cell #2 등이 실제로 <TableCell> 인스턴스인 경우도 처리
+                            const isTableCell = cellRowChild.name === '<TableCell>' ||
+                                                cellRowChild.name === 'TableCell' ||
+                                                (cellRowChild.name.startsWith('Cell #') && 
+                                                 (cellRowChild.type === 'INSTANCE' || 
+                                                  (cellRowChild as any).componentProperties));
+                            
+                            if (isTableCell) {
+                                // <TableCell> 인스턴스 처리: properties 추출 및 텍스트 추출
+                                // 피그마 인스턴스에서 직접 Small 속성 추출
+                                // 디버깅: <TableCell> 인스턴스의 componentProperties 확인
+                                console.log(`🔍 [<TableCell>] extractComponentProperties 호출 전: name=${cellRowChild.name}, componentProperties=`, JSON.stringify((cellRowChild as any).componentProperties || {}));
+                                const cellProperties = await this.extractComponentProperties(cellRowChild, tableSmallContext);
+                                console.log(`🔍 [<TableCell>] extractComponentProperties 호출 후: properties=`, JSON.stringify(cellProperties));
+                                
+                                // 재귀적으로 텍스트 내용 추출 (TableCell 안에 Box > Typography > TEXT 구조)
+                                const extractTextRecursively = (node: any): string => {
+                                    if (node.type === 'TEXT' && node.characters) {
+                                        return node.characters;
+                                    }
+                                    if (node.children) {
+                                        for (const childNode of node.children) {
+                                            const text = extractTextRecursively(childNode);
+                                            if (text) return text;
+                                        }
+                                    }
+                                    return '';
+                                };
+                                
+                                let textContent = extractTextRecursively(cellRowChild);
+                                
+                                // 텍스트가 없으면 children을 추출
+                                const cellChildren: ComponentDesignConfig[] = [];
+                                if (!textContent && cellRowChild.children) {
+                                    for (const cellChild of cellRowChild.children) {
+                                        if ((cellChild as any)?.visible === false) continue;
+                                        const cellChildComponent = await this.extractComponentDesign(cellChild);
+                                        if (cellChildComponent) {
+                                            cellChildren.push(cellChildComponent);
+                                        }
+                                    }
+                                }
+                                
+                                // 텍스트가 있으면 properties.text에 저장
+                                if (textContent) {
+                                    cellProperties.text = textContent;
+                                }
+                                
+                                const tableCell: ComponentDesignConfig = {
+                                    componentId: cellRowChild.id,
+                                    componentName: '<TableCell>',
+                                    componentType: 'table',
+                                    properties: cellProperties,
+                                    children: cellChildren
+                                };
+                                tableCellChildren.push(tableCell);
+                            } else {
+                                // 다른 타입의 경우 TableCell로 변환
+                                const cellProperties = await this.extractComponentProperties(cellRowChild, tableSmallContext);
+                                
+                                // 재귀적으로 텍스트 내용 추출 (TableCell 안에 Box > Typography > TEXT 구조)
+                                const extractTextRecursively = (node: any): string => {
+                                    if (node.type === 'TEXT' && node.characters) {
+                                        return node.characters;
+                                    }
+                                    if (node.children) {
+                                        for (const childNode of node.children) {
+                                            const text = extractTextRecursively(childNode);
+                                            if (text) return text;
+                                        }
+                                    }
+                                    return '';
+                                };
+                                
+                                let textContent = extractTextRecursively(cellRowChild);
+                                
+                                // 텍스트가 없으면 children을 추출
+                                const cellChildren: ComponentDesignConfig[] = [];
+                                if (!textContent && cellRowChild.children) {
+                                    for (const cellChild of cellRowChild.children) {
+                                        if ((cellChild as any)?.visible === false) continue;
+                                        const cellChildComponent = await this.extractComponentDesign(cellChild, tableSmallContext);
+                                        if (cellChildComponent) {
+                                            cellChildren.push(cellChildComponent);
+                                        }
+                                    }
+                                }
+                                
+                                // 텍스트가 있으면 properties.text에 저장
+                                if (textContent) {
+                                    cellProperties.text = textContent;
+                                }
+                                
+                                const tableCell: ComponentDesignConfig = {
+                                    componentId: cellRowChild.id,
+                                    componentName: '<TableCell>',
+                                    componentType: 'table',
+                                    properties: cellProperties,
+                                    children: cellChildren
+                                };
+                                tableCellChildren.push(tableCell);
+                            }
+                        }
+                    }
+                    
+                    // TableRow 생성 (TableCell들을 children으로)
+                    const tableRow: ComponentDesignConfig = {
+                        componentId: child.id,
+                        componentName: '<TableRow>',
+                        componentType: 'table',
+                        properties: await this.extractComponentProperties(child, tableSmallContext),
+                        children: tableCellChildren
+                    };
+                    
+                    children.push(tableRow);
+                    continue;
+                }
+
+                // TableFooter 인스턴스는 페이징 정보가 포함되어 있어 이번 작업에서는 제외
+                if (child.name === '<TableFooter>' || child.name === 'TableFooter') {
+                    continue;
+                }
+                
                 // 모든 자식 노드 처리
-                const childComponent = await this.extractComponentDesign(child);
+                const childComponent = await this.extractComponentDesign(child, tableSmallContext);
                 if (childComponent) {
                     children.push(childComponent);
                 }
             }
-            if (children.length > 0) {
+            
+            // ✅ Table 구조 정규화: MUI 구조에 맞게 변환
+            // MUI 구조: Table > TableHead + TableBody + TableFooter
+            if (isTable && (component.componentName === '<Table>' || component.componentName === 'Table') && children.length > 0) {
+                const tableHeadChildren: ComponentDesignConfig[] = [];
+                const tableBodyChildren: ComponentDesignConfig[] = [];
+                const tableFooterChildren: ComponentDesignConfig[] = [];
+                
+                for (const child of children) {
+                    // TableHead 관련 컴포넌트 처리 (이미 TableHeadRow는 위에서 변환됨)
+                    if (child.componentName === '<TableHead>' || child.componentName === 'TableHead') {
+                        // TableHead는 그대로 추가
+                        tableHeadChildren.push(child);
+                    } else if (child.componentName === '<TableHeadRow>' || child.componentName === 'TableHeadRow') {
+                        // TableHeadRow는 이미 위에서 처리되었지만, 혹시 남아있다면 처리
+                        // 이 경우는 이미 위에서 처리되어야 하므로 발생하지 않아야 함
+                        tableHeadChildren.push(child);
+                    } else if (child.componentName === '<TableFooter>' || child.componentName === 'TableFooter') {
+                        // TableFooter 처리: TableBody와 동일하게 TableRow, TableCell만 포함
+                        // 페이징 정보(Stack, IconButton 등)는 제외하고 TableRow만 추출
+                        if (child.children) {
+                            for (const footerChild of child.children) {
+                                // TableRow만 추출 (페이징 정보 제외)
+                                if (footerChild.componentName === '<TableRow>' || footerChild.componentName === 'TableRow') {
+                                    tableFooterChildren.push(footerChild);
+                                }
+                            }
+                        }
+                    } else if (child.componentName === '<TableRow>' || child.componentName === 'TableRow') {
+                        // TableRow는 TableBody에 들어감
+                        tableBodyChildren.push(child);
+                    } else if (child.componentName === '<TableBody>' || child.componentName === 'TableBody') {
+                        // 이미 TableBody가 있으면 그대로 추가
+                        tableBodyChildren.push(child);
+                    } else {
+                        // 기타 children도 TableBody에 들어감 (Row #1, Row #2 등은 이미 위에서 TableRow로 변환됨)
+                        tableBodyChildren.push(child);
+                    }
+                }
+                
+                // TableHead가 있으면 추가
+                const normalizedChildren: ComponentDesignConfig[] = [];
+                if (tableHeadChildren.length > 0) {
+                    normalizedChildren.push(...tableHeadChildren);
+                }
+                
+                // ✅ TableBody 그룹화: TableRow들을 TableBody로 감싸기
+                if (tableBodyChildren.length > 0) {
+                    // tableBodyChildren에는 TableRow들이 들어있어야 함
+                    const tableBody: ComponentDesignConfig = {
+                        componentId: `${component.componentId}_body`,
+                        componentName: '<TableBody>',
+                        componentType: 'table',
+                        properties: {},
+                        children: tableBodyChildren
+                    };
+                    normalizedChildren.push(tableBody);
+                }
+                
+                // ✅ TableFooter 그룹화: TableRow들을 TableFooter로 감싸기
+                if (tableFooterChildren.length > 0) {
+                    const tableFooter: ComponentDesignConfig = {
+                        componentId: `${component.componentId}_footer`,
+                        componentName: '<TableFooter>',
+                        componentType: 'table',
+                        properties: {},
+                        children: tableFooterChildren
+                    };
+                    normalizedChildren.push(tableFooter);
+                }
+                
+                component.children = normalizedChildren.length > 0 ? normalizedChildren : children;
+            } else if (isTable && children.length > 0) {
+                // Table이 아닌 다른 table 타입 컴포넌트 (TableHead, TableRow 등)
+                const normalizedChildren: ComponentDesignConfig[] = [];
+                for (const child of children) {
+                    // TableHead 안에 있는 <TableHead>를 <TableCell>로 변환
+                    if ((component.componentName === '<TableHead>' || component.componentName === 'TableHead') &&
+                        (child.componentName === '<TableHead>' || child.componentName === 'TableHead')) {
+                        normalizedChildren.push({
+                            ...child,
+                            componentName: '<TableCell>',
+                            componentType: 'table',
+                        });
+                    } else {
+                        normalizedChildren.push(child);
+                    }
+                }
+                component.children = normalizedChildren;
+            } else if (children.length > 0) {
                 component.children = children;
             }
         }
@@ -925,104 +1263,13 @@ export class FigmaDesignExtractor {
     }
 
     /**
-     * 테이블 컬럼 정보 추출
-     * @param node 테이블 노드
-     * @returns 테이블 컬럼 배열
-     */
-    private extractTableColumns(node: FigmaNode): Array<{ key: string; label: string; type: string }> {
-        const columns: Array<{ key: string; label: string; type: string }> = [];
-
-        // 테이블 헤더 찾기
-        const headerRow = node.children?.find(
-            (child) => child.name.toLowerCase().includes('header') || child.name.toLowerCase().includes('thead'),
-        );
-
-        if (headerRow?.children) {
-            headerRow.children.forEach((headerCell) => {
-                const cellText = headerCell.characters || headerCell.name;
-                if (cellText) {
-                    const key = this.generateColumnKey(cellText);
-                    const type = this.determineColumnType(cellText);
-
-                    columns.push({
-                        key,
-                        label: cellText,
-                        type,
-                    });
-                }
-            });
-        }
-
-        return columns;
-    }
-
-    /**
-     * 컬럼 키 생성
-     * @param label 컬럼 라벨
-     * @returns 컬럼 키
-     */
-    private generateColumnKey(label: string): string {
-        // 한글 라벨을 영문 키로 변환
-        const keyMap: Record<string, string> = {
-            번호: 'index', // 테이블 순번 (인덱스)
-            이메일: 'id', // 이메일
-            '이메일 아이디': 'id', // 이메일 (다른 표현)
-            '사용자 ID': 'id', // 이메일 아이디 (다른 표현)
-            이름: 'name',
-            부서: 'department', // 소속 (부서)
-            소속: 'department', // 소속
-            권한: 'permission',
-            상태: 'status',
-            가입일: 'regdate',
-            '최근 로그인': 'last_login',
-            워크플로우명: 'name',
-            설명: 'description',
-            생성자: 'user_name',
-            즐겨찾기: 'isFavorite',
-            생성일: 'created_at',
-            수정일: 'updated_at',
-            전화번호: 'phone',
-            주소: 'address',
-            직급: 'position',
-            입사일: 'joinDate',
-            퇴사일: 'leaveDate',
-        };
-
-        return keyMap[label] || label.toLowerCase().replace(/\s+/g, '_');
-    }
-
-    /**
-     * 컬럼 타입 결정
-     * @param label 컬럼 라벨
-     * @returns 컬럼 타입
-     */
-    private determineColumnType(label: string): string {
-        if (label.includes('이메일') || label.includes('email')) return 'email';
-        if (label.includes('일') || label.includes('날짜') || label.includes('date')) return 'date';
-        if (label.includes('상태') || label.includes('status')) return 'status';
-        if (label.includes('권한') || label.includes('permission')) return 'permission';
-        if (label.includes('프로젝트') || label.includes('project')) return 'project';
-        if (
-            label.includes('실행여부') ||
-            label.includes('차단여부') ||
-            label.includes('즐겨찾기') ||
-            label.includes('favorite')
-        )
-            return 'boolean';
-        if (label.includes('번호') && !label.includes('전화')) return 'index'; // 테이블 순번
-        if (label.includes('전화번호') || label.includes('phone')) return 'phone';
-        if (label.includes('주소') || label.includes('address')) return 'text';
-        if (label.includes('직급') || label.includes('position')) return 'text';
-        return 'text';
-    }
-
-    /**
      * 컴포넌트 속성 추출
      * @param node 피그마 노드
      * @returns 컴포넌트 속성
      */
     private async extractComponentProperties(
         node: FigmaNode,
+        context?: { tableSmall?: boolean },
     ): Promise<Record<
         string,
         | string
@@ -1046,7 +1293,19 @@ export class FigmaDesignExtractor {
         const componentType = this.determineComponentType(node);
 
         // ✅ 매핑 기반으로 props 추출 (name 우선, 없으면 type으로)
-        const mapping = findMappingByFigmaName(node.name) || (componentType ? findMappingByType(componentType) : null);
+        // "Cell #" 패턴은 TableCell로 처리 (피그마에서 TableCell 인스턴스가 "Cell #1", "Cell #2" 등으로 명명됨)
+        let mapping = findMappingByFigmaName(node.name);
+        if (!mapping && (node.name.startsWith('Cell #') || node.name.startsWith('cell #'))) {
+            // Cell # 패턴이고 componentProperties에 Small prop이 있으면 TableCell 매핑 사용
+            const props = (node as any).componentProperties || {};
+            const hasSmallProp = Object.keys(props).some(key => key.toLowerCase() === 'small');
+            if (hasSmallProp) {
+                mapping = findMappingByFigmaName('<TableCell>');
+            }
+        }
+        if (!mapping && componentType) {
+            mapping = findMappingByType(componentType);
+        }
         const isAvatarComponent = (mapping && (mapping as any).muiName === 'Avatar') || (((node as any).name || '').toLowerCase().includes('avatar'));
 
         // ✅ 커스텀 속성 추출 로직이 있으면 사용 (Card의 Paper 속성 추출 등)
@@ -1061,6 +1320,7 @@ export class FigmaDesignExtractor {
             // 모든 MUI Props 추출
             for (const [propName, propDef] of Object.entries(mapping.muiProps)) {
                 let value: any = undefined;
+                let matchingKey: string | undefined = undefined;
 
                 // extractFromFigma 함수가 있으면 사용
                 if (propDef.extractFromFigma) {
@@ -1069,7 +1329,7 @@ export class FigmaDesignExtractor {
                     // componentProperties에서 직접 추출
                     // Figma 디자인 키트는 PascalCase, 개발은 camelCase를 사용하므로 대소문자 무시 매칭
                     const props = (node as any).componentProperties || {};
-                    const matchingKey = Object.keys(props).find(
+                    matchingKey = Object.keys(props).find(
                         key => key.toLowerCase() === propName.toLowerCase()
                     );
 
@@ -1081,18 +1341,52 @@ export class FigmaDesignExtractor {
                             value = propData;
                         }
                     }
+                    
+                    // 디버깅: TableCell의 Small prop 추출 확인
+                    if (propName === 'small' && (node.name === '<TableCell>' || node.name === 'TableCell' || node.name.startsWith('Cell #'))) {
+                        console.log(`🔍 [${node.name}] Small prop 추출 시도: matchingKey=${matchingKey}, value=${value}, props keys:`, Object.keys(props));
+                        if (matchingKey) {
+                            console.log(`✅ [${node.name}] Small prop 발견: ${matchingKey} = ${JSON.stringify(props[matchingKey])}`);
+                        } else {
+                            console.log(`❌ [${node.name}] Small prop을 찾지 못함. componentProperties:`, JSON.stringify(props));
+                        }
+                    }
                 }
 
                 // 값이 있으면 properties에 추가
-                if (value !== undefined && value !== null) {
+                // 단, extractProperties에서 이미 설정한 값이 있으면 유지 (커스텀 추출 로직 우선)
+                if (value !== undefined && value !== null && properties[propName] === undefined) {
                     // 변환 함수가 있으면 적용
                     if (propDef.transform) {
                         value = propDef.transform(value);
                     }
 
-                    // 기본값인 경우 스킵
-                    // string 타입인 경우 대소문자 비교
-                    if (propDef.default !== undefined) {
+                    // ✅ Table의 small 값에 따른 하위 노드 small 추출 제어
+                    // Table small=true인 경우: 하위 노드(TableRow, TableCell 등)의 small 추출 건너뛰기
+                    if (propName === 'small' && context?.tableSmall === true) {
+                        // Table이 small=true인 경우 하위 노드의 small은 추출하지 않음
+                        const isTableComponent = node.name === '<Table>' || node.name === 'Table';
+                        if (!isTableComponent) {
+                            continue; // Table이 아닌 하위 노드의 small은 건너뛰기
+                        }
+                    }
+                    
+                    // ✅ Table small=false인 경우: TableCell의 small만 추출
+                    if (propName === 'small' && context?.tableSmall === false) {
+                        const isTableCell = node.name === '<TableCell>' || 
+                                           node.name === 'TableCell' || 
+                                           node.name.startsWith('Cell #');
+                        if (!isTableCell) {
+                            continue; // TableCell이 아닌 경우 small 추출 건너뛰기
+                        }
+                    }
+                    
+                    // 기본값인 경우 스킵 (단, transformProps가 있는 경우는 제외)
+                    // transformProps가 있는 경우 (예: Table, TableCell의 small) 기본값이어도 저장해야 변환 가능
+                    const hasTransformProps = mapping?.transformProps !== undefined;
+                    const shouldSkipDefault = propDef.default !== undefined && !hasTransformProps;
+                    
+                    if (shouldSkipDefault) {
                         const normalizedValue = typeof value === 'string' ? value.toLowerCase() : value;
                         const normalizedDefault = typeof propDef.default === 'string' ? propDef.default.toLowerCase() : propDef.default;
                         if (normalizedValue === normalizedDefault) {
@@ -1100,8 +1394,40 @@ export class FigmaDesignExtractor {
                         }
                     }
 
-                    // properties에 값 저장 (string은 toLowerCase())
-                    properties[propName] = typeof value === 'string' ? value.toLowerCase() : value;
+                    // properties에 값 저장 (string은 toLowerCase(), boolean 타입은 문자열을 boolean으로 변환)
+                    // transformProps가 있는 경우 small prop도 저장 (기본값이어도)
+                    if (propDef.type === 'boolean') {
+                        // boolean 타입인 경우: 문자열 "true"/"false"를 boolean으로 변환
+                        if (typeof value === 'string') {
+                            const lowerValue = value.toLowerCase();
+                            properties[propName] = lowerValue === 'true';
+                        } else {
+                            properties[propName] = Boolean(value);
+                        }
+                    } else {
+                        properties[propName] = typeof value === 'string' ? value.toLowerCase() : value;
+                    }
+                    
+                    // 디버깅: small prop 추출 확인
+                    if ((propName === 'small') && (node.name === '<Table>' || node.name === 'Table' || node.name === '<TableCell>' || node.name === 'TableCell' || node.name === '<TableHead>' || node.name === 'TableHead')) {
+                        console.log(`🔍 [${node.name}] extractComponentProperties: ${propName}=${value} (hasTransformProps=${hasTransformProps})`);
+                        console.log(`🔍 [${node.name}] componentProperties 전체:`, JSON.stringify((node as any).componentProperties || {}));
+                        console.log(`🔍 [${node.name}] 추출된 properties:`, JSON.stringify(properties));
+                    }
+                    
+                    // 디버깅: TableCell의 모든 prop 추출 확인
+                    if ((node.name === '<TableCell>' || node.name === 'TableCell') && propName === 'small') {
+                        console.log(`🔍 [TableCell] small prop 추출 시도: propName=${propName}, value=${value}, matchingKey=${matchingKey || '없음'}`);
+                        console.log(`🔍 [TableCell] 전체 componentProperties:`, JSON.stringify((node as any).componentProperties || {}));
+                    }
+                    
+                    // 디버깅: TableCell 인스턴스의 componentProperties 확인
+                    if ((node.name === '<TableCell>' || node.name === 'TableCell')) {
+                        const props = (node as any).componentProperties || {};
+                        console.log(`🔍 [${node.name}] TableCell 인스턴스 componentProperties 전체:`, JSON.stringify(props));
+                        const hasSmall = Object.keys(props).some(key => key.toLowerCase() === 'small');
+                        console.log(`🔍 [${node.name}] Small prop 존재 여부: ${hasSmall}, 추출된 properties:`, JSON.stringify(properties));
+                    }
                 }
             }
 

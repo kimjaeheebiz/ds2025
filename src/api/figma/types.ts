@@ -349,9 +349,8 @@ export interface ComponentProperties {
     alt?: string;
     badgeContent?: string | number;
     elevation?: number;
+    component?: string; // component prop (예: 'Paper')
     type?: string;
-    // Table-specific properties
-    columns?: Array<{ key: string; label: string; type: string }>;
     // Icon properties
     startIconComponentId?: string; // Figma의 아이콘 컴포넌트 ID
     endIconComponentId?: string;

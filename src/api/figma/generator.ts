@@ -189,25 +189,37 @@ ${typographyStyles}
     private generateComponentJSX(component: ComponentDesignConfig): string {
         const { componentType, componentName, properties, children } = component;
 
-        // 테이블 컴포넌트는 특별 처리
-        if (componentType === 'table') {
-            return this.generateTableJSX(component);
-        }
-
         // 먼저 componentName으로 매핑을 찾고, 없으면 componentType으로 찾음
         const mapping = findMappingByFigmaName(componentName) || findMappingByType(componentType);
 
-        // layout, card 타입 및 Card 하위 컴포넌트는 children 렌더링
+        // layout, card, table 타입 및 하위 컴포넌트는 children 렌더링
         const isCardSubComponent = componentName === 'CardHeader' ||
             componentName === 'CardContent' ||
             componentName === 'CardActions' ||
             componentName === 'CardMedia';
-        const shouldRenderChildren = (componentType === 'layout' || componentType === 'card' || isCardSubComponent) && children && children.length > 0;
+        const isTableSubComponent = componentName === '<TableHead>' ||
+            componentName === '<TableBody>' ||
+            componentName === '<TableRow>' ||
+            componentName === '<TableCell>' ||
+            componentName === '<TableFooter>' ||
+            componentName === 'TableHead' ||
+            componentName === 'TableBody' ||
+            componentName === 'TableRow' ||
+            componentName === 'TableCell' ||
+            componentName === 'TableFooter';
+        // TableCell은 children이 있으면 렌더링, 없으면 text 사용
+        const isTableCellComponent = componentName === '<TableCell>' || componentName === 'TableCell';
+        const shouldRenderChildren = (componentType === 'layout' || componentType === 'card' || componentType === 'table' || isCardSubComponent || isTableSubComponent) && children && children.length > 0;
 
         let content = '';
         if (shouldRenderChildren) {
             content = children.map(child => this.generateComponentJSX(child)).join('\n        ');
         } else {
+            content = this.generateComponentContent(componentType, componentName, properties);
+        }
+        
+        // TableCell의 경우: children이 없고 text가 있으면 text 사용
+        if (isTableCellComponent && (!children || children.length === 0) && properties.text) {
             content = this.generateComponentContent(componentType, componentName, properties);
         }
 
@@ -246,11 +258,33 @@ ${typographyStyles}
      * @returns SX 속성 문자열 또는 null (빈 객체인 경우)
      */
     private generateSXProps(properties: ComponentProperties, componentType: string, componentName?: string, isStack: boolean = false): string | null {
-        const sxProps: string[] = [];
         // componentName이 있으면 figmaName으로 먼저 매핑을 찾음 (Box 등)
         const mapping = componentName
             ? (findMappingByFigmaName(componentName) || findMappingByType(componentType))
             : findMappingByType(componentType);
+
+        // ✅ Table 관련 컴포넌트 예외 처리
+        // Table, TableHead, TableBody, TableRow, TableCell은 피그마와 개발 코드의 UI 스타일 구성 방식이 달라 sx 속성을 제거
+        const isTableComponent = componentType === 'table' && (
+            componentName === '<Table>' ||
+            componentName === '<TableHead>' ||
+            componentName === '<TableBody>' ||
+            componentName === '<TableRow>' ||
+            componentName === '<TableCell>' ||
+            componentName === '<TableFooter>' ||
+            componentName === 'Table' ||
+            componentName === 'TableHead' ||
+            componentName === 'TableBody' ||
+            componentName === 'TableRow' ||
+            componentName === 'TableCell' ||
+            componentName === 'TableFooter'
+        );
+        
+        if (isTableComponent) {
+            return null; // Table 관련 컴포넌트는 sx 속성을 완전히 제거
+        }
+
+        const sxProps: string[] = [];
 
         // layout 타입인 경우 Auto Layout 속성 추가
         if (componentType === 'layout') {
@@ -306,8 +340,8 @@ ${typographyStyles}
             if (properties.width && properties.width !== 'fill' && properties.width !== 'hug') {
                 // 고정 사이즈
                 sxProps.push(`width: '${properties.width}px'`);
-            } else if (properties.width === 'fill' && isFlexChild) {
-                // 채우기이고 flex 자식인 경우 flex: 1 추가
+            } else if (properties.width === 'fill' && isFlexChild && !excludeList.includes('flex')) {
+                // 채우기이고 flex 자식인 경우 flex: 1 추가 (excludeFromSx에 flex가 없을 때만)
                 sxProps.push(`flex: 1`);
             }
         }
@@ -337,9 +371,16 @@ ${typographyStyles}
         }
 
         // excludeFromSx에 있는 속성들은 sx에서 제외
-        if (!excludeList.includes('borderRadius') && !excludeList.includes('borderColor')) {
+        // variant="outlined"인 경우 Paper가 테두리를 자동으로 처리하므로 제외
+        const shouldExcludeBorders =
+            (componentName === '<TableContainer>' && properties.component === 'Paper' && properties.variant === 'outlined') ||
+            excludeList.includes('borderColor') || excludeList.includes('borderWidth');
+
+        if (!shouldExcludeBorders && !excludeList.includes('borderRadius')) {
             if (properties.borderColor) sxProps.push(`borderColor: '${properties.borderColor}'`);
             if (properties.borderWidth) sxProps.push(`borderWidth: '${properties.borderWidth}px'`);
+        }
+        if (!excludeList.includes('borderRadius')) {
             if (properties.borderRadius) sxProps.push(`borderRadius: '${properties.borderRadius}px'`);
         }
         if (properties.opacity) sxProps.push(`opacity: ${properties.opacity}`);
@@ -381,20 +422,44 @@ ${typographyStyles}
 
         // 새 매핑 시스템 사용 (동적 처리)
         if (mapping && muiProps) {
+            // ✅ Props 변환: 매핑에 transformProps가 있으면 먼저 변환
+            let transformedProperties = properties;
+            if (mapping.transformProps) {
+                // 디버깅: transformProps 실행 전
+                if (componentName === '<Table>' || componentName === 'Table' || componentName === '<TableCell>' || componentName === 'TableCell') {
+                    console.log(`🔄 [${componentName}] transformProps 전:`, JSON.stringify(properties));
+                }
+                transformedProperties = mapping.transformProps(properties);
+                // 디버깅: transformProps 실행 후
+                if (componentName === '<Table>' || componentName === 'Table' || componentName === '<TableCell>' || componentName === 'TableCell') {
+                    console.log(`✅ [${componentName}] transformProps 후:`, JSON.stringify(transformedProperties));
+                }
+            }
+            
             for (const [propName, propDef] of Object.entries(muiProps)) {
-                const value = properties[propName];
+                const value = transformedProperties[propName];
 
                 // union 타입인 경우 values에 포함된 값만 추가
-                if (value !== undefined && propDef.values?.includes(value as any)) {
+                if (propDef.type === 'union' && value !== undefined) {
+                    // values에 포함된 값인지 확인 (대소문자 무시)
+                    const normalizedValue = typeof value === 'string' ? value.toLowerCase() : value;
+                    const normalizedValues = propDef.values?.map(v => typeof v === 'string' ? v.toLowerCase() : v);
+                    const isIncluded = normalizedValues?.includes(normalizedValue as any);
+                    
+                    if (isIncluded) {
                     // 기본값인 경우 스킵
-                    if (propDef.default !== undefined && value === propDef.default) {
+                        if (propDef.default !== undefined) {
+                            const normalizedDefault = typeof propDef.default === 'string' ? propDef.default.toLowerCase() : propDef.default;
+                            if (normalizedValue === normalizedDefault) {
                         continue;
+                            }
                     }
 
                     if (typeof value === 'string') {
                         props.push(`${propName}="${value}"`);
                     } else {
                         props.push(`${propName}={${value}}`);
+                        }
                     }
                 }
                 // union-number 타입인 경우
@@ -432,7 +497,12 @@ ${typographyStyles}
                         continue;
                     }
 
+                    // component prop은 컴포넌트로 처리 (예: 'Paper' -> {Paper})
+                    if (propName === 'component') {
+                        props.push(`${propName}={${value}}`);
+                    } else {
                     props.push(`${propName}="${value}"`);
+                    }
                 }
                 // react-node 타입은 아이콘 컴포넌트로 처리
                 else if (propDef.type === 'react-node') {
@@ -584,9 +654,12 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
             if (muiComponent) {
                 imports.add(muiComponent);
 
-                // 하위 컴포넌트 import 추가 (매핑에서 관리)
-                if (mapping.subComponents) {
-                    mapping.subComponents.forEach((comp) => imports.add(comp));
+                // TableContainer가 component={Paper} 같은 프롭으로 다른 MUI 컴포넌트를 참조하는 경우 해당 컴포넌트도 import
+                const referencedComponent = (component.properties as any)?.component;
+                if (typeof referencedComponent === 'string') {
+                    // 현재는 Paper만 필요하지만, 일반화하여 사용자가 지정한 컴포넌트를 그대로 import 셋에 추가
+                    // 유효한 MUI 컴포넌트명이라고 가정 (예: 'Paper')
+                    imports.add(referencedComponent);
                 }
 
                 // ✅ 매핑 기반 아이콘 import 추가 (하드코딩 제거)
@@ -595,8 +668,9 @@ import { ${importsList} } from '@mui/material';${iconImportsList}`;
                     iconNames.forEach(iconName => iconImports.add(iconName));
                 }
 
-                // ✅ layout, card 타입이거나 children이 있는 경우 children도 처리
-                if ((component.componentType === 'layout' || component.componentType === 'card' || component.children) && component.children) {
+                // ✅ layout, card, table 타입이거나 children이 있는 경우 children도 처리
+                // 실제로 사용되는 컴포넌트만 재귀적으로 import하므로 subComponents는 자동으로 처리됨
+                if ((component.componentType === 'layout' || component.componentType === 'card' || component.componentType === 'table' || component.children) && component.children) {
                     this.collectImportsRecursively(component.children, imports, iconImports);
                 }
             }
@@ -719,28 +793,8 @@ export type ${componentName}Props = object;`;
      * @returns 페이지별 import 문
      */
     private generatePageSpecificImports(pageName: string): string {
-        const lowerPageName = pageName.toLowerCase();
-
-        switch (lowerPageName) {
-            case 'users':
-                return `// Import API functions and types
-import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/users';
-import { UsersPageState, UsersTableProps, UsersApiResponse } from './${this.toPascalCase(pageName)}.types';`;
-
-            case 'project':
-                return `// Import API functions and types
-import { fetchProjects, createProject, updateProject } from '@/api/projects';
-import { ProjectPageState, ProjectCardProps, ProjectApiResponse } from './${this.toPascalCase(pageName)}.types';`;
-
-            case 'dashboard':
-                return `// Import API functions and types
-import { fetchDashboardStats } from '@/api/dashboard';
-import { DashboardStats, DashboardChartProps } from './${this.toPascalCase(pageName)}.types';`;
-
-            default:
-                return `// Import page-specific types
+        return `// Import page-specific types
 import { ${this.toPascalCase(pageName)}PageState } from './${this.toPascalCase(pageName)}.types';`;
-        }
     }
     /**
      * 페이지별 특수 타입 생성 (실제 프로젝트 구조 고려)
@@ -831,109 +885,6 @@ export interface ${this.toPascalCase(pageName)}PageState {
         }
     }
     /**
-     * 테이블 컴포넌트 코드 생성 (동적 컬럼 지원)
-     * @param component 테이블 컴포넌트 설정
-     * @returns 테이블 JSX 코드
-     */
-    private generateTableJSX(component: ComponentDesignConfig): string {
-        const { componentName } = component;
-        const tableName = this.toPascalCase(componentName);
-
-        // 테이블 컬럼 정보 추출
-        const columns = this.extractTableColumns(component);
-
-        const columnCells = columns
-            .map((col) => {
-                const cellContent =
-                    col.key === 'index' ? 'index + 1' : `this.renderCellValue(row[${col.key}], ${JSON.stringify(col)})`;
-                return `<TableCell>
-                        {${cellContent}}
-                    </TableCell>`;
-            })
-            .join('\n                    ');
-
-        return `<TableContainer component={Paper}>
-    <Table sx={{ minWidth: 650 }} aria-label="${tableName} table">
-        <TableHead>
-            <TableRow>
-                ${columns
-                .map(
-                    (col) => `<TableCell key="${col.key}" sx={{ fontWeight: 'bold' }}>
-                    ${col.label}
-                </TableCell>`,
-                )
-                .join('\n                ')}
-            </TableRow>
-        </TableHead>
-        <TableBody>
-            {data.map((row, index) => (
-                <TableRow key={row.seq || index} hover>
-                    ${columnCells}
-                </TableRow>
-            ))}
-        </TableBody>
-    </Table>
-</TableContainer>`;
-    }
-
-    /**
-     * 테이블 컬럼 정보 추출
-     * @param component 테이블 컴포넌트
-     * @returns 컬럼 배열
-     */
-    private extractTableColumns(component: ComponentDesignConfig): Array<{ key: string; label: string; type: string }> {
-        // 피그마 구조에 맞게 테이블 컬럼 정보 추출
-        const { properties } = component;
-
-        // 피그마에서 추출된 컬럼 정보가 있다면 사용
-        if (properties.columns && Array.isArray(properties.columns)) {
-            return properties.columns.map((col: { key?: string; label?: string; type?: string }) => ({
-                key: col.key || '',
-                label: col.label || '',
-                type: col.type || 'text',
-            }));
-        }
-
-        // 기본 컬럼 설정 (피그마 구조 반영)
-        return [
-            { key: 'index', label: '번호', type: 'index' },
-            { key: 'id', label: '이메일', type: 'email' },
-            { key: 'name', label: '이름', type: 'text' },
-            { key: 'department', label: '소속', type: 'text' },
-            { key: 'permission', label: '권한', type: 'permission' },
-            { key: 'status', label: '상태', type: 'status' },
-            { key: 'regdate', label: '가입일', type: 'date' },
-            { key: 'last_login', label: '최근 로그인', type: 'date' },
-        ];
-    }
-
-    /**
-     * 테이블 설정 생성
-     * @param columns 컬럼 배열
-     * @returns 테이블 설정 코드
-     */
-    private generateTableConfig(columns: Array<{ key: string; label: string; type: string }>): string {
-        return `const tableConfig = {
-    columns: [
-        ${columns
-                .map(
-                    (col) => `{
-            key: '${col.key}',
-            label: '${col.label}',
-            type: '${col.type}',
-            sortable: true,
-            filterable: true
-        }`,
-                )
-                .join(',\n        ')}
-    ],
-    pagination: true,
-    sorting: true,
-    filtering: true
-};`;
-    }
-
-    /**
      * 컴포넌트 Props 타입 생성 (매핑 기반)
      * @param component 컴포넌트 설정
      * @returns Props 타입 문자열
@@ -977,29 +928,6 @@ export interface ${this.toPascalCase(pageName)}PageState {
         }
 
         return props.join(';\n    ');
-    }
-
-    /**
-     * 테이블 셀 값 렌더링
-     * @param value 셀 값
-     * @param column 컬럼 정보
-     * @returns 렌더링된 값
-     */
-    private renderCellValue(value: unknown, column: { key: string; label: string; type: string }): string {
-        switch (column.type) {
-            case 'status':
-                return `{value === 'active' ? '활성' : '중지'}`;
-            case 'permission':
-                return `{value === 'admin' ? '시스템관리자' : '일반사용자'}`;
-            case 'boolean':
-                return `{value === 'Y' || value === true ? '예' : '아니오'}`;
-            case 'date':
-                return `{new Date(value).toLocaleDateString()}`;
-            case 'email':
-                return `{value}`;
-            default:
-                return `{value}`;
-        }
     }
 
     /**

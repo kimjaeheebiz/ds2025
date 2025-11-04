@@ -34,7 +34,11 @@ export const PaperMapping: ComponentMapping = {
         },
     },
     
-    excludeFromSx: ['width'],
+    excludeFromSx: [
+        'width',
+        'borderColor',
+        'borderWidth',
+    ],
     
     // ✅ JSX 생성 템플릿 정의
     generateJSX: (componentName, props, content, sx) => {

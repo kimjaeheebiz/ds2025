@@ -45,6 +45,7 @@ import { TableHeadMapping } from './TableHead';
 import { TableBodyMapping } from './TableBody';
 import { TableRowMapping } from './TableRow';
 import { TableCellMapping } from './TableCell';
+import { TableFooterMapping } from './TableFooter';
 import { CardContentMapping } from './CardContent';
 import { CardActionsMapping } from './CardActions';
 import { CardHeaderMapping } from './CardHeader';
@@ -123,6 +124,7 @@ export const COMPONENT_MAPPINGS = {
     tableBody: TableBodyMapping,
     tableRow: TableRowMapping,
     tableCell: TableCellMapping,
+    tableFooter: TableFooterMapping,
     badge: BadgeMapping,
     fab: FabMapping,
     circularProgress: CircularProgressMapping,
@@ -240,6 +242,7 @@ export {
     TableBodyMapping,
     TableRowMapping,
     TableCellMapping,
+    TableFooterMapping,
     CardContentMapping,
     CardActionsMapping,
     CardHeaderMapping,
