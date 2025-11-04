@@ -136,7 +136,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({ workflowData }) => {
             </Box>
 
             {/* 테이블 */}
-            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
+            <TableContainer component={Paper} elevation={0} variant="outlined">
                 <Table size="small">
                     <colgroup>
                         <col style={{ width: '30%' }} />

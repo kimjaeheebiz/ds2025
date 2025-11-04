@@ -506,7 +506,7 @@ export const Components = () => {
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
                         <Chip label="Filled" variant="filled" />
                         <Chip label="Outlined" variant="outlined" />
-                        <Chip label="Deletable" onDelete={() => {}} />
+                        <Chip label="Deletable" onDelete={() => { }} />
                         <Chip label="With Icon" icon={<Star />} />
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
@@ -738,10 +738,7 @@ export const Components = () => {
                             <Typography component="h3" variant="h6" gutterBottom>
                                 Default (Medium)
                             </Typography>
-                            <TableContainer
-                                component={Paper}
-                                sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}
-                            >
+                            <TableContainer component={Paper} elevation={0} variant="outlined">
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -788,10 +785,7 @@ export const Components = () => {
                             <Typography component="h3" variant="h6" gutterBottom>
                                 Small
                             </Typography>
-                            <TableContainer
-                                component={Paper}
-                                sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}
-                            >
+                            <TableContainer component={Paper} elevation={0} variant="outlined">
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
