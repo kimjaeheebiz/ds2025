@@ -49,20 +49,18 @@ OUTPUT_PATH=src/pages/generated
 program
     .command('generate-content')
     .description('기존 레이아웃과 통합된 React 페이지 콘텐츠 생성')
-    .option('-p, --page <pageName>', '생성할 페이지 이름')
+    .argument('[pageName]', '생성할 페이지 이름 (지정하지 않으면 모든 페이지 생성)')
     .option('-l, --layout <layoutType>', '레이아웃 타입 (default, auth, error)', 'default')
     .option('-o, --output <path>', '출력 디렉토리 경로', 'src/pages/generated')
-    .action(async (options) => {
+    .action(async (pageName) => {
         try {
-            console.log(`📄 레이아웃 통합 콘텐츠 생성 중: ${options.page}...`);
-            
             const service = new FigmaIntegrationService();
             
-            if (options.page) {
+            if (pageName) {
                 // 특정 페이지 생성
-                console.log(`📄 ${options.page} 페이지 생성 중...`);
-                await service.generateSinglePage(options.page);
-                console.log(`✅ ${options.page} 페이지가 성공적으로 생성되었습니다.`);
+                console.log(`📄 ${pageName} 페이지 생성 중...`);
+                await service.generateSinglePage(pageName);
+                console.log(`✅ ${pageName} 페이지가 성공적으로 생성되었습니다.`);
             } else {
                 // 모든 페이지 생성
                 console.log('📄 모든 페이지 생성 중...');

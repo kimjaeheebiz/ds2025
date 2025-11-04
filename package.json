@@ -13,7 +13,7 @@
         "build:theme": "npx --yes tsx design-system/generators/to-mui-theme.ts",
         "build:menu": "npx tsx design-system/generators/figma-menu-sync.ts",
         "figma:setup": "npx tsx scripts/figma-sync-cli.ts setup",
-        "figma:page": "npx tsx scripts/figma-sync-cli.ts generate-content --page",
+        "figma:page": "npx tsx scripts/figma-sync-cli.ts generate-content",
         "figma:pages": "npx tsx scripts/figma-sync-cli.ts generate-content",
       
         "figma:validate": "npx tsx scripts/figma-sync-cli.ts validate",
