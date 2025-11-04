@@ -27,7 +27,7 @@ export const FIGMA_CONFIG = {
         // Pages (Frame)
         pages: {
             // project: '166:6455',
-            // users: '598:3722',
+            users: '598:3722',
             // components: '286:6314',
             test: '860:6675',
         },

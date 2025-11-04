@@ -1,6 +1,13 @@
 import React from 'react';
 import {
     Box,
+    TableContainer,
+    Paper,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
     Stack,
     Avatar,
     IconButton,
@@ -10,7 +17,6 @@ import {
     CardHeader,
     CardContent,
     CardActions,
-    CardMedia,
 } from '@mui/material';
 import { SettingsOutlined, ChevronRight, Settings } from '@mui/icons-material';
 
@@ -32,6 +38,51 @@ export const Test: React.FC = () => {
                     gap: 3,
                 }}
             >
+                <TableContainer
+                    component={Paper}
+                    elevation={0}
+                    variant="outlined"
+                    sx={{
+                        backgroundColor: 'background.paper-elevation-0',
+                    }}
+                >
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Title</TableCell>
+                                <TableCell>Head</TableCell>
+                                <TableCell>Head</TableCell>
+                                <TableCell>Head 4</TableCell>
+                                <TableCell>Head</TableCell>
+                                <TableCell>Head</TableCell>
+                                <TableCell>Head</TableCell>
+                                <TableCell>Head</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                                <TableCell>Cell</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
                 <Stack
                     direction="row"
                     spacing={2}
