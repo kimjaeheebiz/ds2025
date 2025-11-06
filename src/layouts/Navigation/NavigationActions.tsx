@@ -3,10 +3,7 @@
  */
 
 import { Box, ListItem, ListItemButton, ListItemText } from '@mui/material';
-import {
-    ArrowUpward as ArrowUpwardIcon,
-    ArrowDownward as ArrowDownwardIcon,
-} from '@mui/icons-material';
+import { ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon } from '@mui/icons-material';
 import { ActionButton, SortOption, SortDirection } from '@/config/navigation';
 
 interface NavigationActionsProps {
@@ -47,12 +44,8 @@ function SortOptionButton({
             }}
         >
             <Box component="span">{sortOption.label}</Box>
-            {currentDirection === 'asc' && (
-                <ArrowUpwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />
-            )}
-            {currentDirection === 'desc' && (
-                <ArrowDownwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />
-            )}
+            {currentDirection === 'asc' && <ArrowUpwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />}
+            {currentDirection === 'desc' && <ArrowDownwardIcon sx={{ fontSize: 'inherit', ml: 0.5 }} />}
         </ListItemButton>
     );
 }
@@ -138,4 +131,3 @@ export function NavigationActions({ actions, sortStates, onSortChange }: Navigat
 
     return <>{actions.map(renderActionButton)}</>;
 }
-

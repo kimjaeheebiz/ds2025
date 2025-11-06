@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Box, Stack, IconButton, Link, useTheme } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Brand } from '@/components';
-import { Person, Menu, DarkModeOutlined, LightModeOutlined } from '@mui/icons-material';
+import { Menu, DarkModeOutlined, LightModeOutlined, AccountCircleOutlined } from '@mui/icons-material';
 import { HEADER_HEIGHT, Z_INDEX } from '@/config';
 
 export interface HeaderProps {
@@ -54,7 +54,7 @@ export const Header = ({ onMenuToggle, onToggleTheme }: HeaderProps) => {
                         {isDark ? <LightModeOutlined /> : <DarkModeOutlined />}
                     </IconButton>
                     <IconButton color="inherit" aria-label="계정 관리" onClick={() => navigate('/login')}>
-                        <Person />
+                        <AccountCircleOutlined />
                     </IconButton>
                 </Stack>
             </Toolbar>

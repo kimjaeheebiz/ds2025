@@ -1,3 +1,7 @@
+# Backup files
+*.backup.ts
+*.backup.js
+
 # Logs
 logs
 *.log
@@ -13,6 +17,13 @@ dist
 dist-ssr
 build
 *.local
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*

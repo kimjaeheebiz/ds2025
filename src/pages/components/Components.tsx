@@ -54,19 +54,7 @@ import {
     ListItemText as ListItemTextComponent,
     useTheme,
 } from '@mui/material';
-import {
-    Add,
-    Search,
-    Star,
-    Settings,
-    Person,
-    Delete,
-    Edit,
-    Share,
-    Home,
-    Work,
-    School,
-} from '@mui/icons-material';
+import { Add, Search, Star, Settings, Person, Delete, Edit, Share, Home, Work, School } from '@mui/icons-material';
 
 export const Components = () => {
     const theme = useTheme();
@@ -86,7 +74,9 @@ export const Components = () => {
 
     // 각 색상의 shade 값들을 동적으로 추출
     const getShadesForColor = (groupName: string, colorName: string) => {
-        return theme.brand?.colors?.[groupName]?.[colorName] ? Object.keys(theme.brand.colors[groupName][colorName]) : [];
+        return theme.brand?.colors?.[groupName]?.[colorName]
+            ? Object.keys(theme.brand.colors[groupName][colorName])
+            : [];
     };
 
     const [checked, setChecked] = React.useState(false);
@@ -107,7 +97,7 @@ export const Components = () => {
         border: '1px solid',
         borderColor: 'action.focus',
         borderRadius: 1,
-        color: 'info.dark'
+        color: 'info.dark',
     };
 
     // 섹션 이동 효과
@@ -133,7 +123,10 @@ export const Components = () => {
 
     const [activeSection, setActiveSection] = React.useState<string>('sectionColors');
 
-    const toggleSizeState: Record<'small' | 'medium' | 'large', [string, React.Dispatch<React.SetStateAction<string>>]> = {
+    const toggleSizeState: Record<
+        'small' | 'medium' | 'large',
+        [string, React.Dispatch<React.SetStateAction<string>>]
+    > = {
         small: [toggleValueSmall, setToggleValueSmall],
         medium: [toggleValueMedium, setToggleValueMedium],
         large: [toggleValueLarge, setToggleValueLarge],
@@ -160,7 +153,10 @@ export const Components = () => {
             {/* 섹션 이동 메뉴 */}
             <Tabs
                 value={activeSection}
-                onChange={(e, v) => { setActiveSection(v); scrollTo(v); }}
+                onChange={(e, v) => {
+                    setActiveSection(v);
+                    scrollTo(v);
+                }}
                 variant="scrollable"
                 scrollButtons="auto"
                 aria-label="섹션 이동 메뉴"
@@ -196,19 +192,24 @@ export const Components = () => {
                     <Grid container spacing={2} sx={{ mb: 5 }}>
                         {(['primary', 'secondary', 'info', 'success', 'error', 'warning'] as const).map((colorName) => (
                             <Grid item key={colorName}>
-                                <Typography variant="caption" sx={{ mb: 0.5 }}>{colorName}</Typography>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>
+                                    {colorName}
+                                </Typography>
                                 <Stack direction="row">
                                     {(['light', 'main', 'dark'] as const).map((tone) => (
-                                        <Box key={`${colorName}-${tone}`} sx={{
-                                            width: 40,
-                                            height: 30,
-                                            bgcolor: `${colorName}.${tone}`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'primary.contrastText',
-                                            typography: 'caption',
-                                        }}>
+                                        <Box
+                                            key={`${colorName}-${tone}`}
+                                            sx={{
+                                                width: 40,
+                                                height: 30,
+                                                bgcolor: `${colorName}.${tone}`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'primary.contrastText',
+                                                typography: 'caption',
+                                            }}
+                                        >
                                             {tone}
                                         </Box>
                                     ))}
@@ -231,21 +232,22 @@ export const Components = () => {
                             <Grid container spacing={1} sx={{ mb: 5 }}>
                                 {getColorNamesForGroup(groupName).map((colorName) => (
                                     <Grid item xs={12} xl={4} key={colorName}>
-                                        <Typography variant="caption">
-                                            {colorName}
-                                        </Typography>
+                                        <Typography variant="caption">{colorName}</Typography>
                                         <Stack direction="row" flexWrap="wrap">
                                             {getShadesForColor(groupName, colorName).map((shade) => (
-                                                <Box key={`${colorName}-${shade}`} sx={{
-                                                    width: 40,
-                                                    height: 30,
-                                                    bgcolor: `${groupName}.${colorName}.${shade}`,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: parseInt(shade) >= 500 ? '#fff' : '#000',
-                                                    typography: 'caption',
-                                                }}>
+                                                <Box
+                                                    key={`${colorName}-${shade}`}
+                                                    sx={{
+                                                        width: 40,
+                                                        height: 30,
+                                                        bgcolor: `${groupName}.${colorName}.${shade}`,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: parseInt(shade) >= 500 ? '#fff' : '#000',
+                                                        typography: 'caption',
+                                                    }}
+                                                >
                                                     {shade}
                                                 </Box>
                                             ))}
@@ -265,28 +267,35 @@ export const Components = () => {
                         </Typography>
                     </Stack>
                     <Grid container spacing={1} sx={{ mb: 3 }}>
-                        {([
-                            ['orange', orange],
-                            ['blue', blue],
-                            ['indigo', indigo],
-                            ['green', green],
-                            ['red', red],
-                            ['grey', grey],
-                        ] as const).map(([colorName, colorPalette]) => (
+                        {(
+                            [
+                                ['orange', orange],
+                                ['blue', blue],
+                                ['indigo', indigo],
+                                ['green', green],
+                                ['red', red],
+                                ['grey', grey],
+                            ] as const
+                        ).map(([colorName, colorPalette]) => (
                             <Grid item xs={12} xl={4} key={colorName}>
-                                <Typography variant="caption" sx={{ mb: 0.5 }}>{colorName}</Typography>
+                                <Typography variant="caption" sx={{ mb: 0.5 }}>
+                                    {colorName}
+                                </Typography>
                                 <Stack direction="row" flexWrap="wrap">
                                     {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => (
-                                        <Box key={`${colorName}-${shade}`} sx={{
-                                            width: 40,
-                                            height: 30,
-                                            bgcolor: (colorPalette as Record<string, string>)[shade],
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: shade >= 500 ? '#fff' : '#000',
-                                            typography: 'caption',
-                                        }}>
+                                        <Box
+                                            key={`${colorName}-${shade}`}
+                                            sx={{
+                                                width: 40,
+                                                height: 30,
+                                                bgcolor: (colorPalette as Record<string, string>)[shade],
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: shade >= 500 ? '#fff' : '#000',
+                                                typography: 'caption',
+                                            }}
+                                        >
                                             {shade}
                                         </Box>
                                     ))}
@@ -302,22 +311,26 @@ export const Components = () => {
                     <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap">
                         {/* Brand Color 풀네임 패턴 테스트 */}
                         {firstColorGroup && theme.brand.colors[firstColorGroup]?.green?.[500] && (
-                            <Box sx={{
-                                p: 1,
-                                bgcolor: theme.brand.colors[firstColorGroup].green[500],
-                                color: 'white',
-                            }}>
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    bgcolor: theme.brand.colors[firstColorGroup].green[500],
+                                    color: 'white',
+                                }}
+                            >
                                 <Typography variant="subtitle2">
                                     theme.brand.colors.{firstColorGroup}.green[500]
                                 </Typography>
                             </Box>
                         )}
                         {secondColorGroup && theme.brand.colors[secondColorGroup]?.blue?.[500] && (
-                            <Box sx={{
-                                p: 1,
-                                bgcolor: theme.brand.colors[secondColorGroup].blue[500],
-                                color: 'white',
-                            }}>
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    bgcolor: theme.brand.colors[secondColorGroup].blue[500],
+                                    color: 'white',
+                                }}
+                            >
                                 <Typography variant="subtitle2">
                                     theme.brand.colors.{secondColorGroup}.blue[500]
                                 </Typography>
@@ -326,37 +339,37 @@ export const Components = () => {
 
                         {/* Brand Color 패턴 테스트 */}
                         {firstColorGroup && (
-                            <Box sx={{
-                                p: 1,
-                                bgcolor: `${firstColorGroup}.green.500`,
-                                color: 'white',
-                            }}>
-                                <Typography variant="subtitle2">
-                                    {firstColorGroup}.green.500
-                                </Typography>
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    bgcolor: `${firstColorGroup}.green.500`,
+                                    color: 'white',
+                                }}
+                            >
+                                <Typography variant="subtitle2">{firstColorGroup}.green.500</Typography>
                             </Box>
                         )}
                         {secondColorGroup && (
-                            <Box sx={{
-                                p: 1,
-                                bgcolor: `${secondColorGroup}.blue.500`,
-                                color: 'white',
-                            }}>
-                                <Typography variant="subtitle2">
-                                    {secondColorGroup}.blue.500
-                                </Typography>
+                            <Box
+                                sx={{
+                                    p: 1,
+                                    bgcolor: `${secondColorGroup}.blue.500`,
+                                    color: 'white',
+                                }}
+                            >
+                                <Typography variant="subtitle2">{secondColorGroup}.blue.500</Typography>
                             </Box>
                         )}
 
                         {/* Material Color 패턴 테스트 */}
-                        <Box sx={{
-                            p: 1,
-                            bgcolor: green[500],
-                            color: 'white',
-                        }}>
-                            <Typography variant="subtitle2">
-                                green[500]
-                            </Typography>
+                        <Box
+                            sx={{
+                                p: 1,
+                                bgcolor: green[500],
+                                color: 'white',
+                            }}
+                        >
+                            <Typography variant="subtitle2">green[500]</Typography>
                         </Box>
                     </Stack>
                 </Box>
@@ -376,7 +389,8 @@ export const Components = () => {
                     <Typography variant="subtitle2">Subtitle 2</Typography>
                     <Typography variant="body1">Body 1</Typography>
                     <Typography variant="body2">Body 2</Typography>
-                    <Typography variant="caption">Caption</Typography>{` `}
+                    <Typography variant="caption">Caption</Typography>
+                    {` `}
                     <Typography variant="overline">Overline</Typography>
                     <Typography variant="inherit">Inherit</Typography>
                 </Box>
@@ -390,31 +404,63 @@ export const Components = () => {
                         <Button variant="contained">Contained</Button>
                         <Button variant="outlined">Outlined</Button>
                         <Button variant="text">Text</Button>
-                        <Button variant="contained" disabled>Disabled</Button>
+                        <Button variant="contained" disabled>
+                            Disabled
+                        </Button>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                        <Button variant="contained" color="primary">Primary</Button>
-                        <Button variant="contained" color="secondary">Secondary</Button>
-                        <Button variant="contained" color="success">Success</Button>
-                        <Button variant="contained" color="error">Error</Button>
-                        <Button variant="contained" color="warning">Warning</Button>
-                        <Button variant="contained" color="info">Info</Button>
+                        <Button variant="contained" color="primary">
+                            Primary
+                        </Button>
+                        <Button variant="contained" color="secondary">
+                            Secondary
+                        </Button>
+                        <Button variant="contained" color="success">
+                            Success
+                        </Button>
+                        <Button variant="contained" color="error">
+                            Error
+                        </Button>
+                        <Button variant="contained" color="warning">
+                            Warning
+                        </Button>
+                        <Button variant="contained" color="info">
+                            Info
+                        </Button>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Button variant="contained" startIcon={<Add />}>Add</Button>
-                        <Button variant="outlined" endIcon={<Settings />}>Settings</Button>
-                        <IconButton color="primary"><Add fontSize="inherit" /></IconButton>
-                        <IconButton color="secondary"><Settings fontSize="inherit" /></IconButton>
+                        <Button variant="contained" startIcon={<Add />}>
+                            Add
+                        </Button>
+                        <Button variant="outlined" endIcon={<Settings />}>
+                            Settings
+                        </Button>
+                        <IconButton color="primary">
+                            <Add fontSize="inherit" />
+                        </IconButton>
+                        <IconButton color="secondary">
+                            <Settings fontSize="inherit" />
+                        </IconButton>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
-                        <Button variant="contained" size="small">Small</Button>
+                        <Button variant="contained" size="small">
+                            Small
+                        </Button>
                         <Button variant="contained">Default(Medium)</Button>
-                        <Button variant="contained" size="large">Large</Button>
+                        <Button variant="contained" size="large">
+                            Large
+                        </Button>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <IconButton color="primary" size="small"><Add fontSize="inherit" /></IconButton>
-                        <IconButton color="primary"><Add fontSize="inherit" /></IconButton>
-                        <IconButton color="primary" size="large"><Add fontSize="inherit" /></IconButton>
+                        <IconButton color="primary" size="small">
+                            <Add fontSize="inherit" />
+                        </IconButton>
+                        <IconButton color="primary">
+                            <Add fontSize="inherit" />
+                        </IconButton>
+                        <IconButton color="primary" size="large">
+                            <Add fontSize="inherit" />
+                        </IconButton>
                     </Stack>
                 </Box>
 
@@ -471,7 +517,9 @@ export const Components = () => {
                         <Avatar>A</Avatar>
                         <Avatar sx={{ bgcolor: 'primary.main' }}>B</Avatar>
                         <Avatar sx={{ bgcolor: 'secondary.main' }}>C</Avatar>
-                        <Avatar><Person /></Avatar>
+                        <Avatar>
+                            <Person />
+                        </Avatar>
                     </Stack>
                 </Box>
 
@@ -482,32 +530,16 @@ export const Components = () => {
                     </Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={3}>
-                            <TextField
-                                label="Standard"
-                                variant="standard"
-                                fullWidth
-                            />
+                            <TextField label="Standard" variant="standard" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
-                            <TextField
-                                label="Filled"
-                                variant="filled"
-                                fullWidth
-                            />
+                            <TextField label="Filled" variant="filled" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
-                            <TextField
-                                label="Outlined"
-                                variant="outlined"
-                                fullWidth
-                            />
+                            <TextField label="Outlined" variant="outlined" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
-                            <TextField
-                                label="With Helper Text"
-                                helperText="Some important text"
-                                fullWidth
-                            />
+                            <TextField label="With Helper Text" helperText="Some important text" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
                             <TextField
@@ -539,12 +571,7 @@ export const Components = () => {
                         </Grid>
                         <Grid item xs={3}>
                             <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={checked}
-                                        onChange={(e) => setChecked(e.target.checked)}
-                                    />
-                                }
+                                control={<Checkbox checked={checked} onChange={(e) => setChecked(e.target.checked)} />}
                                 label="Checkbox"
                             />
                         </Grid>
@@ -562,10 +589,7 @@ export const Components = () => {
                         <Grid item xs={3}>
                             <FormControl fullWidth>
                                 <FormLabel>Radio Group</FormLabel>
-                                <RadioGroup
-                                    value={radioValue}
-                                    onChange={(e) => setRadioValue(e.target.value)}
-                                >
+                                <RadioGroup value={radioValue} onChange={(e) => setRadioValue(e.target.value)}>
                                     <FormControlLabel value="option1" control={<Radio />} label="Option 1" />
                                     <FormControlLabel value="option2" control={<Radio />} label="Option 2" />
                                 </RadioGroup>
@@ -579,18 +603,10 @@ export const Components = () => {
                     </Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={3}>
-                            <TextField
-                                label="TextField Small"
-                                size="small"
-                                fullWidth
-                            />
+                            <TextField label="TextField Small" size="small" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
-                            <TextField
-                                label="TextField Medium"
-                                size="medium"
-                                fullWidth
-                            />
+                            <TextField label="TextField Medium" size="medium" fullWidth />
                         </Grid>
                         <Grid item xs={3}>
                             <FormControl fullWidth size="small">
@@ -636,12 +652,7 @@ export const Components = () => {
                         </Grid>
                         <Grid item xs={3}>
                             <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={checked}
-                                        onChange={(e) => setChecked(e.target.checked)}
-                                    />
-                                }
+                                control={<Checkbox checked={checked} onChange={(e) => setChecked(e.target.checked)} />}
                                 label="Checkbox (Medium)"
                             />
                         </Grid>
@@ -671,11 +682,7 @@ export const Components = () => {
                         <Grid item xs={3}>
                             <FormControl>
                                 <FormLabel>Radio Group (Small vs Medium)</FormLabel>
-                                <RadioGroup
-                                    row
-                                    value={radioValue}
-                                    onChange={(e) => setRadioValue(e.target.value)}
-                                >
+                                <RadioGroup row value={radioValue} onChange={(e) => setRadioValue(e.target.value)}>
                                     <FormControlLabel value="option1" control={<Radio size="small" />} label="Small" />
                                     <FormControlLabel value="option2" control={<Radio />} label="Medium" />
                                 </RadioGroup>
@@ -710,7 +717,9 @@ export const Components = () => {
                                     Card with Icon
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                                    <Avatar sx={{ bgcolor: 'primary.main' }}><Work /></Avatar>
+                                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                        <Work />
+                                    </Avatar>
                                     <Typography variant="body2">Work Item</Typography>
                                 </Box>
                             </CardContent>
@@ -724,13 +733,12 @@ export const Components = () => {
                         Tables
                     </Typography>
 
-
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         <Box>
                             <Typography component="h3" variant="h6" gutterBottom>
                                 Default (Medium)
                             </Typography>
-                            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
+                            <TableContainer component={Paper} elevation={0} variant="outlined">
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -746,8 +754,12 @@ export const Components = () => {
                                                 <Chip label="Active" color="success" size="small" />
                                             </TableCell>
                                             <TableCell>
-                                                <IconButton size="small"><Edit /></IconButton>
-                                                <IconButton size="small"><Delete /></IconButton>
+                                                <IconButton size="small">
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Delete />
+                                                </IconButton>
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
@@ -756,8 +768,12 @@ export const Components = () => {
                                                 <Chip label="Inactive" color="default" size="small" />
                                             </TableCell>
                                             <TableCell>
-                                                <IconButton size="small"><Edit /></IconButton>
-                                                <IconButton size="small"><Delete /></IconButton>
+                                                <IconButton size="small">
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Delete />
+                                                </IconButton>
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>
@@ -769,7 +785,7 @@ export const Components = () => {
                             <Typography component="h3" variant="h6" gutterBottom>
                                 Small
                             </Typography>
-                            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
+                            <TableContainer component={Paper} elevation={0} variant="outlined">
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
@@ -785,8 +801,12 @@ export const Components = () => {
                                                 <Chip label="Active" color="success" size="small" />
                                             </TableCell>
                                             <TableCell>
-                                                <IconButton size="small"><Edit /></IconButton>
-                                                <IconButton size="small"><Delete /></IconButton>
+                                                <IconButton size="small">
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Delete />
+                                                </IconButton>
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
@@ -795,8 +815,12 @@ export const Components = () => {
                                                 <Chip label="Inactive" color="default" size="small" />
                                             </TableCell>
                                             <TableCell>
-                                                <IconButton size="small"><Edit /></IconButton>
-                                                <IconButton size="small"><Delete /></IconButton>
+                                                <IconButton size="small">
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton size="small">
+                                                    <Delete />
+                                                </IconButton>
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>
@@ -819,16 +843,22 @@ export const Components = () => {
                             <Paper sx={{ maxWidth: 400 }}>
                                 <List>
                                     <ListItem>
-                                        <ListItemIcon><Home /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <Home />
+                                        </ListItemIcon>
                                         <ListItemText primary="Home" secondary="Main page" />
                                     </ListItem>
                                     <ListItem>
-                                        <ListItemIcon><Work /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <Work />
+                                        </ListItemIcon>
                                         <ListItemText primary="Work" secondary="Work items" />
                                     </ListItem>
                                     <Divider />
                                     <ListItem>
-                                        <ListItemIcon><School /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <School />
+                                        </ListItemIcon>
                                         <ListItemText primary="Education" secondary="Learning materials" />
                                     </ListItem>
                                 </List>
@@ -841,16 +871,22 @@ export const Components = () => {
                             <Paper sx={{ maxWidth: 400 }}>
                                 <List dense>
                                     <ListItem>
-                                        <ListItemIcon><Home /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <Home />
+                                        </ListItemIcon>
                                         <ListItemText primary="Home" secondary="Main page" />
                                     </ListItem>
                                     <ListItem>
-                                        <ListItemIcon><Work /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <Work />
+                                        </ListItemIcon>
                                         <ListItemText primary="Work" secondary="Work items" />
                                     </ListItem>
                                     <Divider />
                                     <ListItem>
-                                        <ListItemIcon><School /></ListItemIcon>
+                                        <ListItemIcon>
+                                            <School />
+                                        </ListItemIcon>
                                         <ListItemText primary="Education" secondary="Learning materials" />
                                     </ListItem>
                                 </List>
@@ -903,31 +939,33 @@ export const Components = () => {
                     <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                         <DialogTitle>Dialog Title</DialogTitle>
                         <DialogContent>
-                            <Typography>
-                                This is a dialog content. You can put any content here.
-                            </Typography>
+                            <Typography>This is a dialog content. You can put any content here.</Typography>
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={() => setDialogOpen(false)} autoFocus>OK</Button>
+                            <Button onClick={() => setDialogOpen(false)} autoFocus>
+                                OK
+                            </Button>
                         </DialogActions>
                     </Dialog>
 
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                    >
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                         <MenuItemComponent onClick={handleMenuClose}>
-                            <ListItemIconComponent><Edit /></ListItemIconComponent>
+                            <ListItemIconComponent>
+                                <Edit />
+                            </ListItemIconComponent>
                             <ListItemTextComponent>Edit</ListItemTextComponent>
                         </MenuItemComponent>
                         <MenuItemComponent onClick={handleMenuClose}>
-                            <ListItemIconComponent><Share /></ListItemIconComponent>
+                            <ListItemIconComponent>
+                                <Share />
+                            </ListItemIconComponent>
                             <ListItemTextComponent>Share</ListItemTextComponent>
                         </MenuItemComponent>
                         <MenuItemComponent onClick={handleMenuClose}>
-                            <ListItemIconComponent><Delete /></ListItemIconComponent>
+                            <ListItemIconComponent>
+                                <Delete />
+                            </ListItemIconComponent>
                             <ListItemTextComponent>Delete</ListItemTextComponent>
                         </MenuItemComponent>
                     </Menu>
@@ -952,4 +990,3 @@ export const Components = () => {
         </Box>
     );
 };
-

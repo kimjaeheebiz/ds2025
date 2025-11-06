@@ -2,7 +2,7 @@
 // https://mui.com/material-ui/customization/theming/#custom-variables
 
 import '@mui/material/styles';
-import { BrandTokens, BrandColorGroup } from '../../design-system/adapters/types';
+import { BrandTokens, BrandColorGroup } from '../../design-system/generators/types';
 
 declare module '@mui/material/styles' {
     // Theme에 brand 속성 추가
@@ -24,4 +24,3 @@ declare module '@mui/material/styles' {
         [colorGroupName: string]: Partial<BrandColorGroup> | unknown;
     }
 }
-

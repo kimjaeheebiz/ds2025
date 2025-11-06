@@ -8,11 +8,7 @@ interface ProjectSubMenuProps {
     onTabChange: (tabValue: string) => void;
 }
 
-export const ProjectSubMenu: React.FC<ProjectSubMenuProps> = ({
-    tabs,
-    activeTab,
-    onTabChange,
-}) => {
+export const ProjectSubMenu: React.FC<ProjectSubMenuProps> = ({ tabs, activeTab, onTabChange }) => {
     return (
         <Tabs
             value={activeTab}
@@ -35,4 +31,3 @@ export const ProjectSubMenu: React.FC<ProjectSubMenuProps> = ({
         </Tabs>
     );
 };
-

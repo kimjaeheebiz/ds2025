@@ -8,38 +8,38 @@ const HomeContent = () => {
     return (
         <Box sx={{ minHeight: '100%', p: 3, gap: 3 }}>
             <Grid container spacing={2} sx={{ minHeight: '100%' }}>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 Project
                             </Typography>
                             <Typography sx={{ mb: 2 }}>프로젝트별 워크플로우 관리 및 실행</Typography>
-                            <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate('/project/project1')}>
+                            <Button
+                                variant="contained"
+                                endIcon={<ArrowForward />}
+                                onClick={() => navigate('/project/project1')}
+                            >
                                 Project 1
                             </Button>
                         </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 Users
                             </Typography>
                             <Typography sx={{ mb: 2 }}>사용자 관리</Typography>
-                            <Button
-                                variant="contained"
-                                endIcon={<ArrowForward />}
-                                onClick={() => navigate('/users')}
-                            >
+                            <Button variant="contained" endIcon={<ArrowForward />} onClick={() => navigate('/users')}>
                                 Users
                             </Button>
                         </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={4}>
-                    <Card variant="outlined" sx={{ flex: 1 }}>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h5" component="h3" gutterBottom>
                                 UI Components
@@ -52,6 +52,24 @@ const HomeContent = () => {
                                 onClick={() => navigate('/components')}
                             >
                                 Components
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={6}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Typography variant="h5" component="h3" gutterBottom>
+                                Test
+                            </Typography>
+                            <Typography color="error.main" sx={{ mb: 2 }}>페이지 자동 생성 (컴포넌트 매핑 개발 중)</Typography>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                endIcon={<ArrowForward />}
+                                onClick={() => navigate('/test')}
+                            >
+                                Test
                             </Button>
                         </CardContent>
                     </Card>

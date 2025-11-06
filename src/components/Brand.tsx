@@ -12,7 +12,7 @@ export interface BrandProps {
 
 /**
  * Brand 컴포넌트
- * 
+ *
  * Figma 연동:
  * - size: theme.brand.sizes.logo.* (Figma brand/sizes/logo/* → Tokens Studio → theme)
  * - variant: logo(전체) / mark(심볼만)
@@ -36,14 +36,9 @@ export const Brand = ({ size = 'medium', showText = true, variant = 'logo', colo
 
     return (
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-            <Box 
-                component="img" 
-                src={imageSrc} 
-                alt={APP_INFO.name}
-                sx={{ height: logoHeight, width: 'auto' }} 
-            />
+            <Box component="img" src={imageSrc} alt={APP_INFO.name} sx={{ height: logoHeight, width: 'auto' }} />
             {showText && (
-                <Typography 
+                <Typography
                     variant={textVariantMap[size]}
                     color={color === 'white' ? 'common.white' : 'text.primary'}
                     sx={{ lineHeight: 1.1 }}
@@ -54,4 +49,3 @@ export const Brand = ({ size = 'medium', showText = true, variant = 'logo', colo
         </Box>
     );
 };
-

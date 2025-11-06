@@ -1,132 +1,104 @@
 # Agent Platform Design System 2025
 
-React + TypeScript + Vite 기반 관리 시스템
+React + TypeScript + Vite
+
 
 ## 🚀 시작하기
 
+### 필수 설치
+
 ```bash
-# 설치
+# 프로젝트 의존성 설치
 npm install
 
-# 개발 서버
+# 개발 서버 실행
 npm run dev
 
-# 빌드
+# 프로덕션 빌드
 npm run build
 ```
 
----
+### Figma API 통합
+
+```bash
+# 환경 설정 (.env 생성)
+npm run figma:setup
+
+# 상태 확인 (로컬) / 원격 API 확인
+npm run figma:status
+npm run figma:status -- --remote
+
+# 특정 페이지 생성
+npm run figma:page -- <PageName>
+
+# 모든 페이지 생성
+npm run figma:pages
+```
+
 
 ## ✨ 새 페이지 추가
 
-### 1. 페이지 메타데이터 정의
+1) `npm run figma:page -- <PageName>` 실행으로 콘텐츠 생성
+2) `src/config/pages.ts`, `src/config/mainmenu.ts` 연동으로 경로/브레드크럼 반영
+3) 레이아웃/네비게이션과 자동 통합
 
-```typescript
-// src/config/pages.ts
-export const PAGES: PageConfig[] = [
-    {
-        id: 'myNewPage',
-        title: '새로운 페이지',
-        showPageHeader: true,
-    },
-];
-```
-
-### 2. 메뉴에 추가
-
-```typescript
-// src/config/menus.ts
-export const MENUS: MenuItem[] = [
-    {
-        id: 'myNewPage',
-        type: 'item',
-        url: '/my-new-page',
-        icon: 'StarOutlined',
-        pageId: 'myNewPage',
-    },
-];
-```
-
-### 3. 페이지 컴포넌트 생성
-
-```tsx
-// src/pages/my-new-page/MyNewPage.tsx
-export const MyNewPage = () => {
-    return <div>새로운 페이지</div>;
-};
-```
-
-이제 다음이 자동으로 처리됩니다:
-- ✅ React Router 라우팅
-- ✅ 사이드바 메뉴 표시
-- ✅ Breadcrumb 생성
-- ✅ 페이지 타이틀 설정
-
----
 
 ## 📁 프로젝트 구조
 
 ```
 src/
-├── config/              # 설정
-│   ├── pages.ts         # 페이지 메타데이터
-│   ├── menus.ts         # 메뉴 + 라우팅
-│   ├── navigation.ts    # 빌더
-│   └── app.ts           # 앱 설정
+├── api/                 # API 통합 (Figma API 포함)
+├── config/              # 설정 파일
 ├── pages/               # 페이지 컴포넌트
-├── layouts/             # 레이아웃
+├── layouts/             # 레이아웃 컴포넌트
 ├── components/          # 공통 컴포넌트
 ├── hooks/               # 커스텀 훅
-└── theme/               # 테마
+└── theme/               # 테마 설정
 
 design-system/
 ├── tokens/              # 디자인 토큰 (Figma 동기화)
-├── schemas/             # JSON Schema
-└── validators/          # 유효성 검사
+└── generators/          # 코드 생성기
 
-docs/
-├── CONFIG_STRUCTURE.md  # 설정 파일 가이드
-├── MENU_STRUCTURE.md    # 메뉴 구조 가이드
-└── FIGMA_SYNC_GUIDE.md  # Figma 동기화 가이드
+docs/                    # 프로젝트 문서
+scripts/                 # 빌드 및 유틸리티 스크립트
 ```
 
----
 
-## 🎨 Figma 동기화
+## 🎨 디자인 시스템
 
-Tokens Studio로 Figma 디자인과 자동 동기화:
+- **디자인 토큰 → MUI 테마 변환**: `npm run build:theme`
+- **메뉴 구조 동기화(옵션)**: `npm run build:menu`
 
-```bash
-# Figma 토큰 → menus.ts 동기화
-npm run sync:figma
+Figma 연동으로 페이지 콘텐츠 자동 생성, 레이아웃/메뉴/브레드크럼 연동 설계 통일
 
-# 테마 토큰 빌드
-npm run tokens:build-theme
-
-# 네비게이션 검증
-npm run validate:navigation
-```
-
-자세한 내용은 [Figma 동기화 가이드](docs/FIGMA_SYNC_GUIDE.md) 참조
-
----
 
 ## 🔧 주요 기능
 
 - **자동 라우팅**: 설정 기반 라우트 생성 + Lazy loading
-- **스마트 네비게이션**: 3-depth 계층, 액션 버튼, 자동 활성화
+- **스마트 네비게이션**: 계층적 메뉴 구조, 자동 활성화
 - **Breadcrumb**: URL 기반 자동 생성
-- **Design System**: Figma 토큰 동기화
+- **디자인 시스템**: Figma 토큰 동기화 + API 통합
+- **코드 생성**: Figma 디자인을 React 컴포넌트로 자동 변환
 
----
 
 ## 🛠️ 기술 스택
 
-- React 18, TypeScript, Vite
-- Material-UI (MUI)
-- React Router v6
-- Design Tokens (Figma 연동)
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Framework**: Material-UI (MUI)
+- **라우팅**: React Router v6
+- **상태 관리**: Recoil
+- **데이터 페칭**: TanStack Query
+- **디자인 시스템**: Design Tokens (Figma 연동)
+- **CLI 도구**: Commander.js
 
----
 
-**버전**: 1.0.0
+## 📚 문서
+
+- [아키텍처 개요](./docs/ARCHITECTURE.md) - 프로젝트 구조, 레이아웃/라우팅 개요
+- [레이아웃 시스템](./docs/LAYOUT_SYSTEM.md) - Header/Sidebar/PageHeader/Outlet 구성과 배치 규칙
+- [설정 가이드](./docs/CONFIG.md) - pages.ts, mainmenu.ts, navigation.ts 연동 규칙
+- [Figma 자동화](./docs/FIGMA_AUTOMATION.md) - 토큰/페이지 생성 흐름과 상태 점검
+- [명령어 모음](./docs/COMMANDS.md) - 개발/빌드/토큰/메뉴/Figma 전체 명령
+- [디자인 시스템](./docs/DESIGN_SYSTEM.md) - 토큰 → MUI 테마 반영 흐름
+- [메뉴 토큰 연동](./docs/MENU_TOKENS.md) - Figma 변수/토큰 기반 메뉴 → mainmenu.ts 동기화
+- [페이지 생성](./docs/PAGES.md) - 페이지 생성 절차, 파일 구조, 연동/유의 사항

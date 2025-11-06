@@ -16,7 +16,7 @@ export const PageHeader = ({ title }: PageHeaderProps) => (
             flexShrink: 0,
         }}
     >
-        <Typography component="h1" variant="h5" className='page-title' sx={{ fontWeight: 600, m: 0 }}>
+        <Typography component="h1" variant="h5" className="page-title" sx={{ fontWeight: 600, m: 0 }}>
             {title}
         </Typography>
         <Breadcrumb />
