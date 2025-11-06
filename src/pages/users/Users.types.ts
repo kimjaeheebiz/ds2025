@@ -44,6 +44,6 @@ export interface CreateUserRequest {
     permission: 'user' | 'admin';
 }
 
-export type TablecontainerProps = object;
+export type TypographyProps = object;
 
 export type UsersProps = object;

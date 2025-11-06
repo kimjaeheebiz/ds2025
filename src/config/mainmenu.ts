@@ -4,7 +4,7 @@
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
  * 
- * 생성 일시: 2025-11-06T01:48:12.939Z
+ * 생성 일시: 2025-11-06T04:34:47.949Z
  */
 
 import { findPageById } from './pages';
@@ -94,7 +94,7 @@ export const MAIN_MENUS: MenuItem[] = [
     },
     {
         id: 'users',
-        title: '사용자 관리',
+        title: 'Users',
         type: 'item',
         path: '/users',
         icon: 'PeopleOutlineOutlined',

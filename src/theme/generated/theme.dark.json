@@ -1849,7 +1849,7 @@
     "mode": "dark",
     "primary": {
       "light": "#ff9061",
-      "main": "#0291fe",
+      "main": "#ff6114",
       "dark": "#e65509",
       "contrastText": "#000000"
     },
