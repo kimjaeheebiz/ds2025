@@ -1,10 +1,10 @@
 /**
  * 메뉴 설정 (Figma 동기화)
- *
+ * 
  * ⚠️ 이 파일은 자동 생성되었습니다.
  * 수동 편집 시 Figma 동기화로 덮어쓰일 수 있습니다.
- *
- * 생성 일시: 2025-10-22T06:53:15.856Z
+ * 
+ * 생성 일시: 2025-11-06T01:48:12.939Z
  */
 
 import { findPageById } from './pages';
@@ -89,12 +89,12 @@ export const MAIN_MENUS: MenuItem[] = [
                 type: 'item',
                 path: '/project/project2',
                 pageId: 'project.project2',
-            },
+            }
         ],
     },
     {
         id: 'users',
-        title: 'Users',
+        title: '사용자 관리',
         type: 'item',
         path: '/users',
         icon: 'PeopleOutlineOutlined',
@@ -115,7 +115,7 @@ export const MAIN_MENUS: MenuItem[] = [
         path: '/test',
         icon: 'StarBorder',
         pageId: 'test',
-    },
+    }
 ];
 
 // =========================================================================
