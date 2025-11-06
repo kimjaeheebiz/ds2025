@@ -48,7 +48,7 @@
         "type": "text"
       },
       "users": {
-        "value": "사용자 관리",
+        "value": "Users",
         "type": "text"
       },
       "components": {
