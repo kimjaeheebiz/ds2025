@@ -41,7 +41,7 @@
   "primary": {
     "main": {
       "$type": "color",
-      "$value": "{info.main}",
+      "$value": "{colors.hecto.blue.500}",
       "$description": "Reflects the primary.main variable from the theme object"
     },
     "dark": {
