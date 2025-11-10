@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, Stack, Button } from '@mui/material';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 
 // Import page-specific types
 import { TestPageState } from './Test.types';
@@ -19,27 +18,16 @@ export const Test: React.FC = () => {
                     flexDirection: 'column',
                     gap: 3,
                 }}
-            ></Box>
-
-            <Stack direction="row">
-                <Button variant="contained" size="large">
-                    Label
-                </Button>
-                <Button variant="contained" size="large" color="secondary">
-                    Label
-                </Button>
-                <Button variant="contained" size="large">
-                    Label
-                </Button>
-                <Button
-                    variant="outlined"
-                    size="large"
-                    startIcon={<ChevronLeft />}
-                    endIcon={<ChevronRight />}
+            >
+                <Typography
+                    variant="body1"
+                    sx={{
+                        color: 'text.primary',
+                    }}
                 >
-                    test
-                </Button>
-            </Stack>
+                    메인 콘텐츠 영역입니다.
+                </Typography>
+            </Box>
         </Box>
     );
 };

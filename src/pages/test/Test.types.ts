@@ -10,6 +10,4 @@ export interface TestPageState {
 
 export type BoxProps = object;
 
-export type Frame1Props = object;
-
 export type TestProps = object;
