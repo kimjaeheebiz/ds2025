@@ -1,5 +1,15 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import {
+    Box,
+    Stack,
+    Button,
+    Card,
+    CardHeader,
+    CardContent,
+    Typography,
+    CardActions,
+} from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
 // Import page-specific types
 import { TestPageState } from './Test.types';
@@ -19,14 +29,68 @@ export const Test: React.FC = () => {
                     gap: 3,
                 }}
             >
-                <Typography
-                    variant="body1"
-                    sx={{
-                        color: 'text.primary',
-                    }}
-                >
-                    메인 콘텐츠 영역입니다.
-                </Typography>
+                <Stack direction="row" spacing={2}>
+                    <Button variant="contained">primary</Button>
+                    <Button variant="contained" color="secondary">
+                        secondary
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        color="success"
+                        startIcon={<ChevronLeft />}
+                        endIcon={<ChevronRight />}
+                    >
+                        success
+                    </Button>
+                </Stack>
+                <Stack direction="row" spacing={3}>
+                    <Card
+                        elevation={3}
+                        variant="elevation"
+                        sx={{
+                            width: '400px',
+                        }}
+                    >
+                        <CardHeader title="카드 제목입니다." subheader="카드 서브 제목입니다." />
+                        <CardContent>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: 'text.primary',
+                                }}
+                            >
+                                이건 카드 내용입니다.
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button>Action</Button>
+                            <Button>Action</Button>
+                        </CardActions>
+                    </Card>
+                    <Card
+                        elevation={0}
+                        variant="outlined"
+                        sx={{
+                            flex: 1,
+                        }}
+                    >
+                        <CardHeader title="카드 제목입니다." subheader="카드 서브 제목입니다." />
+                        <CardContent>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: 'text.primary',
+                                }}
+                            >
+                                카드 내용입니다.
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button>Action</Button>
+                            <Button>Action</Button>
+                        </CardActions>
+                    </Card>
+                </Stack>
             </Box>
         </Box>
     );
